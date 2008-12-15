@@ -1,0 +1,6 @@
+%include '\\Groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas';
+
+data PeopleIn;
+  infile '\\Groups\data\CTRHS\Crn\S D R C\VDW\Macros\testchs100.txt';
+  input mrn $char10.;
+run;

@@ -1,0 +1,224 @@
+The SAS System
+                 13:02 Thursday, February 22, 2007   1
+
+                        Medical
+                        Record
+                        Number
+ enr_start     enr_end  (CHSID)
+----------------------------------
+12/01/2005  04/30/2006  09V8D3BG3N
+09/01/2006  01/31/2007  09V8D3BG3N
+01/01/2006  04/30/2006  0QV54VVRVV
+08/01/2006  01/31/2007  0QV54VVRVV
+10/01/2005  03/31/2006  0SV6ZWV461
+10/01/2006  01/31/2007  0SV6ZWV461
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Program file: \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestSimpleContinuous.sas
+The SAS System
+                 13:02 Thursday, February 22, 2007   2
+
+Medical
+Record
+Number
+(CHSID)         Days
+--------------------
+09V8D3BG3N       120
+09V8D3BG3N       122
+0QV54VVRVV       120
+0QV54VVRVV       153
+0SV6ZWV461        90
+0SV6ZWV461        92
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Program file: \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestSimpleContinuous.sas
+The SAS System
+                 13:02 Thursday, February 22, 2007   3
+
+                            0/1 flag
+                           answering
+                       question--was
+                        this persion
+            Number of   continuously
+             enrolled  enrolled from
+                 days   01jan2006 to
+Medical       between      31dec2006
+Record      01jan2006  (disregarding
+Number            and     gaps up to
+(CHSID)     31dec2006      90 days)?
+------------------------------------
+09V8D3BG3N        242              0
+0QV54VVRVV        273              0
+0SV6ZWV461        182              0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Program file: \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestSimpleContinuous.sas
+The SAS System
+                 13:02 Thursday, February 22, 2007   4
+
+The FREQ Procedure
+
+                   Continuously                             Cumulative    Cumulative
+CoveredDays            Enrolled    Frequency     Percent     Frequency      Percent
+------------------------------------------------------------------------------------
+          0                   0        1589       79.45          1589        79.45
+         28                   0           1        0.05          1590        79.50
+         30                   0           1        0.05          1591        79.55
+         31                   0          17        0.85          1608        80.40
+         59                   0           4        0.20          1612        80.60
+         61                   0           6        0.30          1618        80.90
+         90                   0           7        0.35          1625        81.25
+         91                   0           1        0.05          1626        81.30
+         92                   0           9        0.45          1635        81.75
+        120                   0           5        0.25          1640        82.00
+        122                   0           4        0.20          1644        82.20
+        151                   0           5        0.25          1649        82.45
+        153                   0           8        0.40          1657        82.85
+        181                   0           7        0.35          1664        83.20
+        182                   0           1        0.05          1665        83.25
+        184                   0           1        0.05          1666        83.30
+        212                   0           4        0.20          1670        83.50
+        214                   0           3        0.15          1673        83.65
+        242                   0           3        0.15          1676        83.80
+        243                   0           6        0.30          1682        84.10
+        245                   0           4        0.20          1686        84.30
+        273                   0           7        0.35          1693        84.65
+        275                   0           5        0.25          1698        84.90
+        304                   0           5        0.25          1703        85.15
+        306                   0           2        0.10          1705        85.25
+        334                   0           7        0.35          1712        85.60
+        365                   1         288       14.40          2000       100.00
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Program file: \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestSimpleContinuous.sas

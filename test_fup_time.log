@@ -1,0 +1,429 @@
+1                                                          The SAS System                             16:17 Friday, October 20, 2006
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           30.14 seconds
+      cpu time            0.76 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * <<program name>>
+8          *
+9          * <<purpose>>
+10         *********************************************/
+11         
+12         /* This is managed in the login script so that it doesnt
+13            actually try to login when the machine is not connected
+14            to the network */
+15         %include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.35 seconds
+      cpu time            0.01 seconds
+      
+
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P020206).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 2
+
+NOTE: SAS initialization used:
+      real time           0.60 seconds
+      cpu time            0.21 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System           16:17 Friday, October 20, 2006
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    * Set the typical libnames... ;
+3    %let DWROOT = \\ctrhs-sas\warehouse\SasData\ ;
+4    libname consumer  "&DWROOT.Consumer" ;
+NOTE: Libref CONSUMER was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer
+5    libname chsid     "&DWROOT.CHSID" ;
+NOTE: Libref CHSID was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CHSID
+6    libname demogs    "&DWROOT.Consumer Demographics" ;
+NOTE: Libref DEMOGS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer Demographics
+7    libname enroll    "&DWROOT.Enrollment" ;
+NOTE: Libref ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Enrollment
+8    libname nac       "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libref NAC was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+9    libname naaccr    "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libname NAACCR refers to the same physical library as NAC.
+NOTE: Libref NAACCR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+10   libname baseline  "&DWROOT.Baseline" ;
+NOTE: Libref BASELINE was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Baseline
+11   libname arpa      "&DWROOT.arpa" ;
+NOTE: Libref ARPA was successfully assigned as follows: 
+      Engine:        V9 
+3                                        The SAS System           16:17 Friday, October 20, 2006
+
+      Physical Name: \\ctrhs-sas\warehouse\SasData\arpa
+12   libname mbhist    "&DWROOT.mbhist" ;
+NOTE: Libref MBHIST was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbhist
+13   libname mbcurr    "&DWROOT.mbcurr" ;
+NOTE: Libref MBCURR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbcurr
+14   libname claims    "&DWROOT.claims" ;
+NOTE: Libref CLAIMS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\claims
+15   libname death     "&DWROOT.death" ;
+NOTE: Libref DEATH was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\death
+16   libname hosp      "&DWROOT.Hospital" ;
+NOTE: Libref HOSP was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+17   libname VDW       "&DWROOT.CRN_VDW" ;
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   libname hosps     "&DWROOT.hospital" ;
+NOTE: Libname HOSPS refers to the same physical library as HOSP.
+NOTE: Libref HOSPS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+19   libname rx        "&DWROOT.rx" ;
+NOTE: Libref RX was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\rx
+20   libname s         "\\ctrhs-sas\sasuser\pardre1" ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+21   
+22   footnote "Program file: &CurrFile " ;
+23   
+24   
+25   options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ;
+26   
+27   
+28   %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+90   
+91   %*include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\fup_time2.sas" ;
+92   
+93   filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
+94                      HOST  = "centerforhealthstudies.org"
+95                      CD    = "/CRNSAS"
+96                      PASS  = XXXXXXXXXXXXXXX
+4                                        The SAS System           16:17 Friday, October 20, 2006
+
+97                      USER  = "CRNReader" ;
+98   
+99   %include crn_macs ;
+NOTE: 220 chsorg2 Microsoft FTP Service (Version 5.0).
+NOTE: User CRNReader has connected to FTP server  on Host centerforhealthstudies.org .
+3563  
+3564  libname owt    "\\groups\DATA\CTRHS\Crn\S D R C\Diffusion\AntiEstrogen\Programming\Data" ;
+NOTE: Libref OWT was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\groups\DATA\CTRHS\Crn\S D R C\Diffusion\AntiEstrogen\Programming\Data
+3565  
+3566  options mprint nofmterr ;
+3567  
+3568  data gnu ;
+3569     set owt.breasttumors (obs = 100) ;
+3570     EndDate = min(of DOD, "31Dec2004"d) ;
+3571     format EndDate mmddyy10. ;
+3572     keep mrn enddate dxdate ;
+3573  run ;
+
+NOTE: Format ERM was not found or could not be loaded.
+NOTE: Format STAGEGEN was not found or could not be loaded.
+NOTE: Format STAGEAJ was not found or could not be loaded.
+NOTE: Format BR_SURG was not found or could not be loaded.
+NOTE: Format $CHEM was not found or could not be loaded.
+NOTE: Format $RAD was not found or could not be loaded.
+NOTE: There were 100 observations read from the data set OWT.BREASTTUMORS.
+NOTE: The data set WORK.GNU has 100 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.28 seconds
+      cpu time            0.03 seconds
+      
+
+3574  
+3575  %GetFollowUpTime(People          = gnu   /* Dset of MRNs */
+3576                 , IndexDate       = DxDate             /* Name of a date var in &People, 
+or else a complete date literal, marking the start of
+3576! the follow-up period. */
+3577                 , EndDate         = EndDate       /* Name of a date var in &People, or 
+else a complete date literal, marking the end of the
+3577! period of interest. */
+3578                 , GapTolerance    = 90                  /* Number of daysdisenrollment to 
+ignore in deciding the disenrollment date. */
+3579                 , CallEndDateVar  = end_of_fup         /* What name should we give the 
+date var that will hold the end of the f/up period? */
+3580                 , OutSet          = owt.drop_me        /* The name of the output dataset */
+3581                 , DebugOut        = owt
+3582                   ) ;
+
+
+==============================================================
+
+Macro GetFollowUpTime V0.90:
+5                                        The SAS System           16:17 Friday, October 20, 2006
+
+
+Creating a dset "owt.drop_me", which will look just like "gnu" except
+that it will have an additional variable "end_of_fup", which will
+hold the earliest of date-of-last-enrollment, or EndDate (or, if the
+person was not enrolled at all a missing value).
+
+THIS IS BETA SOFTWARE-PLEASE SCRUTINIZE THE RESULTS AND REPORT PROBLEMS
+
+==============================================================
+
+
+MPRINT(GETFOLLOWUPTIME):   libname __enroll "\\ctrhs-sas\warehouse\sasdata\crn_vdw" access = 
+readonly ;
+NOTE: Libname __ENROLL refers to the same physical library as VDW.
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+MPRINT(GETFOLLOWUPTIME):   proc sql ;
+MPRINT(GETFOLLOWUPTIME):   create table owt.__enroll as select p.mrn , e.enr_start , e.enr_end 
+, DxDate as idate format = mmddyy10. , EndDate as 
+edate format = mmddyy10. from gnu as p INNER JOIN __enroll.enroll2 as e on p.MRN = e.MRN where 
+DxDate le e.enr_end AND EndDate ge e.enr_start order 
+by mrn, enr_start ;
+INFO: Index _PK0001_ selected for WHERE clause optimization.
+NOTE: Table OWT.__ENROLL created, with 179 rows and 5 columns.
+
+MPRINT(GETFOLLOWUPTIME):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           1.43 seconds
+      cpu time            0.07 seconds
+      
+
+MPRINT(GETFOLLOWUPTIME):   * Collapse contiguous periods down. ;
+MPRINT(GETVARLIST):   ;
+MPRINT(GETVARLIST):   proc sql noprint ;
+MPRINT(GETVARLIST):   * describe table dictionary.columns ;
+MPRINT(GETVARLIST):   select name into :VarList separated by ' ' from dictionary.columns where 
+upcase(compress(libname || '.' || memname)) = 
+"OWT.__ENROLL" AND upcase(name) not in ("ENR_START", "ENR_END") ;
+INFO: Index SVCCTR of SQL table __VDW.StaffGroupClinics selected for SQL WHERE clause (IN 
+subquery) optimization.
+INFO: Index SVCCTR of SQL table __VDW.StaffGroupClinics selected for SQL WHERE clause (IN 
+subquery) optimization.
+MPRINT(GETVARLIST):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           17.50 seconds
+      cpu time            2.98 seconds
+      
+
+MPRINT(COLLAPSEPERIODS):   ;
+VarList is mrn idate edate
+MPRINT(COLLAPSEPERIODS):   proc sort nodupkey data = owt.__enroll ;
+MPRINT(COLLAPSEPERIODS):   by mrn idate edate enr_start enr_end ;
+6                                        The SAS System           16:17 Friday, October 20, 2006
+
+MPRINT(COLLAPSEPERIODS):   run ;
+
+NOTE: There were 179 observations read from the data set OWT.__ENROLL.
+NOTE: SAS sort was used.
+NOTE: 0 observations with duplicate key values were deleted.
+NOTE: The data set OWT.__ENROLL has 179 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.92 seconds
+      cpu time            0.04 seconds
+      
+
+MPRINT(COLLAPSEPERIODS):   data owt.__enroll ;
+MPRINT(COLLAPSEPERIODS):   retain PeriodStart PeriodEnd ;
+MPRINT(COLLAPSEPERIODS):   format PeriodStart PeriodEnd mmddyy10. ;
+MPRINT(COLLAPSEPERIODS):   set owt.__enroll(rename = (enr_start = _enr_start enr_end = 
+_enr_end)) ;
+MPRINT(COLLAPSEPERIODS):   by mrn idate edate ;
+MPRINT(COLLAPSEPERIODS):   if first.edate then do ;
+MPRINT(COLLAPSEPERIODS):   * Start of a new period--initialize. ;
+MPRINT(COLLAPSEPERIODS):   PeriodStart = _enr_start ;
+MPRINT(COLLAPSEPERIODS):   PeriodEnd = _enr_end ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   * else do ;
+MPRINT(COLLAPSEPERIODS):   * if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
+MPRINT(COLLAPSEPERIODS):   if (PeriodStart <= _enr_start <= (PeriodEnd + 90)) then do ;
+MPRINT(COLLAPSEPERIODS):   * Extend the period end out to whichever is longer--the period or 
+the record. ;
+MPRINT(COLLAPSEPERIODS):   PeriodEnd = max(_enr_end, PeriodEnd) ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   else do ;
+MPRINT(COLLAPSEPERIODS):   * We are in a new period--output the last rec & reinitialize. ;
+MPRINT(COLLAPSEPERIODS):   output ;
+MPRINT(COLLAPSEPERIODS):   PeriodStart = _enr_start ;
+MPRINT(COLLAPSEPERIODS):   PeriodEnd = _enr_end ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   * end ;
+MPRINT(COLLAPSEPERIODS):   if last.edate then do ;
+MPRINT(COLLAPSEPERIODS):   output ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   run ;
+
+NOTE: There were 179 observations read from the data set OWT.__ENROLL.
+NOTE: The data set OWT.__ENROLL has 104 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.93 seconds
+      cpu time            0.04 seconds
+      
+
+MPRINT(COLLAPSEPERIODS):   * Now we have the actual start/stop dates in PeriodStart & 
+PeriodEnd--rename those to ;
+MPRINT(COLLAPSEPERIODS):   * the original record start/stop variable names, and strip out any 
+wacky recs where start comes after end ;
+MPRINT(COLLAPSEPERIODS):   data owt.__enroll ;
+7                                        The SAS System           16:17 Friday, October 20, 2006
+
+MPRINT(COLLAPSEPERIODS):   set owt.__enroll(rename = (PeriodStart = enr_start PeriodEnd = 
+enr_end)) ;
+MPRINT(COLLAPSEPERIODS):   * if PeriodStart le PeriodEnd ;
+MPRINT(COLLAPSEPERIODS):   drop _enr_start _enr_end ;
+MPRINT(COLLAPSEPERIODS):   run ;
+
+NOTE: There were 104 observations read from the data set OWT.__ENROLL.
+NOTE: The data set OWT.__ENROLL has 104 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           1.18 seconds
+      cpu time            0.06 seconds
+      
+
+MPRINT(GETFOLLOWUPTIME):   ;
+MPRINT(GETFOLLOWUPTIME):   * The end of contiguous enrollment is enr_end on the rec w/the 
+earliest enr_start ;
+MPRINT(GETFOLLOWUPTIME):   proc sort data = owt.__enroll out = owt.__collapsed_enroll ;
+MPRINT(GETFOLLOWUPTIME):   by mrn enr_start ;
+MPRINT(GETFOLLOWUPTIME):   run ;
+
+NOTE: There were 104 observations read from the data set OWT.__ENROLL.
+NOTE: SAS sort was used.
+NOTE: The data set OWT.__COLLAPSED_ENROLL has 104 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.93 seconds
+      cpu time            0.04 seconds
+      
+
+MPRINT(GETFOLLOWUPTIME):   proc sort nodupkey data = owt.__collapsed_enroll out = 
+owt.__first_periods ;
+MPRINT(GETFOLLOWUPTIME):   by mrn ;
+MPRINT(GETFOLLOWUPTIME):   run ;
+
+NOTE: There were 104 observations read from the data set OWT.__COLLAPSED_ENROLL.
+NOTE: SAS sort was used.
+NOTE: 5 observations with duplicate key values were deleted.
+NOTE: The data set OWT.__FIRST_PERIODS has 99 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           1.06 seconds
+      cpu time            0.03 seconds
+      
+
+MPRINT(GETFOLLOWUPTIME):   proc sql ;
+MPRINT(GETFOLLOWUPTIME):   create table owt.drop_me as select p.* , min(e.edate, e.enr_end) as 
+end_of_fup format = mmddyy10. from gnu as p LEFT JOIN 
+owt.__first_periods as e on p.mrn = e.mrn ;
+NOTE: Invalid (or missing) arguments to the MIN function have caused the function to return a 
+missing value.
+NOTE: Table OWT.DROP_ME created, with 100 rows and 4 columns.
+
+MPRINT(GETFOLLOWUPTIME):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           1.10 seconds
+8                                        The SAS System           16:17 Friday, October 20, 2006
+
+      cpu time            0.03 seconds
+      
+
+3583  
+3584  /*
+3585  data out.drop_me ;
+3586     set out.drop_me ;
+3587     other_end_date = min(end_of_fup, dod) ;
+3588     fup_mos = intck("MONTH", DxDate, other_end_date) ;
+3589     format other_end_date mmddyy10. ;
+3590  run ;
+3591  
+3592  proc format ;
+3593     * The tumor marker and stage vars get recoded to numerics below--here
+3594     * are what should be valid formats for the recoded vars. ;
+3595     value ERM
+3596        1, 3    = "Positive"
+3597        2, 8-10 = "Negative or Unknown"
+3598        /*
+3599        3 = "Borderline"
+3600        other = "Unexpected value!"
+3601        8 = "Ordered, results unknown"
+3602        9 = "Unknown/no information"
+3603        10 = "Not done"
+3604        */
+3605     ;
+3606  /*
+3607  quit ;
+3608  
+3609  goptions device = activex ;
+3610  
+3611  proc sql ;
+3612     create table gnu as
+3613     select fup_mos, put(ermarker, erm.) as er, stageaj
+3614     from out.drop_me
+3615     order by stageaj ;
+3616  quit ;
+3617  
+3618  
+3619  ods html path = "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\" (URL=NONE)
+3620           body = "test_fup_time.html" ;
+3621     proc boxplot data = gnu ;
+3622        plot fup_mos * stageaj ;
+3623  
+3624  run ;
+3625  ods html close ;
+3626  
+3627  
+3628  run ;
+3629  */
+NOTE: Remote submit to CHSDWSAS complete.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           2:05.44
+      cpu time            1.47 seconds
+      

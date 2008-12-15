@@ -1,0 +1,469 @@
+1                                                          The SAS System                              14:10 Tuesday, August 1, 2006
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: This installation is running SAS/STAT hot fix bundle SAS 9.1.3 Service Pack 2.
+
+NOTE: SAS initialization used:
+      real time           3.24 seconds
+      cpu time            1.38 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestInflateEnroll.sas
+8          *
+9          * Tests the InflateEnroll macro.
+10         *
+11         *********************************************/
+12         
+13         /* This is managed in the login script so that it doesnt
+14            actually try to login when the machine is not connected
+15            to the network */
+16         %include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.49 seconds
+      cpu time            0.02 seconds
+      
+
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P072804).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 2
+
+NOTE: SAS initialization used:
+      real time           0.95 seconds
+      cpu time            0.24 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    * Set the typical libnames... ;
+3    %let DWROOT = \\ctrhs-sas\warehouse\SasData\ ;
+4    libname consumer  "&DWROOT.Consumer" ;
+NOTE: Libref CONSUMER was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer
+5    libname chsid     "&DWROOT.CHSID" ;
+NOTE: Libref CHSID was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CHSID
+6    libname demogs    "&DWROOT.Consumer Demographics" ;
+NOTE: Libref DEMOGS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer Demographics
+7    libname enroll    "&DWROOT.Enrollment" ;
+NOTE: Libref ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Enrollment
+8    libname nac       "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libref NAC was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+9    libname naaccr    "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libname NAACCR refers to the same physical library as NAC.
+NOTE: Libref NAACCR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+10   libname baseline  "&DWROOT.Baseline" ;
+NOTE: Libref BASELINE was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Baseline
+11   libname arpa      "&DWROOT.arpa" ;
+NOTE: Libref ARPA was successfully assigned as follows: 
+      Engine:        V9 
+3                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+      Physical Name: \\ctrhs-sas\warehouse\SasData\arpa
+12   libname mbhist    "&DWROOT.mbhist" ;
+NOTE: Libref MBHIST was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbhist
+13   libname mbcurr    "&DWROOT.mbcurr" ;
+NOTE: Libref MBCURR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbcurr
+14   libname claims    "&DWROOT.claims" ;
+NOTE: Libref CLAIMS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\claims
+15   libname death     "&DWROOT.death" ;
+NOTE: Libref DEATH was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\death
+16   libname hosp      "&DWROOT.Hospital" ;
+NOTE: Libref HOSP was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+17   libname VDW       "&DWROOT.CRN_VDW" ;
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   libname hosps     "&DWROOT.hospital" ;
+NOTE: Libname HOSPS refers to the same physical library as HOSP.
+NOTE: Libref HOSPS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+19   libname s         "\\ctrhs-sas\sasuser\pardre1" ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+20   
+21   footnote "Program file: &CurrFile " ;
+22   
+23   
+24   options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ;
+25   
+26   * Simulate the enroll environment ;
+27   
+28   /*
+29   * Create an enroll v2 file ;
+30   %let BHPGroups       = 29, 44, 45, 46, 66 ;
+31   
+32   proc sql ;
+33      * reset inobs = 1000 nowarn ;
+34      create table vdw.enroll2 as
+35      select
+36           chsid        as MRN
+37         , startdt      as enr_start format = mmddyy10.
+38         , enddt        as enr_end   format = mmddyy10.
+4                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+39         , Location     as Location
+40         , PrimryDr     as PrimryDr
+41         , PrmCrCln     as PrmCrCln
+42         , case Medicare       when 1 then 'Y' else ' ' end as INS_Medicare
+43         , case Medicaid       when 1 then 'Y' else ' ' end as INS_Medicaid
+44         , case CommercialFlag when 1 then 'Y' else ' ' end as INS_Commercial
+45         , case PrivatepayFlag when 1 then 'Y' else ' ' end as INS_Privatepay
+46         , case OtherFlag      when 1 then 'Y' else ' ' end as INS_Other
+47         , case  when MedMkGrp in (&BHPGroups)  then 'Y' else ' ' end as INS_BasicHealth
+48      from vdw.enrlseed
+49      order by mrn, enr_start, enr_end
+50      ;
+51      * alter table vdw.enroll2 add constraint enroll2_pk primary key (MRN, enr_start, 
+enr_end) ;
+52      create index enroll2_ix on vdw.enroll2 (MRN, enr_start) ;
+53   quit ;
+54   */
+55   
+56   %let _EnrollLib = \\ctrhs-sas\Warehouse\Sasdata\CRN_VDW ;
+57   %let _EnrollData = enroll2 ;
+58   
+59   %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\InflateEnroll.sas" ;
+160  
+161  * Grab a dset of test ppl ;
+162  
+163  libname s "\\ctrhs-sas\sasuser\pardre1" ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+164  
+165  %macro MakeTestSample(OutSet, N, Letter) ;
+166  
+167     proc sql outobs = &N nowarn ;
+168        create table &OutSet as
+169        select mrn
+170        from vdw.demog
+171        where substr(MRN, 3, 1) = '&Letter'
+172        ;
+173     quit ;
+174  
+175  %mend MakeTestSample ;
+176  
+177  %*MakeTestSample(OutSet = s.test_ie, N = 200, Letter = Q) ;
+178  
+179  options mprint mlogic ;
+180  
+181  %let st = 01Jan2003 ;
+182  %let en = 31Jul2005 ;
+183  
+184  %macro MakeDSets ;
+185  
+186  %GetInflatedEnroll(InSet      = s.test_ie    /* Name of the dset containing the CHSIDs of 
+the ppl whose ENROLL recs you want. */
+5                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+187                 , StartDt      = &st  /* The start of the period over which you want ENROLL 
+recs, e.g., 01Jan1991 */
+188                 , EndDt        = &en /* The end of the period over which you want ENROLL 
+recs, e.g., 30Jun2003 */
+189                 , OutSet       = s.out_ie  /* The name of the output dataset. */
+190                 , MinVars      =  %str('Location', 'PrimryDr', 'PrmCrCln')
+191                 ) ;
+192  
+193  * Now pull the corresponding recs from old enroll to see if they are the same. ;
+194  proc sql ;
+195     create table s.compare_ie as
+196     select e.*
+197     from vdw.enroll as e INNER JOIN
+198           s.test_ie as t
+199     on    e.MRN = t.MRN
+200     where mdy(e.enr_month, 1, e.enr_year) between "&st"d and "&en"d ;
+201  quit ;
+202  %mend MakeDSets ;
+203  
+204  %makedsets ;
+MLOGIC(MAKEDSETS):  Beginning execution.
+MLOGIC(GETINFLATEDENROLL):  Beginning execution.
+MLOGIC(GETINFLATEDENROLL):  Parameter INSET has value s.test_ie
+MLOGIC(GETINFLATEDENROLL):  Parameter STARTDT has value 01Jan2003
+MLOGIC(GETINFLATEDENROLL):  Parameter ENDDT has value 31Jul2005
+MLOGIC(GETINFLATEDENROLL):  Parameter OUTSET has value s.out_ie
+MLOGIC(GETINFLATEDENROLL):  Parameter MINVARS has value 'Location' 'PrimryDr' 'PrmCrCln'
+MLOGIC(GETINFLATEDENROLL):  Parameter EARLIESTYEAR has value 1980
+MPRINT(GETINFLATEDENROLL):   libname enr "\\ctrhs-sas\Warehouse\Sasdata\CRN_VDW" access = 
+readonly ;
+NOTE: Libname ENR refers to the same physical library as VDW.
+NOTE: Libref ENR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+MPRINT(GETINFLATEDENROLL):   proc sql ;
+MPRINT(GETINFLATEDENROLL):   * Step 1: get the start/stop ENROLL recs that cover any part of 
+the period of interest ;
+MPRINT(GETINFLATEDENROLL):   CREATE TABLE _svelte_enroll AS SELECT e.* FROM enr.enroll2 AS e 
+INNER JOIN s.test_ie AS i ON e.MRN = i.MRN where 
+01Jan2003 le AND 31Jul2005 ge e.enr_start ORDER BY mrn, enr_start ;
+NOTE: PROC SQL set option NOEXEC and will continue to check the syntax of statements.
+NOTE: Line generated by the macro variable "STARTDT".
+204   01Jan2003
+        -------
+        22
+        76
+MPRINT(GETINFLATEDENROLL):   * While we are here, lets build a SELECT list for any non-standard 
+vars that might exist. ;
+MPRINT(GETINFLATEDENROLL):   * reset noprint ;
+MLOGIC(GETINFLATEDENROLL):  %IF condition %length(&MinVars) > 0 is TRUE
+ERROR 22-322: Syntax error, expecting one of the following: !, !!, &, *, **, +, -, /, <, <=, 
+<>, =, >, >=, AND, EQ, EQT, GE, GET, GROUP, GT, GTT, 
+              HAVING, LE, LET, LT, LTT, NE, NET, OR, ORDER, ^=, |, ||, ~=.  
+6                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+
+ERROR 76-322: Syntax error, statement will be ignored.
+
+MPRINT(GETINFLATEDENROLL):   SELECT case when lowcase(name) in (
+MLOGIC(LOWCASE):  Beginning execution.
+MLOGIC(LOWCASE):  This macro was compiled from the autocall file C:\Program Files\SAS\SAS 
+9.1\core\sasmacro\lowcase.sas
+MLOGIC(LOWCASE):  Parameter STRING has value 'Location' 'PrimryDr' 'PrmCrCln'
+MPRINT(LOWCASE):  'location', 'primrydr', 'prmcrcln'
+MLOGIC(LOWCASE):  Ending execution.
+MPRINT(GETINFLATEDENROLL):  ) then 'min(' || compress(name) || ') as ' || name else 'max(' || 
+compress(name) || ') as ' || name end as c INTO 
+:agg_vars separated by ', ' FROM dictionary.columns where libname = 'WORK' AND memname = 
+'_SVELTE_ENROLL' AND lowcase(name) not in ('mrn', 
+'enr_year', 'enr_month', 'enr_start', 'enr_end') ;
+NOTE: Statement not executed due to NOEXEC option.
+MPRINT(GETINFLATEDENROLL):   * Now calculate the earliest start date and latest end date. ;
+NOTE: Line generated by the invoked macro "GETINFLATEDENROLL".
+204   Now calculate the earliest start date and latest end date. ;       SELECT min(&StartDt) 
+as min_start, max(&EndDt) as max_end       INTO
+204! :min_start, max_end       from _svelte_enroll       ;     quit ;     data _flags ;       
+do ENR_Year = year(
+                 -------
+                 79
+ERROR 79-322: Expecting a :.
+
+NOTE: Line generated by the macro variable "STARTDT".
+204  01Jan2003
+       -------
+       22
+NOTE: Line generated by the macro variable "ENDDT".
+204  31Jul2005
+       -------
+       22
+MPRINT(GETINFLATEDENROLL):   SELECT min(01Jan2003) as min_start, max(31Jul2005) as max_end INTO 
+:min_start, max_end from _svelte_enroll ;
+ERROR 22-322: Syntax error, expecting one of the following: !, !!, &, *, **, +, ',', -, /, <, 
+<=, <>, =, >, >=, ?, AND, CONTAINS, EQ, EQT, GE, GET, 
+              GT, GTT, LE, LET, LIKE, LT, LTT, NE, NET, OR, ^=, |, ||, ~=.  
+
+MPRINT(GETINFLATEDENROLL):   quit ;
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.01 seconds
+      
+
+MPRINT(GETINFLATEDENROLL):   data _flags ;
+NOTE: Line generated by the invoked macro "GETINFLATEDENROLL".
+204  "&min_start"d) to year("&max_end"d) ;          do ENR_Month = 1 to 12 ;             
+_enr_dat = mdy(enr_month, 15, enr_year) ;             * Only
+     -------------
+     77
+7                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+ERROR 77-185: Invalid number conversion on "&min_start"d.
+
+204! "&min_start"d) to year("&max_end"d) ;          do ENR_Month = 1 to 12 ;             
+_enr_dat = mdy(enr_month, 15, enr_year) ;             * Only
+                            -----------
+                            77
+204! output those recs that fall within the start/end dates ;             if "&min_start"d le 
+_enr_dat le
+WARNING: Apparent symbolic reference MIN_START not resolved.
+ERROR: Invalid date/time/datetime constant "&min_start"d.
+WARNING: Apparent symbolic reference MAX_END not resolved.
+ERROR: Invalid date/time/datetime constant "&max_end"d.
+MPRINT(GETINFLATEDENROLL):   do ENR_Year = year("&min_start"d) to year("&max_end"d) ;
+MPRINT(GETINFLATEDENROLL):   do ENR_Month = 1 to 12 ;
+MPRINT(GETINFLATEDENROLL):   _enr_dat = mdy(enr_month, 15, enr_year) ;
+MPRINT(GETINFLATEDENROLL):   * Only output those recs that fall within the start/end dates ;
+WARNING: Apparent symbolic reference MIN_START not resolved.
+WARNING: Apparent symbolic reference MAX_END not resolved.
+MPRINT(GETINFLATEDENROLL):   if "&min_start"d le _enr_dat le "&max_end"d then output ;
+MPRINT(GETINFLATEDENROLL):   end ;
+MPRINT(GETINFLATEDENROLL):   end ;
+MPRINT(GETINFLATEDENROLL):   run ;
+
+ERROR 77-185: Invalid number conversion on "&max_end"d.
+
+NOTE: The SAS System stopped processing this step because of errors.
+WARNING: The data set WORK._FLAGS may be incomplete.  When this step was stopped there were 0 
+observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.00 seconds
+      
+
+
+MPRINT(GETINFLATEDENROLL):   proc sql ;
+MPRINT(GETINFLATEDENROLL):   alter table _flags add primary key (_enr_dat) ;
+NOTE: Table WORK._FLAGS has been modified, with 3 columns.
+NOTE: Line generated by the invoked macro "GETINFLATEDENROLL".
+204   &agg_vars       from  _svelte_enroll as p CROSS JOIN             _flags as f       where 
+f._enr_dat BETWEEN p.enr_start AND p.enr_end
+      -
+      22
+204! group by p.mrn, ENR_Year, ENR_Month ;    quit ;
+WARNING: Apparent symbolic reference AGG_VARS not resolved.
+MPRINT(GETINFLATEDENROLL):   create table s.out_ie as select p.MRN , f.ENR_Year , f.ENR_Month , 
+&agg_vars from _svelte_enroll as p CROSS JOIN _flags 
+as f where f._enr_dat BETWEEN p.enr_start AND p.enr_end group by p.mrn, ENR_Year, ENR_Month ;
+ERROR 22-322: Syntax error, expecting one of the following: a name, a quoted string, a numeric 
+constant, a datetime constant, a missing value, BTRIM, 
+              INPUT, LOWER, PUT, SUBSTRING, UPPER, USER.  
+
+NOTE: PROC SQL set option NOEXEC and will continue to check the syntax of statements.
+MPRINT(GETINFLATEDENROLL):   quit ;
+8                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+NOTE: The SAS System stopped processing this step because of errors.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.07 seconds
+      cpu time            0.00 seconds
+      
+MLOGIC(GETINFLATEDENROLL):  Ending execution.
+MPRINT(MAKEDSETS):   ;
+MPRINT(MAKEDSETS):   * Now pull the corresponding recs from old enroll to see if they are the 
+same. ;
+
+
+MPRINT(MAKEDSETS):   proc sql ;
+MPRINT(MAKEDSETS):   create table s.compare_ie as select e.* from vdw.enroll as e INNER JOIN 
+s.test_ie as t on e.MRN = t.MRN where mdy(e.enr_month, 
+1, e.enr_year) between "01Jan2003"d and "31Jul2005"d ;
+NOTE: Table S.COMPARE_IE created, with 811 rows and 13 columns.
+
+MPRINT(MAKEDSETS):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           4:03.22
+      cpu time            2:29.12
+      
+
+MLOGIC(MAKEDSETS):  Ending execution.
+205  
+206  /*
+207  
+208  definite difference for the first person: 00Q099DJTQ
+209  
+210  first:
+211  where 01jan2003 between s and e OR
+212        31Jul2005 between s and e
+213  
+214  
+215  second:
+216  where s between 01jan2003 and 31jul2005 OR
+217        e between 01jan2003 and 31jul2005
+218  
+219  Starts      Stops       first second
+220  07/01/2001 02/28/2003  yes   yes
+221  03/01/2003 07/31/2003  no    yes
+222  08/01/2003 08/31/2004  no    yes
+223  09/01/2004 03/31/2005  no    yes
+224  04/01/2005 08/31/2006  yes   yes
+225  
+226  
+227  */
+228  
+229  /*
+230  
+231     Another difference for person 00Q7UCL76X.
+232  
+233  Starts      Stops       second
+9                                        The SAS System            14:10 Tuesday, August 1, 2006
+
+234  06/01/1997 12/31/1997  no
+235  01/01/1998 03/31/1998  no
+236  04/01/1998 04/30/1999  no
+237  06/01/1999 07/31/2000  no
+238  08/01/2000 08/31/2000  no
+239  09/01/2000 09/30/2000  no
+240  10/01/2000 08/31/2005  no
+241  09/01/2005 12/31/2005
+242  01/01/2006 08/31/2006
+243  
+244  
+245  */
+246  
+247  proc sql noexec ;
+248     create table s.enr2_raw as
+249     select *
+250     from vdw.enroll2
+251     where MRN = '00Q7UCL76X'
+252     order by enr_start, enr_end
+253     ;
+NOTE: Statement not executed due to NOEXEC option.
+254  quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+255  
+256  * proc compare base = s.out_ie compare = s.compare_ie(drop = mainnet) ;
+257  
+258  
+259  run ;
+NOTE: Remote submit to CHSDWSAS complete.
+ERROR: Errors printed on pages 5,6,7.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           4:18.69
+      cpu time            2.20 seconds
+      

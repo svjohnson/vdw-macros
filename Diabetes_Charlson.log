@@ -1,0 +1,321 @@
+1                                                          The SAS System                           12:00 Monday, September 18, 2006
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 3
+
+NOTE: SAS initialization used:
+      real time           3.09 seconds
+      cpu time            0.46 seconds
+      
+1          %include '\\home\rosstr1\My SAS Files\Scripts\Remote\RemoteStart.sas';
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P061705).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 2
+
+NOTE: SAS initialization used:
+      real time           0.26 seconds
+      cpu time            0.15 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System         12:00 Monday, September 18, 2006
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    
+3    *Roy's footnote idea;
+4    /*
+5    proc sql noprint ;
+6       select trim(XPath)
+7       into :CurrFile separated by ' '
+8       from dictionary.extfiles
+9       where fileref like "#LN00006" ;
+10      ;
+11   quit ;
+12   */
+13   
+14   footnote "Program Run on &Sysdate" ;
+15   
+16   %let _Root = \\ctrhs-sas\warehouse\SasData\ ;
+17   libname vdw "&_Root.CRN_VDW";
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   
+19   
+20   %macro Diabetes_Charlson(outfile, startdate, enddate, EncType = A);
+21   /***************************************************************************
+22   ****************************************************************************
+23   * Programmer:
+24   *   Tyler Ross
+25   *   Center For Health Studies
+26   *   (206) 287-2927
+27   *   ross.t@ghc.org
+28   *
+29   * History:  Created September 15, 2006
+30   *
+31   * Purpose:
+32   *   For the diabetes dx as defined by Charlson, this macro creates
+3                                        The SAS System         12:00 Monday, September 18, 2006
+
+33   *    - A dataset called Diabetes_Charlson with the dx and descriptions
+34   *    - A format called Diabetes_Charlson with the dx
+35   *    - A dataset called &outfile with all people having diabetes
+36   *
+37   * Parameters:
+38   *   Outfile = the file that will contain the list of MRN of those with diabetes
+39   *   StartDate = Date from which you want to start looking for diabetes dx
+40   *   EndDate   = Date from which you want to stop looking for diabetes dx
+41   *   EncType   = Value of A will search All encounters (default),
+42   *               Value of I will search only Inpatient encounters
+43   *               Value of B will search Both IP and OP for dx (but not others)
+44   *
+45   * Dependencies:
+46   *   The Dx file
+47   *   A call to input standard vars before running the macro
+48   *
+49   ***************************************************************************
+50   **************************************************************************/
+51   
+52   *Catch and Throw;
+53   %let EncType = %upcase(&EncType.);
+54   %if (&EncType.^= A AND &EncType. ^= I AND &EncType. ^= B) %then %do;
+55     %put PROBLEM: The parameter 'Inpatient' must be among 'A', 'I', or 'B';
+56     %put PROBLEM: Doing Nothing;
+57     %goto exit;
+58   %end;
+59   %else %if "&StartDate"d > "&EndDate"d %then %do;
+60     %put PROBLEM: The Startdate must be on or before the EndDate;
+61     %put PROBLEM: Doing Nothing;
+62     %goto exit;
+63   %end;
+64   
+65   /**************************************
+66   *From the Charlson Macro
+67   ***Diabetess;
+68        "250   "-"250.33",
+69       "250.7 "-"250.73" = "DIAB"
+70   ***Diabetes with chronic complications
+71       "250.4 "-"250.63" = "DIABC"
+72   **************************************/
+73   
+74   libname util "&_UtilizationLib." access = readonly ;
+75   
+76   proc format;
+77     value $Diabetes_Charlson
+78        "250   "-"250.33",
+79       "250.7 "-"250.73",
+80       "250.4 "-"250.63"  = "DIABC"
+81     ;
+82   run;
+83   
+84   data Diabetes_Charlson;
+85   *Note - Datalines are not allowed in macros;
+4                                        The SAS System         12:00 Monday, September 18, 2006
+
+86     length diabetes_dx $6 description $50;
+87   
+88   diabetes_dx="250"   ; description="DIABETES MELLITUS"          ; output;
+89   *Just in case lets throw one in with the decimal;
+90   diabetes_dx="250."  ; description="DIABETES MELLITUS"          ; output;
+91   diabetes_dx="250.22"; description="DM2/NOS W HYPEROSMOL UNC"   ; output;
+92   diabetes_dx="250.50"; description="DM2/NOS W EYE MANIF NSU"    ; output;
+93   diabetes_dx="250.0" ; description="DIABETES MELLITUS UNCOMP"   ; output;
+94   diabetes_dx="250.23"; description="DM1 HYPEROSMOLARITY UNC"    ; output;
+95   diabetes_dx="250.51"; description="DM1 W EYE MANIFEST NSU"     ; output;
+96   diabetes_dx="250.00"; description="DM2/NOS UNCOMP NSU"         ; output;
+97   diabetes_dx="250.29"; description="Unspec: adult-onset vs juvenile type";output;
+98   diabetes_dx="250.52"; description="DM2/NOS W EYE MANIF UNC"    ; output;
+99   diabetes_dx="250.01"; description="DM1 UNCOMP NSU"             ; output;
+100  diabetes_dx="250.3" ; description="DIABETES W COMA NEC"        ; output;
+101  diabetes_dx="250.53"; description="DM1 W EYE MANIFEST UNC"     ; output;
+102  diabetes_dx="250.02"; description="DM2/NOS UNCOMP UNC"         ; output;
+103  diabetes_dx="250.30"; description="DM2/NOS W COMA NEC NSU"     ; output;
+104  diabetes_dx="250.59"; description="Unspec: adult-onset vs juvenile type";output;
+105  diabetes_dx="250.03"; description="DM1 UNCOMP UNC"             ; output;
+106  diabetes_dx="250.31"; description="DM1 W COMA NEC NSU"         ; output;
+107  diabetes_dx="250.6" ; description="DM2 NEUROLOGIC MANIFEST"    ; output;
+108  diabetes_dx="250.09"; description="Unspec: adult-onset vs juvenile type";output;
+109  diabetes_dx="503.2" ; description="DM2/NOS W COMA NEC UNC"     ; output;
+110  diabetes_dx="250.60"; description="DM2/NOS W NEUR MANIF NSU"   ; output;
+111  diabetes_dx="250.1" ; description="DIABETES W KETOACIDOSIS"    ; output;
+112  diabetes_dx="250.33"; description="DM1 W COMA NEC UNC"         ; output;
+113  diabetes_dx="250.61"; description="DM1 W NEURO MANIFEST NSU"   ; output;
+114  diabetes_dx="250.10"; description="DM2/NOS W KETOACID NSU"     ; output;
+115  diabetes_dx="250.4" ; description="DM W RENAL MANIFESTATION"   ; output;
+116  diabetes_dx="250.62"; description="DM2/NOS W NEUR MANIF UNC"   ; output;
+117  diabetes_dx="250.11"; description="DM1 W KETOACIDOSIS NSU"     ; output;
+118  diabetes_dx="250.40"; description="DM2/NOS W REN MANIF NSU"    ; output;
+119  diabetes_dx="250.63"; description="DM1 W NEURO MANIFEST UNC"   ; output;
+120  diabetes_dx="250.12"; description="DM2/NOS W KETOACID UNC"     ; output;
+121  diabetes_dx="250.41"; description="DM1 W RENAL MANIFEST NSU"   ; output;
+122  diabetes_dx="250.7" ; description="DM W CIRC DISORDER"         ; output;
+123  diabetes_dx="250.13"; description="DM1 W KETOACIDOSIS UNC"     ; output;
+124  diabetes_dx="250.42"; description="DM2/NOS W REN MANIF UNC"    ; output;
+125  diabetes_dx="250.70"; description="DM2/NOS W CIRC DIS NSU"     ; output;
+126  diabetes_dx="250.19"; description="Unspec: adult-onset vs juvenile type";output;
+127  diabetes_dx="250.43"; description="DM1 W RENAL MANIFEST UNC"   ; output;
+128  diabetes_dx="250.71"; description="DM1 W CIRC DISORD NSU"      ; output;
+129  diabetes_dx="250.2" ; description="DM W HYPEROSMOLARITY"       ; output;
+130  diabetes_dx="250.49"; description="Unspec: adult-onset vs juvenile type";output;
+131  diabetes_dx="250.72"; description="DM2/NOS W CIRC DIS UNC"     ; output;
+132  diabetes_dx="250.20"; description="DM2/NOS W HYPEROSMOL NSU"   ; output;
+133  diabetes_dx="250.5" ; description="DM W OPHTHALMIC MANIFEST"   ; output;
+134  diabetes_dx="250.73"; description="DM1 W CIRC DISORD UNC"      ; output;
+135  diabetes_dx="250.21"; description="DM1 HYPEROSMOLARITY NSU";   ; output;
+136  run;
+137  
+138  proc sql noprint;
+5                                        The SAS System         12:00 Monday, September 18, 2006
+
+139    create table &outfile as
+140      select distinct mrn
+141      from util.&_DxData
+142      where dx in(select diabetes_dx from diabetes_charlson)
+143        AND adate between "&startdate"d AND "&EndDate"d
+144  %if       %upcase(&EncType.) = I %then AND EncType = "IP";
+145  %else %if %upcase(&EncType.) = B %then AND EncType in("AV", "IP");
+146    ;
+147  quit;
+148  
+149  %exit: %mend Diabetes_Charlson;
+150  
+151  *TEST SECTION;
+152  %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas";
+214  
+215  *Problem 1;
+216  %Diabetes_Charlson(outfile=MyTest, startdate=01May2004, enddate=15May2004
+217                   , EncType = Z);
+PROBLEM: The parameter 'Inpatient' must be among 'A', 'I', or 'B'
+PROBLEM: Doing Nothing
+218  *Problem 2;
+219  %Diabetes_Charlson(outfile=MyTest, startdate=15May2004, enddate=01Mar2002
+220                   , EncType = A);
+PROBLEM: The Startdate must be on or before the EndDate
+PROBLEM: Doing Nothing
+221  
+222  *Success 1;
+223  %Diabetes_Charlson(outfile=MyTest, startdate=01May2004, enddate=15May2004
+224                   , EncType = A);
+NOTE: Libname UTIL refers to the same physical library as VDW.
+NOTE: Libref UTIL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Format $DIABETES_CHARLSON has been output.
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: The data set WORK.DIABETES_CHARLSON has 47 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+NOTE: Table WORK.MYTEST created, with 4893 rows and 1 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           3:33.74
+      cpu time            57.39 seconds
+      
+6                                        The SAS System         12:00 Monday, September 18, 2006
+
+
+225  *Success 2;
+226  %Diabetes_Charlson(outfile=MyTest, startdate=01May2004, enddate=15May2004
+227                   , EncType = I);
+NOTE: Libname UTIL refers to the same physical library as VDW.
+NOTE: Libref UTIL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Format $DIABETES_CHARLSON is already on the library.
+NOTE: Format $DIABETES_CHARLSON has been output.
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: The data set WORK.DIABETES_CHARLSON has 47 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.04 seconds
+      cpu time            0.01 seconds
+      
+
+NOTE: Table WORK.MYTEST created, with 0 rows and 1 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.07 seconds
+      cpu time            0.04 seconds
+      
+
+228  *Success 3;
+229  %Diabetes_Charlson(outfile=MyTest, startdate=01May2004, enddate=15May2004
+230                   , EncType = B);
+NOTE: Libname UTIL refers to the same physical library as VDW.
+NOTE: Libref UTIL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Format $DIABETES_CHARLSON is already on the library.
+NOTE: Format $DIABETES_CHARLSON has been output.
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: The data set WORK.DIABETES_CHARLSON has 47 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.03 seconds
+      
+
+NOTE: Table WORK.MYTEST created, with 0 rows and 1 columns.
+7                                        The SAS System         12:00 Monday, September 18, 2006
+
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.01 seconds
+      
+
+NOTE: Remote submit to CHSDWSAS complete.
+13         signoff chsdwsas;
+NOTE: Remote signoff from CHSDWSAS commencing.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           3:36.00
+      cpu time            57.78 seconds
+      
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: SAS/CONNECT conversation terminated.
+NOTE: Remote signoff from CHSDWSAS complete.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           3:41.40
+      cpu time            0.71 seconds
+      

@@ -1,0 +1,586 @@
+1                                                          The SAS System                             09:55 Monday, October 16, 2006
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           7.25 seconds
+      cpu time            0.35 seconds
+      
+1          %include '\\home\rosstr1\My SAS Files\Scripts\Remote\RemoteStart.sas';
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P020206).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 2
+
+NOTE: SAS initialization used:
+      real time           0.25 seconds
+      cpu time            0.18 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System           09:55 Monday, October 16, 2006
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    
+3    *Roy's footnote idea;
+4    /*
+5    proc sql noprint ;
+6       select trim(XPath)
+7       into :CurrFile separated by ' '
+8       from dictionary.extfiles
+9       where fileref like "#LN00006" ;
+10      ;
+11   quit ;
+12   */
+13   
+14   footnote "Program Run on &Sysdate" ;
+15   
+16   %let _Root = \\ctrhs-sas\warehouse\SasData\ ;
+17   
+18   
+19   
+20   
+21   %macro CleanEnroll(OutLib, Clean=N, Dirty=N, Report=Y);
+22   /***************************************************************************
+23   * Parameters:
+24   *   OutLib  = The library name you've already declared where you want output
+25   *             you elect to save (Clean="Y", Dirty="Y") to go.
+26   *   Clean   = "Y" outputs a table (in OutLib) with enroll records deemed clean.
+27   *             Any other value will not output this table.
+28   *   Dirty   = "Y" outputs a table (in Outlib) with enroll records deemed dirty.
+29   *             along with DirtyReason, a text variable explaining why the record
+30   *             is dirty.  Any other value will not output this file.
+31   *   Report  = "Y" will do a freq tabulation on the dirty data by DirtyReason,
+32   *             report misspecified variable lengths, and perform freq tables on
+33   *             the clean data.
+34   *             Any other value will suppress this calculation.
+35   *
+3                                        The SAS System           09:55 Monday, October 16, 2006
+
+36   * Programmer:
+37   *   Tyler Ross
+38   *   Center For Health Studies
+39   *   (206) 287-2927
+40   *   ross.t@ghc.org
+41   *
+42   * History:
+43   *   Created October 13, 2006
+44   **************************************************************************/
+45   
+46     /*Catch Errors*/
+47     %if &Clean ^= Y AND &Dirty ^= Y AND &Report ^= Y %then %do;
+48       %put ERROR: YOU MUST SPECIFY AT LEAST ONE TABLE TO OUTPUT OR TO PRODUCE;
+49       %put ERROR: A REPORT. SET <<CLEAN>>, <<DIRTY>>, AND/OR <<REPORT>> TO "Y";
+50     %end;
+51     %else %do;
+52       /*This mess is so that we save a little IO time depending on whether
+53         programmer wants the datasets saved.*/
+54       %if &Report ^= Y AND &Clean ^= Y %then %do;
+55         %let DataStatement = &OutLib..Dirty;
+56         %let DirtyReturn   = output &Outlib..dirty;
+57         %let CleanReturn   = ;
+58       %end;
+59       %else %if &Report ^= Y AND &Dirty ^= Y %then %do;
+60         %let DataStatement = &OutLib..Clean (drop=DirtyReason LastEnd);
+61         %let DirtyReturn = ;
+62         %let CleanReturn = output &Outlib..clean;
+63       %end;
+64       %else %if &Report = Y AND &Clean ^= Y AND &Dirty ^= Y %then %do;
+65         %let DataStatement = Clean (drop=DirtyReason LastEnd) Dirty;
+66         %let DirtyReturn = output dirty;
+67         %let CleanReturn = output clean;
+68       %end;
+69       %else %if &Report = Y AND &Clean = Y AND &Dirty ^= Y %then %do;
+70         %let DataStatement = &Outlib..Clean (drop=DirtyReason LastEnd) Dirty;
+71         %let DirtyReturn = output dirty;
+72         %let CleanReturn = output &Outlib..clean;
+73       %end;
+74       %else %if &Report = Y AND &Clean ^= Y AND &Dirty = Y %then %do;
+75         %let DataStatement = Clean (drop=DirtyReason LastEnd) &Outlib..Dirty;
+76         %let DirtyReturn = output &Outlib..dirty;
+77         %let CleanReturn = output clean;
+78       %end;
+79       %else %do; /*They want both clean and dirty, regardless of report*/
+80     %let DataStatement = &Outlib..Clean (drop=DirtyReason LastEnd) &Outlib..Dirty;
+81         %let DirtyReturn = output &Outlib..dirty;
+82         %let CleanReturn = output &Outlib..clean;
+83       %end;
+84   
+85       /*Clean the data*/
+86       libname __enroll "&_EnrollLib.";
+87       proc sort data=__enroll.&_EnrollData out=ToClean;
+88         by mrn enr_start;
+4                                        The SAS System           09:55 Monday, October 16, 2006
+
+89       run;
+90   
+91       data &DataStatement;
+92         set ToClean;
+93         by mrn enr_start;
+94         length DirtyReason $40 LastEnd 4 DaysEnrolled 8;
+95   
+96         DaysEnrolled = Enr_End - Enr_Start + 1;
+97   
+98         if MISSING(MRN)=1 then do;
+99           DirtyReason = "Missing MRN";
+100          &DirtyReturn;
+101        end;
+102        else if MISSING(enr_start)=1 then do;
+103          DirtyReason = "Missing ENR_Start";
+104          &DirtyReturn;
+105        end;
+106        else if MISSING(enr_end)=1 then do;
+107          DirtyReason = "Missing ENR_End";
+108          &DirtyReturn;
+109        end;
+110        else if enr_end < enr_start then do;
+111          DirtyReason = "Enr_end is BEFORE enr_start";
+112          &DirtyReturn;
+113        end;
+114        else if first.MRN = 0 AND LastEND > enr_start then do;
+115          DirtyReason = "Enroll period overlaps with other obs";
+116          &DirtyReturn;
+117        end;
+118        else if INS_MEDICARE NOT IN("Y", "") then do;
+119          DirtyReason = "Invalid value for INS_MEDICARE";
+120          &DirtyReturn;
+121        end;
+122        else if INS_MEDICAID NOT IN("Y", "") then do;
+123          DirtyReason = "Invalid value for INS_MEDICAID";
+124          &DirtyReturn;
+125        end;
+126        else if INS_Commercial NOT IN("Y", "") then do;
+127          DirtyReason = "Invalid value for INS_COMMERCIAL";
+128          &DirtyReturn;
+129        end;
+130        else if INS_PRIVATEPAY NOT IN("Y", "") then do;
+131          DirtyReason = "Invalid value for INS_PRIVATEPAY";
+132          &DirtyReturn;
+133        end;
+134        else if INS_OTHER NOT IN("Y", "") then do;
+135          DirtyReason = "Invalid value for INS_OTHER";
+136          &DirtyReturn;
+137        end;
+138        else if DRUGCOV NOT IN("Y", "N", "") then do;
+139          DirtyReason = "Invalid value for DRUGCOV";
+140          &DirtyReturn;
+141        end;
+5                                        The SAS System           09:55 Monday, October 16, 2006
+
+142        else do;
+143          &CleanReturn;
+144        end;
+145        LastEnd = enr_end;
+146        retain LastEnd;
+147      run;
+148  
+149      %if &Report = Y %then %do;
+150        proc format;
+151          value DEnrollf
+152            1           = "1 Day"
+153            2    - 27   = "2 to 27 days"
+154            28   - 31   = "28 to 31 days"
+155            32   - 93   = "32 to 93 days"
+156            94   - 186  = "94 to 186 days"
+157            187  - 363  = "187 to 363 days"
+158            364  - 366  = "364 to 366 days"
+159            367  - 1096 = "367 to 1096 days (3 years)"
+160            1096 - high = "More than 1096 days"
+161            other       = "Other?!"
+162          ;
+163        run;
+164        proc freq data= %if(&Clean=Y) %then &Outlib..Clean; %else Clean;;
+165          title "Frequency Distributions of Obs That Are Clean";
+166          format Enr_Start MMYY. Enr_End MMYY. DaysEnrolled DEnrollf.;
+167          table Enr_Start Enr_End DaysEnrolled Ins_Medicare Ins_Medicaid
+168                Ins_Commercial Ins_PrivatePay Ins_Other DRUGCOV;
+169        run;
+170        proc freq data= %if(&Dirty=Y) %then &Outlib..Dirty noprint;
+171                        %else Dirty noprint;;
+172          table DirtyReason / out=DirtyReport;
+173        run;
+174        proc contents data=__enroll.&_EnrollData. out=EnrollContents noprint;
+175        run;
+176  
+177        data WrongLength (keep=vname YourLength SpecLength);
+178          set EnrollContents;
+179          length vname $32. YourLength 8 SpecLength 8;
+180          vname = upcase(compress(name));
+181          if vname='MRN' then do;
+182            call symput('TotalRecords', compress(nobs));
+183            return;
+184          end;
+185          else if vname="INS_MEDICARE" AND length^=1 then do;
+186            YourLength=length;
+187            SpecLength=1;
+188            output;
+189          end;
+190          else if vname="INS_MEDICAid" AND length^=1 then do;
+191            YourLength=length;
+192            SpecLength=1;
+193            output;
+194          end;
+6                                        The SAS System           09:55 Monday, October 16, 2006
+
+195          else if vname="INS_COMMERCIAL" AND length^=1 then do;
+196            YourLength=length;
+197            SpecLength=1;
+198            output;
+199          end;
+200          else if vname="INS_PRIVATEPAY" AND length^=1 then do;
+201            YourLength=length;
+202            SpecLength=1;
+203            output;
+204          end;
+205          else if vname="INS_OTHER" AND length^=1 then do;
+206            YourLength=length;
+207            SpecLength=1;
+208            output;
+209          end;
+210          else if vname="DRUGCOV" AND length^=1 then do;
+211            YourLength=length;
+212            SpecLength=1;
+213            output;
+214          end;
+215          else return;
+216        run;
+217  
+218        *This should not error nor print if WrongLength is empty;
+219        proc print data=WrongLength;
+220          title "Table of Variables Having the Wrong Length";
+221        run;
+222        title "Frequency of Observations Not up to Specs by Reason";
+223        proc sql;
+224          select DirtyReason
+225               , COUNT as Frequency
+226               , COUNT/&TotalRecords. as PercentOfAllEnroll
+227               , Percent as PercentOfDirtyEnroll
+228          from DirtyReport
+229          ;
+230        quit;
+231      %end;
+232    %end;
+233  %mend CleanEnroll;
+234  
+235  %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas";
+297  libname templib "\\ctrhs-sas\sasuser\rosstr1\DeleteMe\";
+NOTE: Libref TEMPLIB was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\rosstr1\DeleteMe
+298  
+299  %CleanEnroll(OutLib=templib, Clean=N, Dirty=N, Report=Y);
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\sasdata\crn_vdw
+
+NOTE: There were 6462854 observations read from the data set __ENROLL.ENROLL2.
+NOTE: The data set WORK.TOCLEAN has 6462854 observations and 14 variables.
+7                                        The SAS System           09:55 Monday, October 16, 2006
+
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           24.42 seconds
+      cpu time            19.36 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set WORK.TOCLEAN.
+NOTE: The data set WORK.CLEAN has 6462854 observations and 15 variables.
+NOTE: The data set WORK.DIRTY has 0 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+      real time           18.07 seconds
+      cpu time            17.67 seconds
+      
+
+NOTE: Format DENROLLF has been output.
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set WORK.CLEAN.
+NOTE: The PROCEDURE FREQ printed pages 1-14.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           7.44 seconds
+      cpu time            7.39 seconds
+      
+
+
+NOTE: No observations in data set WORK.DIRTY.
+NOTE: The data set WORK.DIRTYREPORT has 0 observations and 3 variables.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: The data set WORK.ENROLLCONTENTS has 14 observations and 40 variables.
+NOTE: PROCEDURE CONTENTS used (Total process time):
+      real time           0.04 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      299:153   
+NOTE: There were 14 observations read from the data set WORK.ENROLLCONTENTS.
+NOTE: The data set WORK.WRONGLENGTH has 0 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+8                                        The SAS System           09:55 Monday, October 16, 2006
+
+      
+
+
+NOTE: No observations in data set WORK.WRONGLENGTH.
+NOTE: PROCEDURE PRINT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+NOTE: No rows were selected.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+300  %CleanEnroll(OutLib=templib, Clean=Y, Dirty=Y, Report=N);
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\sasdata\crn_vdw
+
+NOTE: There were 6462854 observations read from the data set __ENROLL.ENROLL2.
+NOTE: The data set WORK.TOCLEAN has 6462854 observations and 14 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           23.72 seconds
+      cpu time            18.11 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set WORK.TOCLEAN.
+NOTE: The data set TEMPLIB.CLEAN has 6462854 observations and 15 variables.
+NOTE: The data set TEMPLIB.DIRTY has 0 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+      real time           26.44 seconds
+      cpu time            17.51 seconds
+      
+
+301  %CleanEnroll(OutLib=templib, Clean=N, Dirty=Y, Report=Y);
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\sasdata\crn_vdw
+
+NOTE: There were 6462854 observations read from the data set __ENROLL.ENROLL2.
+NOTE: The data set WORK.TOCLEAN has 6462854 observations and 14 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           30.10 seconds
+      cpu time            20.64 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set WORK.TOCLEAN.
+NOTE: The data set WORK.CLEAN has 6462854 observations and 15 variables.
+NOTE: The data set TEMPLIB.DIRTY has 0 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+9                                        The SAS System           09:55 Monday, October 16, 2006
+
+      real time           19.57 seconds
+      cpu time            17.28 seconds
+      
+
+NOTE: Format DENROLLF is already on the library.
+NOTE: Format DENROLLF has been output.
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set WORK.CLEAN.
+NOTE: The PROCEDURE FREQ printed pages 15-28.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           8.58 seconds
+      cpu time            7.53 seconds
+      
+
+
+NOTE: No observations in data set TEMPLIB.DIRTY.
+NOTE: The data set WORK.DIRTYREPORT has 0 observations and 3 variables.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: The data set WORK.ENROLLCONTENTS has 14 observations and 40 variables.
+NOTE: PROCEDURE CONTENTS used (Total process time):
+      real time           0.09 seconds
+      cpu time            0.04 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      301:153   
+NOTE: There were 14 observations read from the data set WORK.ENROLLCONTENTS.
+NOTE: The data set WORK.WRONGLENGTH has 0 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: No observations in data set WORK.WRONGLENGTH.
+NOTE: PROCEDURE PRINT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+10                                       The SAS System           09:55 Monday, October 16, 2006
+
+NOTE: No rows were selected.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+302  %CleanEnroll(OutLib=templib, Clean=Y, Dirty=N, Report=Y);
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\sasdata\crn_vdw
+
+NOTE: There were 6462854 observations read from the data set __ENROLL.ENROLL2.
+NOTE: The data set WORK.TOCLEAN has 6462854 observations and 14 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           23.98 seconds
+      cpu time            19.23 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set WORK.TOCLEAN.
+NOTE: The data set TEMPLIB.CLEAN has 6462854 observations and 15 variables.
+NOTE: The data set WORK.DIRTY has 0 observations and 17 variables.
+NOTE: DATA statement used (Total process time):
+      real time           20.57 seconds
+      cpu time            17.28 seconds
+      
+
+NOTE: Format DENROLLF is already on the library.
+NOTE: Format DENROLLF has been output.
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set TEMPLIB.CLEAN.
+NOTE: The PROCEDURE FREQ printed pages 29-42.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           7.44 seconds
+      cpu time            7.31 seconds
+      
+
+
+NOTE: No observations in data set WORK.DIRTY.
+NOTE: The data set WORK.DIRTYREPORT has 0 observations and 3 variables.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: The data set WORK.ENROLLCONTENTS has 14 observations and 40 variables.
+11                                       The SAS System           09:55 Monday, October 16, 2006
+
+NOTE: PROCEDURE CONTENTS used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.01 seconds
+      
+
+
+NOTE: Numeric values have been converted to character values at the places given by: 
+      (Line):(Column).
+      302:153   
+NOTE: There were 14 observations read from the data set WORK.ENROLLCONTENTS.
+NOTE: The data set WORK.WRONGLENGTH has 0 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: No observations in data set WORK.WRONGLENGTH.
+NOTE: PROCEDURE PRINT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+NOTE: No rows were selected.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+303  %CleanEnroll(OutLib=templib, Clean=Y, Dirty=N, Report=N);
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\sasdata\crn_vdw
+
+NOTE: There were 6462854 observations read from the data set __ENROLL.ENROLL2.
+NOTE: The data set WORK.TOCLEAN has 6462854 observations and 14 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           19.07 seconds
+      cpu time            19.34 seconds
+      
+
+
+NOTE: There were 6462854 observations read from the data set WORK.TOCLEAN.
+NOTE: The data set TEMPLIB.CLEAN has 6462854 observations and 15 variables.
+NOTE: DATA statement used (Total process time):
+      real time           19.33 seconds
+      cpu time            18.39 seconds
+      
+
+NOTE: Remote submit to CHSDWSAS complete.
+13         signoff chsdwsas;
+NOTE: Remote signoff from CHSDWSAS commencing.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+12                                       The SAS System           09:55 Monday, October 16, 2006
+
+      real time           4:11.70
+      cpu time            3:27.51
+      
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: SAS/CONNECT conversation terminated.
+NOTE: Remote signoff from CHSDWSAS complete.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           4:24.40
+      cpu time            0.71 seconds
+      

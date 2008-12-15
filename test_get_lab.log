@@ -1,0 +1,220 @@
+1                                                          The SAS System                             11:32 Thursday, April 17, 2008
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           3.01 seconds
+      cpu time            0.31 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\test_get_lab.sas
+8          *
+9          * <<purpose>>
+10         *********************************************/
+11         
+12         /* This is managed in the login script so that it doesnt
+13            actually try to login when the machine is not connected
+14            to the network */
+15         %include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P020206).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           0.45 seconds
+      cpu time            0.13 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System            11:32 Thursday, April 17, 2008
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    * Set the typical libnames... ;
+3    %let DWROOT = \\ctrhs-sas\warehouse\SasData\ ;
+4    libname consumer  "&DWROOT.Consumer" ;
+NOTE: Libref CONSUMER was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer
+5    libname chsid     "&DWROOT.CHSID" ;
+NOTE: Libref CHSID was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CHSID
+6    libname demogs    "&DWROOT.Consumer Demographics" ;
+NOTE: Libref DEMOGS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer Demographics
+7    libname enroll    "&DWROOT.Enrollment" ;
+NOTE: Libref ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Enrollment
+8    libname nac       "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libref NAC was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+9    libname naaccr    "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libname NAACCR refers to the same physical library as NAC.
+NOTE: Libref NAACCR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+10   libname baseline  "&DWROOT.Baseline" ;
+NOTE: Libref BASELINE was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Baseline
+11   libname arpa      "&DWROOT.arpa" ;
+NOTE: Libref ARPA was successfully assigned as follows: 
+3                                        The SAS System            11:32 Thursday, April 17, 2008
+
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\arpa
+12   libname mbhist    "&DWROOT.mbhist" ;
+NOTE: Libref MBHIST was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbhist
+13   libname mbcurr    "&DWROOT.mbcurr" ;
+NOTE: Libref MBCURR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbcurr
+14   libname claims    "&DWROOT.claims" ;
+NOTE: Libref CLAIMS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\claims
+15   libname death     "&DWROOT.death" ;
+NOTE: Libref DEATH was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\death
+16   libname hosp      "&DWROOT.Hospital" ;
+NOTE: Libref HOSP was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+17   libname VDW       "&DWROOT.CRN_VDW" ;
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   libname hosps     "&DWROOT.hospital" ;
+NOTE: Libname HOSPS refers to the same physical library as HOSP.
+NOTE: Libref HOSPS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+19   libname rx        "&DWROOT.rx" ;
+NOTE: Libref RX was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\rx
+20   libname lab       "&DWROOT.lab" ;
+NOTE: Libref LAB was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\lab
+21   libname s         "\\ctrhs-sas\sasuser\pardre1" ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+22   
+23   footnote "Program file: &CurrFile " ;
+24   
+25   
+26   options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' 
+dsoptions="note2err" ;
+27   
+28   %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+97   filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
+4                                        The SAS System            11:32 Thursday, April 17, 2008
+
+98                      HOST  = "centerforhealthstudies.org"
+99                      CD    = "/CRNSAS"
+100                     PASS  = XXXXXXXXXXXXXXX
+101                     USER  = "CRNReader" ;
+102  
+103  %include crn_macs ;
+NOTE: 220 chsorg2 Microsoft FTP Service (Version 5.0).
+NOTE: User CRNReader has connected to FTP server  on Host centerforhealthstudies.org .
+4308  
+4309  %macro get_test_cohort(outset = , n = 100) ;
+4310    proc sql outobs = &n nowarn ;
+4311      create table &outset as
+4312      select mrn
+4313      from vdw.demog
+4314      where substr(mrn, 4, 1) = 'L'
+4315      ;
+4316    quit ;
+4317  %mend ;
+4318  
+4319  data tests_wanted ;
+4320  input test_type $ ;
+4321  datalines ;
+
+NOTE: The data set WORK.TESTS_WANTED has 1 observations and 1 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.00 seconds
+      
+
+4323  ;
+4324  run ;
+4325  
+4326  %get_test_cohort(outset = ppls) ;
+NOTE: Table WORK.PPLS created, with 100 rows and 1 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.12 seconds
+      cpu time            0.00 seconds
+      
+
+4327  
+4328  
+4329  %GetLabForPeopleAndLab(
+4330         People = ppls
+4331        , LabLst = tests_wanted
+4332        , StartDt = 01jan2006
+4333        , EndDt = 31dec2006
+4334        , Outset = s.test_tests
+4335        ) ;
+NOTE: Libname __LAB refers to the same physical library as VDW.
+NOTE: Libref __LAB was successfully assigned as follows: 
+      Engine:        V9 
+5                                        The SAS System            11:32 Thursday, April 17, 2008
+
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table S.TEST_TESTS created, with 5 rows and 21 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           2:09.65
+      cpu time            7.20 seconds
+      
+
+NOTE: Libref __LAB has been deassigned.
+NOTE: Remote submit to CHSDWSAS complete.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           3:14.33
+      cpu time            0.52 seconds
+      

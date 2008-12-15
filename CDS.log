@@ -1,0 +1,462 @@
+1                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+NOTE: Copyright (c) 1999-2001 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software Release 8.2 (TS2M0)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the WIN_PRO  platform.
+
+
+
+NOTE: This installation is running Base SAS hot fix bundle 82BX07.
+
+NOTE: SAS initialization used:
+      real time           1.05 seconds
+      cpu time            0.85 seconds
+      
+
+NOTE: AUTOEXEC processing beginning; file is C:\Documents and Settings\pardre1\autoexec.sas.
+
+
+NOTE: AUTOEXEC processing completed.
+
+NOTE: Libref VIEWS was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\Warehouse\Sasdata\Views
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * CDS.sas
+8          *
+9          * Computes several versions of the Clark chronic disease score.
+10         *
+11         * Based on Parker Pettus' cdscore.sas program.
+12         *
+13         *********************************************/
+14         
+15         /* This is managed in the login script so that it doesnt
+16            actually try to login when the machine is not connected
+17            to the network */
+18         %include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+NOTE: PROCEDURE SQL used:
+      real time           0.03 seconds
+      cpu time            0.03 seconds
+      
+
+NOTE: Remote signon to SASONNT commencing (SAS Release 8.02.02M0P012301).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Copyright (c) 1999-2001 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software Release 8.2 (TS2M0)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the WIN_SRV  platform.
+2                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+
+
+
+NOTE: SAS initialization used:
+      real time           0.34 seconds
+      cpu time            0.28 seconds
+      
+NOTE: Libref VIEWS was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\Warehouse\Sasdata\Views
+NOTE: Remote signon to SASONNT complete.
+3                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+NOTE: Remote submit to SASONNT commencing.
+1    ***********************;
+2    * Set the typical libnames... ;
+3    %let DWROOT = \\ctrhs-dbserver\warehouse\SasData\ ;
+4    libname consumer  "&DWROOT.Consumer" ;
+NOTE: Libref CONSUMER was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\Consumer
+5    libname chsid     "&DWROOT.CHSID" ;
+NOTE: Libref CHSID was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\CHSID
+6    libname demogs    "&DWROOT.Consumer Demographics" ;
+NOTE: Libref DEMOGS was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\Consumer Demographics
+7    libname enroll    "&DWROOT.Enrollment" ;
+NOTE: Libref ENROLL was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\Enrollment
+8    libname nac       "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libref NAC was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\Cancer\Naaccr
+9    libname naaccr    "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libname NAACCR refers to the same physical library as NAC.
+NOTE: Libref NAACCR was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\Cancer\Naaccr
+10   libname baseline  "&DWROOT.Baseline" ;
+NOTE: Libref BASELINE was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\Baseline
+11   libname arpa      "&DWROOT.arpa" ;
+NOTE: Libref ARPA was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\arpa
+12   libname mbhist    "&DWROOT.mbhist" ;
+NOTE: Libref MBHIST was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\mbhist
+13   libname mbcurr    "&DWROOT.mbcurr" ;
+NOTE: Libref MBCURR was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\mbcurr
+14   libname claims    "&DWROOT.claims" ;
+NOTE: Libref CLAIMS was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\claims
+15   libname death     "&DWROOT.death" ;
+NOTE: Libref DEATH was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\death
+4                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+16   libname hosp      "&DWROOT.Hospital" ;
+NOTE: Libref HOSP was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\Hospital
+17   libname VDW       "&DWROOT.CRN_VDW" ;
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\CRN_VDW
+18   
+19   footnote "Program file: &CurrFile " ;
+20   
+21   
+22   options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ;
+23   
+24   %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+77   libname dm "&_DemographicLib" ;
+NOTE: Libname DM refers to the same physical library as VDW.
+NOTE: Libref DM was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\CRN_VDW
+78   libname rx "&_RxLib" ;
+NOTE: Libname RX refers to the same physical library as DM.
+NOTE: Libref RX was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\SasData\CRN_VDW
+79   
+80   * This is the location of the UNIFORM file ;
+81   libname un "\\groups\data\CTRHS\Crn\S D R C\VDW\Parker" ;
+NOTE: Libref UN was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\groups\data\CTRHS\Crn\S D R C\VDW\Parker
+82   
+83   * Should this go in the macro lib? ;
+84   %macro CalcAge(BDtVar, RefDate) ;
+85      intck('YEAR', &BDtVar, &RefDate) -
+86      (mdy(month(&RefDate), day(&RefDate), 2004) <
+87       mdy(month(&BDtVar) , day(&BDtVar) , 2004))
+88   %mend CalcAge ;
+89   
+90   %macro CalcCDS(People, DateVar, Model, Outset) ;
+91   
+92      * This is funky format notation--never seen this before Parkers program. ;
+93      proc format ;
+94         value agegrp  18-<25 = '1'
+95                       25-<35 = '2'
+96                       35-<45 = '3'
+97                       45-<55 = '4'
+98                       55-<65 = '5'
+99                       65-<75 = '6'
+100                      75-<85 = '7'
+101                     85-high = '8'
+102        ;
+103     run ;
+5                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+104  
+105     proc sql ;
+106  
+107        * Get age/sex, and chuck the under-18 crowd. ;
+108        create table ppl as
+109        select p.*
+110              , upcase(d.gender) || put(%CalcAge(BDtVar = birth_date, RefDate = &DateVar), 
+agegrp.) as GenderAge
+111        from  &People as p INNER JOIN
+112              dm.&_DemographicData as d
+113        on    p.MRN = d.MRN
+114        where %CalcAge(BDtVar = birth_date, RefDate = &DateVar) ge 18 ;
+115  
+116        * People get a certain base CDS score just on the basis of their age and sex--bring 
+those in. ;
+117        create table ppl as
+118        select p.*
+119              , cm.ClarkTotCost
+120              , cm.ClarkOutPtCost
+121              , cm.ClarkPrmCrVis
+122        from  ppl as p INNER JOIN
+123              &Model as cm
+124        on    p.GenderAge = cm.CDSCat ;
+125  
+126        select * from ppl ;
+127  
+128        * And those intercepts are deviations about a grand intercept--add that in ;
+129        create table ppl as
+130        select p.MRN
+131              , p.GenderAge
+132              , p.&DateVar
+133              , sum(p.ClarkTotCost, cm.ClarkTotCost)       as ClarkTotCost
+134              , sum(p.ClarkOutPtCost, cm.ClarkOutPtCost)   as ClarkOutPtCost
+135              , sum(p.ClarkPrmCrVis, cm.ClarkPrmCrVis)     as ClarkPrmCrVis
+136        from  ppl as p CROSS JOIN
+137              &Model as cm
+138        where cm.CDSCat = 'XX' ;
+139  
+140        select * from ppl ;
+141  
+142        * Gather fills for each person in People for the six months ending on &DateVar ;
+143        create table fills as
+144        select p.MRN
+145              , r.NDC
+146        from rx.&_RxData as r INNER JOIN
+147              ppl as p
+148        on    r.MRN = p.MRN
+149        where rx.RxDate between (p.&DateVar - 180) and p.&DateVar ;
+150  
+151        * Translate from NDCs to CDS categories.  This is a select distinct  ;
+152        * b/c multiple fills that set the same flag are only counted once. ;
+153        create table PersonFlags as
+154        select distinct
+6                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+155              f.MRN
+156              , u.CDSCat
+157        from fills as f LEFT JOIN
+158              un.uniform as u
+159        on    f.NDC = u.NDC
+160        where u.CDSCat is not null ;
+161  
+162        drop table fills ;
+163  
+164        * If a person has both an A7 flag (Cardiac Disease) and an A15 (Heart Disease ;
+165        * /Hypertension) we need to discount the A15 ;
+166        delete from PersonFlags
+167        where CDSCat = 'A15' AND
+168              MRN in (select MRN from PersonFlags where CDSCat = 'A7') ;
+169  
+170        * Now bring in the CDS scores applicable to each flag & sum over person. ;
+171        create table PersonFlags as
+172        select p.MRN
+173              , sum(cm.ClarkTotCost  ) as ClarkTotCost
+174              , sum(cm.ClarkOutPtCost) as ClarkOutPtCost
+175              , sum(cm.ClarkPrmCrVis ) as ClarkPrmCrVis
+176        from  PersonFlags as p INNER JOIN
+177              &Model as cm
+178        on    p.CDSCat = cm.CDSCat
+179        group by p.MRN
+180        ;
+181  
+182        * Now we add the PersonFlag values to the Gender/Age scores and we are done! ;
+183        create table &Outset as
+184        select p.MRN
+185              , p.GenderAge
+186              , p.&DateVar
+187              , sum(p.ClarkTotCost,   pf.ClarkTotCost)     as ClarkTotCost
+188              , sum(p.ClarkOutPtCost, pf.ClarkOutPtCost)   as ClarkOutPtCost
+189              , sum(p.ClarkPrmCrVis,  pf.ClarkPrmCrVis)    as ClarkPrmCrVis
+190        from  ppl as p LEFT JOIN
+191              PersonFlags as pf
+192        on    p.MRN = pf.MRN ;
+193  
+194     quit ;
+195  %mend CalcCDS ;
+196  
+197  %macro TestCalcCDS ;
+198     libname cds "\\groups\data\CTRHS\Crn\S D R C\VDW\Parker\cds" ;
+199     libname scratch "\\ctrhs-dbserver\warehouse\Sasdata\CRN_VDW\scratch" ;
+200  
+201     /*
+202     proc sql ;
+203        reset outobs = 50 nowarn ;
+204        * Group enrolled for first 6 months of 2004. ;
+205        create table scratch.ppl as
+206        select mrn
+207        from vdw.enroll
+7                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+208        where enr_year = 2004 AND
+209              enr_month between 1 and 6
+210        group by mrn
+211        having count(*) = 6 ;
+212     quit ;
+213  
+214     */
+215  
+216     data ppl ;
+217        set scratch.ppl ;
+218        CDSDate = "30Jun2004"d ;
+219     run ;
+220  
+221     proc sql noexec ;
+222        create table ppl as
+223        select p.*
+224              , birth_date format = mmddyy10.
+225              , gender
+226              , %CalcAge(BDtVar = birth_date, RefDate = CDSDate) as Age
+227              , put(calculated age, agegrp.) as FmtAge
+228              /* , upcase(d.gender) || put(%CalcAge(BDtVar = birth_date, RefDate = 
+&DateVar), agegrp.) as GenderAge */
+229        from  ppl as p INNER JOIN
+230              dm.&_DemographicData as d
+231        on    p.MRN = d.MRN
+232        where %CalcAge(BDtVar = birth_date, RefDate = CDSDate) ge 18 ;
+233     quit ;
+234  
+235     options mprint ;
+236  
+237     %CalcCDS(People = ppl
+238           , DateVar = CDSDate
+239           , Model = cds.cdsmodels
+240           , Outset = scratch.test_cds) ;
+241     run ;
+242  
+243  %mend TestCalcCDS ;
+244  
+245  %TestCalcCDS ;
+NOTE: Libref CDS was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\groups\data\CTRHS\Crn\S D R C\VDW\Parker\cds
+NOTE: Libref SCRATCH was successfully assigned as follows: 
+      Engine:        V8 
+      Physical Name: \\ctrhs-dbserver\warehouse\Sasdata\CRN_VDW\scratch
+
+NOTE: There were 50 observations read from the data set SCRATCH.PPL.
+NOTE: The data set WORK.PPL has 50 observations and 2 variables.
+NOTE: DATA statement used:
+      real time           0.03 seconds
+      cpu time            0.03 seconds
+      
+
+8                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+NOTE: Statement not executed due to NOEXEC option.
+NOTE: PROCEDURE SQL used:
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+MPRINT(CALCCDS):   * This is funky format notation--never seen this before Parkers program. ;
+MPRINT(CALCCDS):   proc format ;
+MPRINT(CALCCDS):   value agegrp 18-<25 = '1' 25-<35 = '2' 35-<45 = '3' 45-<55 = '4' 55-<65 = 
+'5' 65-<75 = '6' 75-<85 = '7' 85-high = '8' ;
+NOTE: Format AGEGRP has been output.
+MPRINT(CALCCDS):   run ;
+
+NOTE: PROCEDURE FORMAT used:
+      real time           0.31 seconds
+      cpu time            0.03 seconds
+      
+
+MPRINT(CALCCDS):   proc sql ;
+MPRINT(CALCCDS):   * Get age/sex, and chuck the under-18 crowd. ;
+MPRINT(CALCCDS):   create table ppl as select p.* , upcase(d.gender) || put(
+MPRINT(CALCAGE):  intck('YEAR', birth_date, CDSDate) - (mdy(month(CDSDate), day(CDSDate), 2004) 
+< mdy(month(birth_date) , day(birth_date) , 2004))
+MPRINT(CALCCDS):  , agegrp.) as GenderAge from ppl as p INNER JOIN dm.demog as d on p.MRN = 
+d.MRN where
+MPRINT(CALCAGE):   intck('YEAR', birth_date, CDSDate) - (mdy(month(CDSDate), day(CDSDate), 
+2004) < mdy(month(birth_date) , day(birth_date) , 2004))
+MPRINT(CALCCDS):   ge 18 ;
+INFO: Index mrn of SQL table DM.DEMOG (alias = D) selected for SQL WHERE clause (join) 
+optimization.
+NOTE: Table WORK.PPL created, with 49 rows and 3 columns.
+
+MPRINT(CALCCDS):   * People get a certain base CDS score just on the basis of their age and 
+sex--bring those in. ;
+MPRINT(CALCCDS):   create table ppl as select p.* , cm.ClarkTotCost , cm.ClarkOutPtCost , 
+cm.ClarkPrmCrVis from ppl as p INNER JOIN cds.cdsmodels as 
+cm on p.GenderAge = cm.CDSCat ;
+NOTE: Table WORK.PPL created, with 49 rows and 6 columns.
+
+MPRINT(CALCCDS):   select * from ppl ;
+MPRINT(CALCCDS):   * And those intercepts are deviations about a grand intercept--add that in ;
+MPRINT(CALCCDS):   create table ppl as select p.MRN , p.GenderAge , p.CDSDate , 
+sum(p.ClarkTotCost, cm.ClarkTotCost) as ClarkTotCost , 
+sum(p.ClarkOutPtCost, cm.ClarkOutPtCost) as ClarkOutPtCost , sum(p.ClarkPrmCrVis, 
+cm.ClarkPrmCrVis) as ClarkPrmCrVis from ppl as p CROSS JOIN 
+cds.cdsmodels as cm where cm.CDSCat = 'XX' ;
+NOTE: The execution of this query involves performing one or more Cartesian product joins that 
+can not be optimized.
+NOTE: Table WORK.PPL created, with 49 rows and 6 columns.
+
+MPRINT(CALCCDS):   select * from ppl ;
+MPRINT(CALCCDS):   * Gather fills for each person in People for the six months ending on 
+&DateVar ;
+9                                        The SAS System        09:01 Wednesday, January 26, 2005
+
+MPRINT(CALCCDS):   create table fills as select p.MRN , r.NDC from rx.rx as r INNER JOIN ppl as 
+p on r.MRN = p.MRN where rx.RxDate between (p.CDSDate 
+- 180) and p.CDSDate ;
+NOTE: Table WORK.FILLS created, with 557 rows and 2 columns.
+
+MPRINT(CALCCDS):   * Translate from NDCs to CDS categories. This is a select distinct ;
+MPRINT(CALCCDS):   * b/c multiple fills that set the same flag are only counted once. ;
+MPRINT(CALCCDS):   create table PersonFlags as select distinct f.MRN , u.CDSCat from fills as f 
+LEFT JOIN un.uniform as u on f.NDC = u.NDC where 
+u.CDSCat is not null ;
+NOTE: Table WORK.PERSONFLAGS created, with 107 rows and 2 columns.
+
+MPRINT(CALCCDS):   drop table fills ;
+NOTE: Table WORK.FILLS has been dropped.
+MPRINT(CALCCDS):   * If a person has both an A7 flag (Cardiac Disease) and an A15 (Heart 
+Disease ;
+MPRINT(CALCCDS):   * /Hypertension) we need to discount the A15 ;
+MPRINT(CALCCDS):   delete from PersonFlags where CDSCat = 'A15' AND MRN in (select MRN from 
+PersonFlags where CDSCat = 'A7') ;
+NOTE: 4 rows were deleted from WORK.PERSONFLAGS.
+
+MPRINT(CALCCDS):   * Now bring in the CDS scores applicable to each flag & sum over person. ;
+MPRINT(CALCCDS):   create table PersonFlags as select p.MRN , sum(cm.ClarkTotCost ) as 
+ClarkTotCost , sum(cm.ClarkOutPtCost) as ClarkOutPtCost , 
+sum(cm.ClarkPrmCrVis ) as ClarkPrmCrVis from PersonFlags as p INNER JOIN cds.cdsmodels as cm on 
+p.CDSCat = cm.CDSCat group by p.MRN ;
+NOTE: Table WORK.PERSONFLAGS created, with 37 rows and 4 columns.
+
+MPRINT(CALCCDS):   * Now we add the PersonFlag values to the Gender/Age scores and we are done! 
+;
+MPRINT(CALCCDS):   create table scratch.test_cds as select p.MRN , p.GenderAge , p.CDSDate , 
+sum(p.ClarkTotCost, pf.ClarkTotCost) as ClarkTotCost , 
+sum(p.ClarkOutPtCost, pf.ClarkOutPtCost) as ClarkOutPtCost , sum(p.ClarkPrmCrVis, 
+pf.ClarkPrmCrVis) as ClarkPrmCrVis from ppl as p LEFT JOIN 
+PersonFlags as pf on p.MRN = pf.MRN ;
+NOTE: Table SCRATCH.TEST_CDS created, with 49 rows and 6 columns.
+
+MPRINT(CALCCDS):   quit ;
+NOTE: The PROCEDURE SQL printed pages 1-4.
+NOTE: PROCEDURE SQL used:
+      real time           4:23.03
+      cpu time            2:12.49
+      
+
+MPRINT(TESTCALCCDS):   ;
+MPRINT(TESTCALCCDS):   run ;
+246  
+247  endsas ;
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           4:26.60
+      cpu time            2:13.18
+10                                       The SAS System        09:01 Wednesday, January 26, 2005
+
+      
+NOTE: Remote submit to SASONNT complete.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           4:30.36
+      cpu time            2.04 seconds
+      

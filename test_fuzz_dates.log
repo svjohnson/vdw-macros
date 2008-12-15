@@ -1,0 +1,432 @@
+1                                                          The SAS System                          08:32 Tuesday, September 23, 2008
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           3.39 seconds
+      cpu time            0.88 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          *
+8          *
+9          * <<purpose>>
+10         *********************************************/
+11         
+12         /* This is managed in the login script so that it doesnt
+13            actually try to login when the machine is not connected
+14            to the network */
+15         %include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.17 seconds
+      cpu time            0.04 seconds
+      
+
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P020206).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           0.32 seconds
+      cpu time            0.10 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System        08:32 Tuesday, September 23, 2008
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    * Set the typical libnames... ;
+3    %let DWROOT = \\ctrhs-sas\warehouse\SasData\ ;
+4    libname consumer  "&DWROOT.Consumer" ;
+NOTE: Libref CONSUMER was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer
+5    libname chsid     "&DWROOT.CHSID" ;
+NOTE: Libref CHSID was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CHSID
+6    libname demogs    "&DWROOT.Consumer Demographics" ;
+NOTE: Libref DEMOGS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer Demographics
+7    libname enroll    "&DWROOT.Enrollment" ;
+NOTE: Libref ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Enrollment
+8    libname nac       "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libref NAC was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+9    libname naaccr    "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libname NAACCR refers to the same physical library as NAC.
+NOTE: Libref NAACCR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+10   libname baseline  "&DWROOT.Baseline" ;
+NOTE: Libref BASELINE was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Baseline
+11   libname arpa      "&DWROOT.arpa" ;
+NOTE: Libref ARPA was successfully assigned as follows: 
+      Engine:        V9 
+3                                        The SAS System        08:32 Tuesday, September 23, 2008
+
+      Physical Name: \\ctrhs-sas\warehouse\SasData\arpa
+12   libname mbhist    "&DWROOT.mbhist" ;
+NOTE: Libref MBHIST was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbhist
+13   libname mbcurr    "&DWROOT.mbcurr" ;
+NOTE: Libref MBCURR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbcurr
+14   libname claims    "&DWROOT.claims" ;
+NOTE: Libref CLAIMS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\claims
+15   libname death     "&DWROOT.death" ;
+NOTE: Libref DEATH was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\death
+16   libname hosp      "&DWROOT.Hospital" ;
+NOTE: Libref HOSP was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+17   libname VDW       "&DWROOT.CRN_VDW" ;
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   libname hosps     "&DWROOT.hospital" ;
+NOTE: Libname HOSPS refers to the same physical library as HOSP.
+NOTE: Libref HOSPS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+19   libname rx        "&DWROOT.rx" ;
+NOTE: Libref RX was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\rx
+20   libname lab       "&DWROOT.lab" ;
+NOTE: Libref LAB was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\lab
+21   libname s         "\\ctrhs-sas\sasuser\pardre1" ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+22   
+23   footnote "Program file: &CurrFile " ;
+24   
+25   
+26   options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' 
+dsoptions="note2err" ;
+27   
+28   %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\fuzz_dates.sas" ;
+184  
+185  /*
+186  libname tf 'c:\deleteme\test_fuzz_dates' ;
+4                                        The SAS System        08:32 Tuesday, September 23, 2008
+
+187  libname orig 'C:\DeleteMe\test_fuzz_dates\unfuzzed' ;
+188  
+189  
+190  data orig.people ;
+191    input
+192      @1    mrn         $char8.
+193      @9    birth_date  date9.
+194      @19   sex         $char1.
+195      @21   christmas   date9.
+196    ;
+197    format
+198      birth_date christmas mmddyy10.
+199    ;
+200    label
+201      birth_date = "Date this person was born"
+202      christmas = "Merry Christmas!"
+203    ;
+204  datalines ;
+205  roy     30jun1966 m 25dec1975
+206  laurel  05apr1970 f 25dec1975
+207  bill    09dec1942 m 25dec1975
+208  anne    12dec1939 f 25dec1975
+209  ;
+210  run ;
+211  
+212  
+213  data orig.fills ;
+214    input
+215      @1    mrn         $char8.
+216      @9    fill_date   date9.
+217      @19   drug        $char20.
+218    ;
+219    format
+220      fill_date mmddyy10.
+221    ;
+222    label
+223      fill_date = "Date the indicated prescription was filled"
+224    ;
+225  datalines ;
+226  roy     30jun1986 crack
+227  roy     29jun1980 aspirin
+228  roy     27jun1981 profollica
+229  roy     25jun1982 aspartame
+230  roy     23jun1983 mailman
+231  roy     21jun1984 johnny walker
+232  roy     19jun1985 johnny walker
+233  roy     17jun1986 schlitz
+234  roy     15jun1987 yellow
+235  roy     13jun1988 tylenol
+236  roy     11jun1989 the purple pill
+237  roy     09jun1990 something
+238  roy     07jun1991 something
+239  mary    05apr2008 crack
+5                                        The SAS System        08:32 Tuesday, September 23, 2008
+
+240  tim     09dec1942 crack
+241  tim     12dec1939 crack
+242  ;
+243  run ;
+244  
+245  data orig.diagnoses ;
+246    input
+247      @1    mrn         $char8.
+248      @9    dx_date     date9.
+249      @19   diagnosis   $char20.
+250    ;
+251    format
+252      dx_date mmddyy10.
+253    ;
+254  datalines ;
+255  roy     30jun1966 baldness
+256  roy     29jun1980 baldness
+257  roy     27jun1981 baldness
+258  roy     25jun1982 baldness
+259  roy     23jun1983 baldness
+260  roy     21jun1984 baldness
+261  roy     19jun1985 baldness
+262  bob     17jun1986 athletes foot
+263  bob     15jun1987 athletes foot
+264  bob     13jun1988 athletes foot
+265  bob     11jun1989 athletes foot
+266  roy     09jun1990 still baldness
+267  roy     07jun1991 still baldness
+268  mary    05apr2008 crotchetiness
+269  tim     09dec1942 toenail fungus
+270  tim     12dec1939 toenail fungus
+271  ;
+272  run ;
+273  
+274  proc sql ;
+275    describe table dictionary.columns ;
+276  quit ;
+277  */
+278  
+279  data people ;
+280    set vdw.demog ;
+281    where substr(mrn, 3, 1) = 'F' ;
+282    if _n_ le 1000 ;
+283  run ;
+
+NOTE: There were 86491 observations read from the data set VDW.DEMOG.
+      WHERE SUBSTR(mrn, 3, 1)='F';
+NOTE: The data set WORK.PEOPLE has 1000 observations and 9 variables.
+NOTE: DATA statement used (Total process time):
+      real time           7.64 seconds
+      cpu time            1.67 seconds
+      
+
+6                                        The SAS System        08:32 Tuesday, September 23, 2008
+
+284  
+285  options mprint ;
+286  
+287  %fuzz_dates(
+288        inlib       = work      /* libname where your to-be-fuzzed dsets live*/
+289      , outlib      = s        /* name of the libname where you want the fuzzed dsets */
+290      , dsets       = people /* a space-delimited list of the dataset(s) whose dates you 
+want fuzzed */
+291      , XWalk       = xwalk     /* name you want for the xwalk dataset */
+292      , IdVar       = mrn       /* the id variable in common among the input datasets (which 
+gets removed & replaced by a study_id */
+293      , datevars    = dx_date birth_date fill_date /* a space-delimited list of the date 
+variables you want fuzzed. Not all date vars are found in
+293! all datasets */
+294      , FuzzDays    = 30       /* minimum number of days to add */
+295        ) ;
+MPRINT(FUZZ_DATES):   proc sql noprint ;
+MPRINT(FUZZ_DATES):   * Get names of the columns in the to-be-fuzzed tables. ;
+MPRINT(FUZZ_DATES):   create table __all_columns as select memname as table_name, name as 
+field_name, format as field_format, label as field_label 
+from dictionary.columns where upcase(libname) = "WORK" AND upcase(memname) in (
+MPRINT(COMMIFY):  "PEOPLE"
+MPRINT(FUZZ_DATES):  ) AND upcase(name) NOT = "MRN" ;
+ERROR: Libname A is not assigned.
+ERROR: Libname A is not assigned.
+NOTE: Table WORK.__ALL_COLUMNS created, with 8 rows and 4 columns.
+
+MPRINT(FUZZ_DATES):   * Read the table names into a macro array. ;
+MPRINT(FUZZ_DATES):   select distinct table_name into :tname1-:tname99 from __all_columns ;
+MPRINT(FUZZ_DATES):   * Generate a UNION query to create our xwalk dset. ;
+MPRINT(FUZZ_DATES):   select distinct "select mrn from work." || table_name into 
+:union_statement separated by " union " from __all_columns ;
+MPRINT(FUZZ_DATES):   * How long should our studyid be? ;
+MPRINT(FUZZ_DATES):   * Execute the UNION ;
+MPRINT(FUZZ_DATES):   create table xwalk as select mrn from work.PEOPLE ;
+NOTE: Table WORK.XWALK created, with 1000 rows and 1 columns.
+
+MPRINT(FUZZ_DATES):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           24.08 seconds
+      cpu time            1.67 seconds
+      
+
+MPRINT(FUZZ_DATES):   * Add the fuzz_days var to xwalk. ;
+MPRINT(FUZZ_DATES):   data xwalk ;
+MPRINT(FUZZ_DATES):   set xwalk ;
+MPRINT(FUZZ_DATES):   fuzz_days = 0 ;
+MPRINT(FUZZ_DATES):   * Disallow values of 0 ;
+MPRINT(FUZZ_DATES):   do while(fuzz_days = 0) ;
+MPRINT(FUZZ_DATES):   randy = uniform(0) ;
+MPRINT(FUZZ_DATES):   * fuzz_days = round(((30 - (- 30) + 1) * randy + (- 30)), 1) ;
+MPRINT(FUZZ_DATES):   ;
+MPRINT(FUZZ_DATES):   * fuzz_days = round(((&FuzzDays - (- &FuzzDays) + 1) * randy + (- 
+7                                        The SAS System        08:32 Tuesday, September 23, 2008
+
+&FuzzDays)), 1) ;
+MPRINT(FUZZ_DATES):   * fuzz_days = round(((&fuzz_hi - &fuzz_lo + 1) * randy + &fuzz_lo), 1) ;
+MPRINT(FUZZ_DATES):   * fuzz_days = ceil((2*&fuzzdays + 1)*uniform(0)) - (&fuzzdays + 1);
+MPRINT(FUZZ_DATES):   fuzz_days = round(2 * (30+0.5) * randy - (30+0.5), 1.0) ;
+MPRINT(FUZZ_DATES):   end ;
+MPRINT(FUZZ_DATES):   label randy = "A random variable generated with uniform(0)--used to 
+calculate fuzz_days." fuzz_days = "The constant added to 
+the dates dx_date birth_date fill_date" ;
+MPRINT(FUZZ_DATES):   run ;
+
+NOTE: There were 1000 observations read from the data set WORK.XWALK.
+NOTE: The data set WORK.XWALK has 1000 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.03 seconds
+      
+
+MPRINT(FUZZ_DATES):   proc sort data = xwalk ;
+MPRINT(FUZZ_DATES):   by randy ;
+MPRINT(FUZZ_DATES):   run ;
+
+NOTE: There were 1000 observations read from the data set WORK.XWALK.
+NOTE: SAS sort was used.
+NOTE: The data set WORK.XWALK has 1000 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.03 seconds
+      cpu time            0.01 seconds
+      
+
+MPRINT(FUZZ_DATES):   data s.xwalk ;
+MPRINT(FUZZ_DATES):   length study_id $ 10 ;
+MPRINT(FUZZ_DATES):   set xwalk ;
+MPRINT(FUZZ_DATES):   study_id = put(_n_, z2.0) ;
+MPRINT(FUZZ_DATES):   label study_id = "Arbitrary person identifier (randomly assigned)." ;
+MPRINT(FUZZ_DATES):   run ;
+
+NOTE: There were 1000 observations read from the data set WORK.XWALK.
+NOTE: The data set S.XWALK has 1000 observations and 4 variables.
+NOTE: At least one W.D format was too small for the number to be printed. The decimal may be 
+shifted by the "BEST" format.
+NOTE: DATA statement used (Total process time):
+      real time           0.12 seconds
+      cpu time            0.00 seconds
+      
+
+Working on PEOPLE
+MPRINT(FUZZ_DATES):   proc sql noprint feedback ;
+MPRINT(FUZZ_DATES):   * Using intnx means that this should also work with datetimes. ;
+MPRINT(FUZZ_DATES):   select case when upcase(field_name) in (
+MPRINT(COMMIFY):  "DX_DATE", "BIRTH_DATE", "FILL_DATE"
+MPRINT(FUZZ_DATES):  ) then 'intnx("day", ' || trim(field_name) || ', x.fuzz_days, "sameday") 
+as ' || field_name || ' format = ' || field_format || ' 
+label = "' || trim(field_label) || " (fuzzed +/- 30 days)""" else field_name end as var_name 
+8                                        The SAS System        08:32 Tuesday, September 23, 2008
+
+into :field_list separated by ', ' from __all_columns 
+where table_name = "PEOPLE" ;
+NOTE: Statement transforms to:
+
+        select case 
+                 when UPCASE(__ALL_COLUMNS.field_name) in ('BIRTH_DATE', 'DX_DATE', 
+'FILL_DATE') then 
+'intnx("day",'||TRIM(__ALL_COLUMNS.field_name)||', x.fuzz_days, "sameday") 
+as'||__ALL_COLUMNS.field_name||' format ='||__ALL_COLUMNS.field_format||' 
+label = "'||TRIM(__ALL_COLUMNS.field_label)||' (fuzzed +/- 30 days)"'
+                 else __ALL_COLUMNS.field_name
+                 end as var_name
+          from WORK.__ALL_COLUMNS
+         where __ALL_COLUMNS.table_name='PEOPLE';
+
+MPRINT(FUZZ_DATES):   ;
+MPRINT(FUZZ_DATES):   * Writed the fuzzed version. ;
+MPRINT(FUZZ_DATES):   create table s.PEOPLE_fuzzed as select study_id, intnx("day", Birth_Date, 
+x.fuzz_days, "sameday") as Birth_Date format = 
+MMDDYY10. label = "CONSUMER BIRTH DATE (fuzzed +/- 30 days)", Gender, race1, race2, race3, 
+race4, race5, Hispanic from work.PEOPLE as u INNER JOIN 
+s.xwalk as x on u.mrn = x.mrn ;
+NOTE: Statement transforms to:
+
+        select X.study_id, INTNX('day', U.Birth_Date, X.fuzz_days, 'sameday') as Birth_Date 
+label='CONSUMER BIRTH DATE (fuzzed +/- 30 days)' 
+format=MMDDYY10.0, U.Gender, U.race1, U.race2, U.race3, U.race4, U.race5, U.Hispanic
+          from WORK.PEOPLE U inner join S.XWALK X on U.mrn=X.mrn;
+
+NOTE: Invalid (or missing) arguments to the INTNX function have caused the function to return a 
+missing value.
+NOTE: Table S.PEOPLE_FUZZED created, with 1000 rows and 9 columns.
+
+MPRINT(FUZZ_DATES):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.07 seconds
+      cpu time            0.00 seconds
+      
+
+296  
+297  proc freq data = s.xwalk ;
+298    tables fuzz_days ;
+299  run ;
+
+NOTE: There were 1000 observations read from the data set S.XWALK.
+NOTE: The PROCEDURE FREQ printed pages 1-2.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.04 seconds
+      
+
+NOTE: Remote submit to CHSDWSAS complete.
+ERROR: Errors printed on page 6.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           44.06 seconds
+      cpu time            1.99 seconds
+      

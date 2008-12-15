@@ -1,0 +1,67 @@
+%macro ndclookup(inds, outds, EverNDC);                                                                           
+                                                                                                                  
+**********************************************************************************;                               
+* look up NDC codes by drugnames or fragments of drugnames                                                        
+* Check the results file to see that they are all drugs of interest                                               
+*                                                                                                                 
+* Input:                                                                                                          
+*	inds is the name of the input SAS dataset with the list of character strings to match                     
+*		contains the variable "drugname"                                                                  
+*		Both the Generic and Brand fields are searched for all input strings                              
+*                                                                                                                 
+*	outds is the name of the output SAS dataset                                                               
+*       EverNDC is the SAS dataset name of the file of all NDCcodes                                               
+*                                                                                                                 
+*  EverNDC is the fully qualified name of your local copy of the EverNDC dataset.                                 
+*                                                                                                                 
+*    Example:                                                                                                     
+*Data StringsOfInterest;                                                                                          
+*   input  drugname $char20.;                                                                                     
+*   datalines;                                                                                                    
+*TAMOX                                                                                                            
+*Ralox                                                                                                            
+*NOLVADEX                                                                                                         
+*LETROZOLE                                                                                                        
+*EXEMESTANE                                                                                                       
+*ANASTROZOLE                                                                                                      
+                                                                                                                  
+*%ndclookup(StringsOfInterest, NDCs_of_Interest, mylib.EverNDC);                                                  
+***********************************************************************************;                              
+                                                                                                                  
+   proc sql noprint ;                                                                                             
+                                                                                                                  
+      * Create a monster WHERE clause to apply to ever_ndc from the contents of InDs. ;                           
+      * The embedded single quotes can get a bit confusing--just remember that ;                                  
+      * one single quote character escapes the following one.  So a string of four single-quote ;                 
+      * chars in a row defines a string containing one single quote--the two on the ends delimit ;                
+      * the string, and the two in the middle resolve to one (the first one escaping the second). ;               
+      * SQL written by Roy Pardee                                                                 ;               
+                                                                                                                  
+      select      'upcase(n.Generic) LIKE ''%' || trim(upcase(s.DrugName))|| '%''' || ' OR                        
+                   upcase(n.Brand)   LIKE ''%' || trim(upcase(s.DrugName))|| '%''' as where_clause                
+      into :wh separated by ' OR '                                                                                
+      from &inds as s ;                                                                                           
+                                                                                                                  
+      * First pull all of the NDCs that meet the WHERE clause above. ;                                            
+      create table _OfInterest as                                                                                 
+      select distinct *                                                                                           
+      from &everndc as n                                                                                          
+      where &wh ;                                                                                                 
+                                                                                                                  
+      * Now pull drugs that *dont* match the WHERE clause, but share an NDC with one that does. ;                 
+      create table _Suspicious as                                                                                 
+      select distinct n.*                                                                                         
+      from _OfInterest as a inner join &everndc as n                                                              
+      on a.ndc = n.ndc                                                                                            
+      where not (&wh)                                                                                             
+      ;                                                                                                           
+                                                                                                                  
+      * Mash the two dsets together ;                                                                             
+      create table &outds as                                                                                      
+      select *, 0 as Suspicious label = "Flag indicating whether Generic or Brand contained a string of interest."
+      from _OfInterest                                                                                            
+      UNION ALL                                                                                                   
+      select *, 1 as Suspicious                                                                                   
+      from _Suspicious ;                                                                                          
+   quit ;                                                                                                         
+%mend ndclookup;

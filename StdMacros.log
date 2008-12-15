@@ -1,0 +1,203 @@
+1                                        The SAS System            11:38 Thursday, July 29, 2004
+
+NOTE: Copyright (c) 1999-2001 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software Release 8.2 (TS2M0)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the WIN_PRO  platform.
+
+
+
+NOTE: This installation is running Base SAS hot fix bundle 82BX07.
+
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: SAS initialization used:
+      real time           1.75 seconds
+      cpu time            0.21 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * StdMacros.sas
+8          *
+9          * Contains standard VDW macros for use against VDW data.
+10         *********************************************/
+11         
+12         %macro GetRxForPeople(People     /* The name of a dataset containing the people whose
+12       !  fills you want. */
+13                             , StartDt    /* The date on which you want to start collecting
+13       ! fills. */
+14                             , EndDt      /* The date on which you want to stop collecting
+14       ! fills. */
+15                             , Outset     /* The name of the output dataset containing the
+15       ! fills. */) ;
+16         
+17            /*
+18               Gets the pharmacy fills for a specified set of MRNs, which ocurred between
+19               StartDt and EndDt.
+20            */
+21         
+22            %if &People = &Outset %then %do ;
+23               %put PROBLEM: The People dataset must be different from the OutSet dataset. ;
+24               %put PROBLEM: Both parameters are set to "&People". ;
+25               %put PROBLEM: Doing nothing. ;
+26            %end ;
+27            %else %do ;
+28               proc sql ;
+29                  create table &OutSet as
+30                  select r.*
+31                  from rx.&RxSet as r INNER JOIN
+32                        &People as p
+33                  on    r.MRN = p.MRN
+34                  where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d ;
+2                                        The SAS System            11:38 Thursday, July 29, 2004
+
+35               quit ;
+36            %end ;
+37         %mend GetRxForPeople ;
+38         
+39         %macro GetRxForDrugs(DrugLst     /* The name of a dataset containing the people whose
+39       !  fills you want. */
+40                             , StartDt    /* The date on which you want to start collecting
+40       ! fills. */
+41                             , EndDt      /* The date on which you want to stop collecting
+41       ! fills. */
+42                             , Outset     /* The name of the output dataset containing the
+42       ! fills. */) ;
+43         
+44            /*
+45               Gets the pharmacy fills for a specified set of MRNs, which ocurred between
+46               StartDt and EndDt.
+47            */
+48         
+49            %if &People = &Outset %then %do ;
+50               %put PROBLEM: The People dataset must be different from the OutSet dataset. ;
+51               %put PROBLEM: Both parameters are set to "&People". ;
+52               %put PROBLEM: Doing nothing. ;
+53            %end ;
+54            %else %do ;
+55               proc sql ;
+56                  create table &OutSet as
+57                  select r.*
+58                  from rx.&RxSet as r INNER JOIN
+59                        &People as p
+60                  on    r.MRN = p.MRN
+61                  where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d ;
+62               quit ;
+63            %end ;
+64         %mend GetRxForDrugs ;
+65         
+66         %macro CountFills(DrugList) ;
+67            /*
+68               Counts the number of fills for each of the NDC codes specified in
+69               the input dataset.
+70            */
+71            proc sql ;
+72               title2 "Extent of pharmacy data." ;
+73               select count(*) as NumFills label = "Total rx records"
+74                     , min(RxDate) as FirstFill format = mmddyy10. label = "Earliest recorded
+74       ! fill"
+75                     , max(RxDate) as LastFill format = mmddyy10. label = "Most recent
+75       ! recorded fill"
+76               from rx.&RxSet ;
+77         
+78               title2 "Number of fills for the list of NDCs in &DrugList" ;
+79               select d.generic
+80                     , d.NDC
+81                     , count(r.NDC) as NumFills label = "Number of Fills"
+3                                        The SAS System            11:38 Thursday, July 29, 2004
+
+82                     , min(r.RxDate) as FirstFill format = mmddyy10. label = "Date of first
+82       ! fill"
+83                     , max(r.RxDate) as LastFill format = mmddyy10. label = "Date of most
+83       ! recent fill"
+84               from  &DrugList as d LEFT JOIN
+85                     rx.&RxSet as r
+86               on    d.NDC = r.NDC
+87               group by d.generic, d.NDC ;
+88            quit ;
+89         %mend CountFills ;
+90         
+91         %macro BreastCancerDefinition01(StartDt = 01Jan1997
+92                                       , EndDt = 31Dec2003
+93                                       , OutSet = brca) ;
+94            /*
+95               These criteria are based on the ones used for the Early Screening study.
+96               See:
+96       ! https://www.kpchr.org/CRN2/apps/storage/docs/20000823whmesprogramming_case_criteria.d
+96       ! oc.
+97            */
+98         
+99            proc sql number ;
+100              create table AllBreastTumors as
+101              select mrn
+102                    , DxDate
+103                    , DtMrk1 as ERMarker
+104                    , StageGen
+105                    , StageAJ
+106              from tumor.&TumorSet
+107              where DxDate between "&StartDt"d and "&EndDt"d  AND
+108                    ICDOSite between 'C500' and 'C509'        AND
+109                    Gender = '2'                              AND
+110                    Morph NOT between '9590' and '9979'       AND
+111                    ( (behav in ('3', '6', '9')) OR
+112                      (behav = '2' AND MORPH ne '8520')) ;
+113        
+114              create table FirstBTs as
+115              select DISTINCT b.*
+116              from  AllBreastTumors as b INNER JOIN
+117                    (select MRN, min(DxDate) as FirstBTDate from AllBreastTumors group by
+117      ! MRN) as b2
+118              on    b.MRN = b2.MRN AND
+119                    b.DxDate = b2.FirstBTDate
+120              order by mrn, ERMarker ;
+121        
+122              title "These people had >1 tumor dxd on the same day, each with different
+122      ! receptor statuses or stages." ;
+123              select *
+124              from  FirstBTs
+125              where MRN in (select MRN from FirstBTs group by MRN having count(*) > 1) ;
+126              title ;
+127        
+128              * Some women will have > 1 breast tumor dxd on the same day, each with ;
+4                                        The SAS System            11:38 Thursday, July 29, 2004
+
+129              * different stages and/or receptor statuses.  We want to call the receptor
+129      ! status ;
+130              * positive if any tumor is positive, and we want to take the greatest stage. ;
+131        
+132              create table &OutSet as
+133              select mrn
+134                    , dxdate
+135                    , min(case ERMarker
+136                             when '0' then 10
+137                             else input(ERMarker, 2.0)
+138                          end) as ERMarker format = ERM.
+139                    , max(case lowcase(StageGen)
+140                             when '9' then -1
+141                             when 'b' then -2
+142                             else input(StageGen, 2.0)
+143                          end) as StageGen format = StageGen.
+144                    , max(case lowcase(StageAJ)
+145                             when '' then -1
+146                             when 'unk' then -1
+147                             when '2a' then 2
+148                             when '2b' then 2.5
+149                             when '3a' then 3
+150                             when '3b' then 3.5
+151                             else input(StageAJ, 2.0)
+152                          end) as StageAJ format = StageAJ.
+153              from FirstBTs
+154              group by mrn, dxdate ;
+155           quit ;
+156        
+157        %mend BreastCancerDefinition01 ;
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           2.37 seconds
+      cpu time            0.26 seconds
+      

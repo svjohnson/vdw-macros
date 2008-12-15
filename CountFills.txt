@@ -1,0 +1,24 @@
+%macro CountFills(DrugList) ;
+   /*
+      Counts the number of fills for each of the NDC codes specified in
+      the input dataset.
+   */
+   proc sql ;
+      title2 "Extent of pharmacy data." ;
+      select count(*) as NumFills label = "Total rx records"
+            , min(RxDate) as FirstFill format = mmddyy10. label = "Earliest recorded fill"
+            , max(RxDate) as LastFill format = mmddyy10. label = "Most recent recorded fill"
+      from rx.&RxSet ;
+
+      title2 "Number of fills for the list of NDCs in &DrugList" ;
+      select d.generic
+            , d.NDC
+            , count(r.NDC) as NumFills label = "Number of Fills"
+            , min(r.RxDate) as FirstFill format = mmddyy10. label = "Date of first fill"
+            , max(r.RxDate) as LastFill format = mmddyy10. label = "Date of most recent fill"
+      from  &DrugList as d LEFT JOIN
+            rx.&RxSet as r
+      on    d.NDC = r.NDC
+      group by d.generic, d.NDC ;
+   quit ;
+%mend CountFills ;

@@ -1,0 +1,643 @@
+1                                                          The SAS System                          12:42 Wednesday, October 18, 2006
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           1.63 seconds
+      cpu time            0.49 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\NewPullContinuous.sas
+8          *
+9          * A %pullcontinuous() for the start/stop version of ENROLL.
+10         *********************************************/
+11         
+12         %macro LastWord(WordList) ;
+13            %* This is a helper macro for CollapsePeriods--it just returns the last word
+13       ! (variable name) in a string (var list). ;
+14            %let i = 0 ;
+15            %do %until(&ThisWord = ) ;
+16               %let i = %eval(&i + 1) ;
+17               %let ThisWord = %scan(&WordList, &i) ;
+18            %end ;
+19            %let i = %eval(&i - 1) ;
+20            %* Note the lack of a semicolon on the next line--thats on purpose! ;
+21            %scan(&WordList, &i)
+22         %mend LastWord ;
+23         
+24         %macro GetVarList(DSet         /* Name of the dset you want collapsed. */
+25                         , RecStart     /* Name of the var that contains the period start
+25       ! dates. */
+26                         , RecEnd       /* Name of the var that contains the period end dates.
+26       !  */
+27                         ) ;
+28         
+29            %* This is also a helper macro for CollapsePeriods--it creates a global macro var
+29       ! ;
+30            %* containing a list of all vars in the input named dset *other than* the ones
+30       ! that ;
+31            %* define the start/end of each record. ;
+32         
+2                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+33            %* I dont know a good way of passing a return value out of a macro--so this is
+33       ! made global. ;
+34            %global VarList ;
+35         
+36            /*
+37         
+38            Dictionary.Columns is a dynamically-created dataset, consisting of one row per
+39            variable per dataset, in all of the currently defined libraries.
+40         
+41            My understanding is that sas will only create this 'table' if you issue
+42            a query against it.
+43         
+44            There can be ersatz errors caused by the creation of this table when there
+45            are sql views contained in a defined libname whose source tables
+46            are not resolvable.
+47         
+48            Dictionary.columns looks like this:
+49         
+50            create table DICTIONARY.COLUMNS
+51           (
+52            libname  char(8)     label='Library Name',
+53            memname  char(32)    label='Member Name',
+54            memtype  char(8)     label='Member Type',
+55            name     char(32)    label='Column Name',
+56            type     char(4)     label='Column Type',
+57            length   num         label='Column Length',
+58            npos     num         label='Column Position',
+59            varnum   num         label='Column Number in Table',
+60            label    char(256)   label='Column Label',
+61            format   char(16)    label='Column Format',
+62            informat char(16)    label='Column Informat',
+63            idxusage char(9)     label='Column Index Type'
+64           );
+65         
+66            */
+67         
+68            %* If we got just a one-part dset name for a WORK dataset, add the WORK libname
+68       ! explicitly. ;
+69         
+70            %if %index(&Dset, .) = 0 %then %do ;
+71               %let Dset = work.&Dset ;
+72            %end ;
+73         
+74            %*put Dset is &Dset ; ;
+75         
+76            proc sql noprint ;
+77               * describe table dictionary.columns ;
+78               select name
+79               into :VarList separated by ' '
+80               from dictionary.columns
+81               where upcase(compress(libname || '.' || memname)) = %upcase("&Dset") AND
+82                     upcase(name) not in (%upcase("&RecStart"), %upcase("&RecEnd")) ;
+83            quit ;
+3                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+84         
+85         %mend GetVarList ;
+86         
+87         %macro CollapsePeriods(Lib          /* Name of the library containing the dset you
+87       ! want collapsed */
+88                              , DSet         /* Name of the dset you want collapsed. */
+89                              , RecStart     /* Name of the var that contains the period start
+89       !  dates. */
+90                              , RecEnd       /* Name of the var that contains the period end
+90       ! dates. */
+91                              , DaysTol = 1  /* The number of days gap to tolerate in
+91       ! evaluating whether one period is contiguous w/another. */
+92                              , Debug   = 0  /* 0/1 flag indicating whether you want the PUT
+92       ! statements to run (PRODUCES A LOT OF OUTPUT!). */
+93                              ) ;
+94         
+95            %* Takes an input mbhist dataset and collapses contiguous time periods where the
+95       ! variables ;
+96            %* other than the ones defining period start/stop dates dont change. ;
+97         
+98            %* Adapted from Mark Terjesons code posted to sas-l:
+98       ! http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0003d&L=sas-l&D=0&P=18578 ;
+99         
+100           %* This defines VarList ;
+101           %GetVarList( Dset = &Dset
+102                      , RecStart = &RecStart
+103                      , RecEnd = &RecEnd) ;
+104        
+105           %put VarList is &VarList ;
+106        
+107           %let LastVar = %LastWord(&VarList) ;
+108        
+109           proc sort nodupkey data = &Dset ;
+110              by &VarList &RecStart &RecEnd ;
+111           run ;
+112        
+113           data &Dset ;
+114              retain PeriodStart PeriodEnd ;
+115              format PeriodStart PeriodEnd mmddyy10. ;
+116              set &Dset(rename = (&RecStart = _&RecStart
+117                                  &RecEnd   = _&RecEnd)) ;
+118              by &VarList ;
+119        
+120              if first.&LastVar then do ;
+121                 * Start of a new period--initialize. ;
+122                 PeriodStart = _&RecStart ;
+123                 PeriodEnd   = _&RecEnd ;
+124                 %if &Debug = 1 %then %do ;
+125                    put "First &LastVar:          " _N_ = PeriodStart =  _&RecStart =
+125      ! PeriodEnd =  _&RecEnd = ;
+126                 %end ;
+127              end ;
+128              * else do ;
+4                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+129                 /*
+130                    Checking "contiguousity":
+131                    If this records start date falls w/in (or butts up against) the
+132                    current period (plus tolerance), then extend the current period out to
+132      ! this
+133                    records end date.
+134                 */
+135                 * if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
+136                 if (PeriodStart <= _&RecStart <= (PeriodEnd + &DaysTol)) then do ;
+137                    * Extend the period end out to whichever is longer--the period or the
+137      ! record. ;
+138                    PeriodEnd = max(_&RecEnd, PeriodEnd) ;
+139                    %if &Debug = 1 %then %do ;
+140                       put "Extending period end:    " _N_ = PeriodStart =  _&RecStart =
+140      ! PeriodEnd =  _&RecEnd = ;
+141                    %end ;
+142                 end ;
+143                 else do ;
+144                    * We are in a new period--output the last rec & reinitialize. ;
+145                    output ;
+146                    PeriodStart = _&RecStart ;
+147                    PeriodEnd   = _&RecEnd ;
+148                 end ;
+149              * end ;
+150              /*
+151                 Likewise, if this is our last value of the last var on our BY list, we are
+151      ! about to start a new period.
+152                 Spit out the record--the new period vars get initialized above in the "if
+152      ! first.&LastVar..."
+153                 block.
+154              */
+155              if last.&LastVar then do ;
+156                 %if &Debug = 1 %then %do ;
+157                    put "Last &LastVar:           " _N_ = PeriodStart =  _&RecStart =
+157      ! PeriodEnd =  _&RecEnd = ;
+158                 %end ;
+159                 output ;
+160              end ;
+161           run ;
+162           * Now we have the actual start/stop dates in PeriodStart & PeriodEnd--rename those
+162      !  to ;
+163           * the original record start/stop variable names, and strip out any wacky recs
+163      ! where start comes after end ;
+164           data &Dset ;
+165              set &Dset(rename = (PeriodStart = &RecStart
+166                                  PeriodEnd   = &RecEnd)) ;
+167              * if PeriodStart le PeriodEnd ;
+168              drop _&RecStart _&RecEnd ;
+169           run ;
+170        %mend CollapsePeriods ;
+171        
+172        %macro ExplodeEnrollData(InSet
+173                                , OutSet
+5                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+174                                , StartDate = "01jan1900"d
+175                                , EndDate   = "31dec9999"d) ;
+176           data &OutSet ;
+177              set &InSet ;
+178              period_start = max(enr_start, &StartDate) ;
+179              period_end   = min(enr_end, &EndDate) ;
+180              do i = 0 to intck('MONTH', period_start, period_end) ;
+181                 enr_date = intnx('MONTH', period_start, i, 'MIDDLE') ;
+182                 enr_month = month(enr_date) ;
+183                 enr_year = year(enr_date) ;
+184                 output ;
+185              end ;
+186              format enr_date mmddyy10. ;
+187              drop i period_start period_end ;
+188           run ;
+189        
+190        %mend ExplodeEnrollData ;
+191        
+192        %macro PullContinuous3(InSet                     /* The name of the input dataset of
+192      ! MRNs of the ppl whose enrollment you want to check. */
+193                             , OutSet                    /* The name of the output dataset of
+193      !  only the continuously enrolled people. */
+194                             , IndexDate                 /* Either the name of a date
+194      ! variable in InSet, or, a complete date literal (e.g., "01Jan2005"d) */
+195                             , PreIndexEnrolledMonths    /* The # of months of enrollment
+195      ! required prior to the index date. */
+196                             , PreIndexGapTolerance      /* The length of enrollment gaps you
+196      !  consider to be ignorable for pre-index date enrollment. */
+197                             , PostIndexEnrolledMonths   /* The # of months of enrollment
+197      ! required post index date. */
+198                             , PostIndexGapTolerance     /* The length of enrollment gaps you
+198      !  consider to be ignorable for post-index date enrollment.*/
+199                             , DebugOut = work           /* Libname to save interim dsets to
+199      ! for debugging--leave set to work to discard these. */
+200                             , EnrollDset = __enroll.&_EnrollData /* For testing. */
+201                             ) ;
+202        
+203           /*
+204        
+205              Divide and conquer.
+206        
+207              First, ID the set of people w/no more than max(:GapTolerance) gaps between the
+207      ! period between
+208                 (IndexDate - PreIndexEnrolledMonths) and (IndexDate +
+208      ! PostIndexEnrolledMonths).
+209              Those folks definitely go in OutSet.
+210        
+211              For the remaining, explode the enroll data into pm/pm structure & pass
+212              it to PullContinuous2.
+213        
+214        
+215           */
+216        
+6                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+217           libname __enroll "&_EnrollLib" access = readonly ;
+218        
+219           proc sql ;
+220              create table __ids as
+221              select distinct mrn
+222                 , intnx('MONTH', &IndexDate, -&PreIndexEnrolledMonths, 'BEGINNING')  as
+222      ! earliest format = mmddyy10.
+223                 , intnx('MONTH', &IndexDate,  &PostIndexEnrolledMonths, 'END')       as
+223      ! latest   format = mmddyy10.
+224                 , (CALCULATED latest - CALCULATED earliest) + 1 as total_days_desired
+225              from &InSet
+226              ;
+227        
+228              * Make sure we only have one record per MRN. ;
+229              create table __drop_me as
+230              select mrn, count(*) as appears_num_times
+231              from __ids
+232              group by mrn
+233              having count(*) > 1 ;
+234        
+235              %if &sqlobs > 0 %then %do ;
+236                 %PUT ;
+237                 %PUT ;
+238                 %PUT ;
+239                 %PUT ;
+240                 %PUT ;
+241                 %PUT ERROR: &SQLOBS MRNs appear more than once in the input datset! ;
+242                 %PUT ERROR: &SQLOBS MRNs appear more than once in the input datset! ;
+243                 %PUT ERROR: &SQLOBS MRNs appear more than once in the input datset! ;
+244                 %PUT ;
+245                 %PUT See the .lst file for a list of duplicated MRNs ;
+246                 %PUT ;
+247                 %PUT ;
+248                 %PUT ;
+249                 %PUT ;
+250                 %PUT ;
+251                 select * from __drop_me ;
+252                 %abort return ;
+253              %end ;
+254        
+255              drop table __drop_me ;
+256        
+257              * Grab out the enroll records that could possibly contribute to the period of
+257      ! interest. ;
+258              create table __enroll as
+259              select i.mrn, i.earliest, i.latest, i.total_days_desired, e.enr_start,
+259      ! e.enr_end
+260              from  __ids as i INNER JOIN
+261                    &EnrollDset as e
+262              on    i.MRN = e.MRN
+263              where i.earliest le e.enr_end AND
+264                    i.latest   ge e.enr_start
+265              ;
+7                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+266           quit ;
+267        
+268           * The tolerances given in this macro are in months--convert those to days for the
+268      ! call to CollapsePeriods. ;
+269           * Lets be conservative at this stage--all months are 28 days long. ;
+270        
+271           %let days_per_month = 28 ;
+272        
+273           %if &PreIndexGapTolerance > &PostIndexGapTolerance %then %do ;
+274              %let tolerance_in_days = %eval(&days_per_month * &PreIndexGapTolerance) ;
+275           %end ;
+276           %else %do ;
+277              %let tolerance_in_days = %eval(&days_per_month * &PostIndexGapTolerance) ;
+278           %end ;
+279        
+280           %CollapsePeriods(Lib       = work      /* Name of the library containing the dset
+280      ! you want collapsed */
+281                          , DSet      = __enroll  /* Name of the dset you want collapsed. */
+282                          , RecStart  = enr_start   /* Name of the var that contains the
+282      ! period start dates. */
+283                          , RecEnd    = enr_end     /* Name of the var that contains the
+283      ! period end dates. */
+284                          , DaysTol   = &tolerance_in_days    /* The number of days gap to
+284      ! tolerate in evaluating whether one period is contiguous w/another. */
+285                          ) ;
+286        
+287           * Now that we have spackled over any minimal gaps, compare the # of days enrolled
+287      ! per period ;
+288           proc sql ;
+289        
+290              create table __enroll_with_covered_days as
+291              select   *
+292                    , (min(latest, enr_end) - max(earliest, enr_start)) + 1 as CoveredDays
+293                    , (CALCULATED CoveredDays = total_days_desired) as ContinuouslyEnrolled
+294              from __enroll
+295              ;
+296        
+297              * select * from gnu ;
+298        
+299              create table __continuously_enrolled as
+300              select MRN
+301              from &InSet
+302              where MRN in (select MRN from __enroll_with_covered_days where
+302      ! ContinuouslyEnrolled = 1)
+303              ;
+304        
+305              delete from __enroll
+306              where MRN in (select MRN from __enroll_with_covered_days where
+306      ! ContinuouslyEnrolled = 1)
+307              ;
+308        
+309              drop table __enroll_with_covered_days ;
+310        
+8                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+311           quit ;
+312        
+313           %ExplodeEnrollData(InSet = __enroll
+314                           , OutSet = __exploded
+315                           , StartDate = earliest
+316                           , EndDate = latest
+317                           ) ;
+318        
+319        
+320           proc sql ;
+321              drop table __enroll ;
+322           quit ;
+323        
+324           * Now we feed the exploded dataset to the old version of pullcontinuous. ;
+325           %PullContinuous2(   InSet                   = &InSet                    /* The
+325      ! name of the input dataset of MRNs of the ppl whose enrollment you want to check. */
+326                             , OutSet                  = __pc2_out                   /* The
+326      ! name of the output dataset of only the continuously enrolled people. */
+327                             , IndexDate               = &IndexDate                /* Either
+327      ! the name of a date variable in InSet, or, a complete date literal (e.g.,
+327      ! "01Jan2005"d) */
+328                             , PreIndexEnrolledMonths  = &PreIndexEnrolledMonths   /* The #
+328      ! of months of enrollment required prior to the index date. */
+329                             , PreIndexGapTolerance    = &PreIndexGapTolerance     /* The
+329      ! length of enrollment gaps you consider to be ignorable for pre-index date enrollment.
+329      !  */
+330                             , PostIndexEnrolledMonths = &PostIndexEnrolledMonths  /* The #
+330      ! of months of enrollment required post index date. */
+331                             , PostIndexGapTolerance   = &PostIndexGapTolerance    /* The
+331      ! length of enrollment gaps you consider to be ignorable for post-index date
+331      ! enrollment.*/
+332                             , DebugOut                = &DebugOut          /* Libname to
+332      ! save interim dsets to for debugging--leave set to work to discard these. */
+333                             , EnrollDset              = __exploded /* For testing. */
+334                             ) ;
+335        
+336           proc sql ;
+337              drop table __exploded ;
+338        
+339              insert into __continuously_enrolled (mrn)
+340              select mrn
+341              from __pc2_out ;
+342        
+343              drop table __pc2_out ;
+344        
+345              create table &OutSet as
+346              select *
+347              from &InSet
+348              where mrn in (select mrn from __continuously_enrolled) ;
+349        
+350              drop table __continuously_enrolled ;
+351        
+352           quit ;
+9                                        The SAS System        12:42 Wednesday, October 18, 2006
+
+353        
+354        %mend PullContinuous3 ;
+355        
+356        %macro didnt_work(InSet                     /* The name of the input dataset of MRNs
+356      ! of the ppl whose enrollment you want to check. */
+357                             , OutSet                    /* The name of the output dataset of
+357      !  only the continuously enrolled people. */
+358                             , IndexDate                 /* Either the name of a date
+358      ! variable in InSet, or, a complete date literal (e.g., "01Jan2005"d) */
+359                             , PreIndexEnrolledMonths    /* The # of months of enrollment
+359      ! required prior to the index date. */
+360                             , PreIndexGapTolerance      /* The length of enrollment gaps you
+360      !  consider to be ignorable for pre-index date enrollment. */
+361                             , PostIndexEnrolledMonths   /* The # of months of enrollment
+361      ! required post index date. */
+362                             , PostIndexGapTolerance     /* The length of enrollment gaps you
+362      !  consider to be ignorable for post-index date enrollment.*/
+363                             , DebugOut = work           /* Libname to save interim dsets to
+363      ! for debugging--leave set to work to discard these. */
+364                             , EnrollDset = __enroll.&_EnrollData /* For testing. */
+365                             ) ;
+366        
+367        /*
+368           All we really need is mrn, index date, startdate & enddate.
+369           Call %collapseperiods w/just those vars?
+370        
+371           For each person
+372              early_date = index_date - (PreIndexEnrolledMonths - PreIndexGapTolerance)
+373              late_date = index_date + (PostIndexEnrolledMonths - PostIndexGapTolerance)
+374        
+375           Lots of ppl will have a single record that covers the whole period--they are an
+375      ! easy case.
+376        
+377           where (early_date between enr_start and enr_end) AND
+378                 (late_date between enr_start and enr_end)
+379        
+380           For other records, we total up the gap months:
+381              The difference between early_date and enr_start (if > 0).
+382              The difference between enr_end and late_date (if > 0).
+383        
+384           To pull &EnrollDset records that could possibly contribute to the period of
+384      ! interest:
+385        
+386           where early_date between enr_start and enr_end or
+387                 late_date  between enr_start and enr_end
+388        
+389           This doesnt work b/c it ignores the inter-record gaps.  The call to
+389      ! %collapsperiods()
+390           closes up 1-day gaps, but there may well still be longer inter-record gaps that
+391           are still w/in tolerance.  I could bump the tolerance figures in the call to
+391      ! %collapseperiods
+392           for that, but if I am going to allow for different tolerances before and after the
+393           index date, I would have to treat the before and after index periods
+10                                       The SAS System        12:42 Wednesday, October 18, 2006
+
+393      ! differently--somehow
+394           partition the enroll records (breaking on index date) and call %cp twice, once for
+394      !  each
+395           period w/each tolerance.
+396        
+397           Test for a positive inter-record gap (enr_start - _LastEnd).  The gap is the
+397      ! period between _LastEnd and enr_start.
+398           3 scenarios:
+399              1) Completely pre-index (enr_start lt index_dt)
+400              2) Completely post-index ( index_dt lt _LastEnd) (This cant actually happen,
+400      ! can it?)
+401              3) Straddle (index_dt between _LastEnd and enr_start).
+402        
+403        
+404        
+405        */
+406        
+407           %* Validate the arguments. ;
+408           %if &PreIndexGapTolerance > &PreIndexEnrolledMonths %then %do ;
+409              %put WARNING: Pre-index gap tolerance cannot be greater than the number of
+409      ! months of desired pre-index enrollment. ;
+410              %let PreIndexGapTolerance = %eval(&PreIndexEnrolledMonths - 1) ;
+411              %put Setting the pre-index gap tolerance to &PreIndexGapTolerance ;
+412           %end ;
+413        
+414           %if &PostIndexGapTolerance > &PostIndexEnrolledMonths %then %do ;
+415              %put WARNING: Post-index gap tolerance cannot be greater than the number of
+415      ! months of desired Post-index enrollment. ;
+416              %let PostIndexGapTolerance = %eval(&PostIndexEnrolledMonths - 1) ;
+417              %put Setting the Post-index gap tolerance to &PostIndexGapTolerance ;
+418           %end ;
+419        
+420        
+421           %put ;
+422           %put ;
+423           %put ============================================================== ;
+424           %put ;
+425           %put Macro PullContinuous3: ;
+426           %put ;
+427           %put Creating a dataset "&OutSet", which will look exactly like  ;
+428           %put dataset "&InSet", except that anyone not enrolled for &PreIndexEnrolledMonths
+428      !  ;
+429           %put months prior to &IndexDate (disregarding gaps of up to &PreIndexGapTolerance
+429      ! month(s)) AND ;
+430           %put &PostIndexEnrolledMonths months after &IndexDate (disregarding gaps of up to
+430      ! &PostIndexGapTolerance month(s)) will;
+431           %put be eliminated.;
+432           %put ;
+433           %put ============================================================== ;
+434           %put ;
+435           %put ;
+436        
+437           %* We only need our peoples enroll recs over the period from (IndexDate -
+11                                       The SAS System        12:42 Wednesday, October 18, 2006
+
+437      ! (PreIndexEnrolledMonths + PreIndexGapTolerance))
+438           %* to                                                        (IndexDate +
+438      ! (PostIndexEnrolledMonths + PostIndexGapTolerance). ;
+439           %* These vars simplify the expressions a bit... ;
+440           %let PreMonthCount  = %eval(&PreIndexEnrolledMonths  + &PreIndexGapTolerance)  ;
+441           %let PostMonthCount = %eval(&PostIndexEnrolledMonths + &PostIndexGapTolerance) ;
+442        
+443           libname __enroll "&_EnrollLib" access = readonly ;
+444        
+445           proc sql ;
+446              create table &DebugOut..__thisenrl as
+447              select distinct i.MRN
+448                    , e.enr_start                                               format =
+448      ! mmddyy10.
+449                    , e.enr_end                                                 format =
+449      ! mmddyy10.
+450                    , &IndexDate                                  as IDate      format =
+450      ! mmddyy10.
+451                    , intnx("MONTH", &IndexDate, -&PreMonthCount) as early_date format =
+451      ! mmddyy10.
+452                    , intnx("MONTH", &IndexDate, &PostMonthCount) as late_date  format =
+452      ! mmddyy10.
+453              from  &InSet as i LEFT JOIN
+454                    &EnrollDset as e
+455              on    i.MRN = e.MRN
+456              WHERE calculated early_date between enr_start and enr_end OR
+457                    calculated late_date  between enr_start and enr_end
+458              order by i.MRN, e.enr_start
+459              ;
+460           quit ;
+461        
+462           * In order to properly count gaps, I have to be able to assume that the records
+462      ! are absolutely contiguous. ;
+463           %CollapsePeriods(DSet    = &DebugOut..__thisenrl     /* Name of the dset you want
+463      ! collapsed. */
+464                          , RecStart= enr_start     /* Name of the var that contains the
+464      ! period start dates. */
+465                          , RecEnd  = enr_end     /* Name of the var that contains the period
+465      !  end dates. */
+466                          ) ;
+467        
+468           data &DebugOut..__gapstats ;
+469              length num_pre_gaps num_post_gaps dur_pre_gaps dur_post_gaps 4 ;
+470              set &DebugOut..__thisenrl ;
+471              by mrn ;
+472              if first.mrn then do ;
+473                 num_pre_gaps  = 0 ;
+474                 num_post_gaps = 0 ;
+475                 dur_pre_gaps  = 0 ;
+476                 dur_post_gaps = 0 ;
+477              end ;
+478              * Test for gaps.  Count number and aggregate durations (months). ;
+479              * Pre-index ;
+12                                       The SAS System        12:42 Wednesday, October 18, 2006
+
+480              if early_date lt enr_start then do ;
+481                 num_pre_gaps + 1 ;
+482                 * Is this right?  I think it will consider a duration of 1 day = 1 month if
+482      ! they fall in different months. ;
+483                 dur_pre_gaps + intck("MONTH", early_date, enr_start) ;
+484              end ;
+485              * Post-index ;
+486              if enr_end lt late_date then do ;
+487                 num_post_gaps + 1 ;
+488                 dur_post_gaps + intck("MONTH", enr_end, late_date) ;
+489              end ;
+490              if last.mrn then output ;
+491           run ;
+492        
+493           proc sql ;
+494              create table &DebugOut..__nogoodniks as
+495              select mrn
+496              from &DebugOut..__gapstats
+497              where dur_post_gaps gt &PostIndexGapTolerance OR
+498                    dur_pre_gaps  gt &PreIndexGapTolerance
+499              ;
+500              create table &OutSet as
+501              select *
+502              from &InSet
+503              where MRN not in (select MRN from &DebugOut..__nogoodniks) ;
+504           quit ;
+505        
+506           libname __enroll clear ;
+507        
+508        %mend didnt_work ;
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           1.86 seconds
+      cpu time            0.51 seconds
+      

@@ -1,0 +1,26 @@
+%macro GetRxForDrugs(DrugLst     /* The name of a dataset containing the people whose fills you want. */
+                    , StartDt    /* The date on which you want to start collecting fills. */
+                    , EndDt      /* The date on which you want to stop collecting fills. */
+                    , Outset     /* The name of the output dataset containing the fills. */) ;
+
+   /*
+      Gets the pharmacy fills for a specified set of drugs (identified by NDCs)
+      which ocurred between the dates specified in StartDt and EndDt.
+   */
+
+   %if &DrugLst = &Outset %then %do ;
+      %put PROBLEM: The Drug List dataset must be different from the OutSet dataset. ;
+      %put PROBLEM: Both parameters are set to "&DrugLst". ;
+      %put PROBLEM: Doing nothing. ;
+   %end ;
+   %else %do ;
+      proc sql ;
+         create table &OutSet as
+         select r.*
+         from rx.&RxSet as r INNER JOIN
+               &DrugLst as p
+         on    r.NDC = p.NDC
+         where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d ;
+      quit ;
+   %end ;
+%mend GetRxForDrugs ;

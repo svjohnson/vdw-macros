@@ -1,0 +1,112 @@
+The SAS System
+                       14:48 Monday, July 31, 2006   1
+
+The COMPARE Procedure
+Comparison of S.OUT_IE with S.COMPARE_IE
+(Method=EXACT)
+
+Data Set Summary
+
+Dataset                Created          Modified  NVar    NObs
+
+S.OUT_IE      31JUL06:14:40:44  31JUL06:14:40:44    12     811
+S.COMPARE_IE  31JUL06:14:40:45  31JUL06:14:40:45    12     811
+
+
+Variables Summary
+
+Number of Variables in Common: 12.
+Number of Variables with Differing Attributes: 12.
+
+
+Listing of Common Variables with Differing Attributes
+
+Variable         Dataset       Type  Length
+
+MRN              S.OUT_IE      Char      10
+                 S.COMPARE_IE  Char      10
+ENR_Year         S.OUT_IE      Num        8
+                 S.COMPARE_IE  Num        3
+ENR_Month        S.OUT_IE      Num        8
+                 S.COMPARE_IE  Num        3
+LOCATION         S.OUT_IE      Char      10
+                 S.COMPARE_IE  Char       3
+PRIMRYDR         S.OUT_IE      Char       6
+                 S.COMPARE_IE  Char       6
+PRMCRCLN         S.OUT_IE      Char       3
+                 S.COMPARE_IE  Char       3
+INS_Medicare     S.OUT_IE      Char       1
+                 S.COMPARE_IE  Char       1
+INS_Medicaid     S.OUT_IE      Char       1
+                 S.COMPARE_IE  Char       1
+INS_Commercial   S.OUT_IE      Char       1
+                 S.COMPARE_IE  Char       1
+INS_Privatepay   S.OUT_IE      Char       1
+                 S.COMPARE_IE  Char       1
+INS_Other        S.OUT_IE      Char       1
+                 S.COMPARE_IE  Char       1
+INS_BasicHealth  S.OUT_IE      Char       1
+                 S.COMPARE_IE  Char       1
+
+
+
+
+
+
+Program file: \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestInflateEnroll.sas
+The SAS System
+                       14:48 Monday, July 31, 2006   2
+
+The COMPARE Procedure
+Comparison of S.OUT_IE with S.COMPARE_IE
+(Method=EXACT)
+
+Observation Summary
+
+Observation      Base  Compare
+
+First Obs           1        1
+Last  Obs         811      811
+
+Number of Observations in Common: 811.
+Total Number of Observations Read from S.OUT_IE: 811.
+Total Number of Observations Read from S.COMPARE_IE: 811.
+
+Number of Observations with Some Compared Variables Unequal: 0.
+Number of Observations with All Compared Variables Equal: 811.
+
+NOTE: No unequal values were found. All values compared are exactly equal.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Program file: \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestInflateEnroll.sas

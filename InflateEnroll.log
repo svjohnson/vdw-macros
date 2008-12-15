@@ -1,0 +1,118 @@
+1                                                          The SAS System                                12:54 Monday, July 31, 2006
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: This installation is running SAS/STAT hot fix bundle SAS 9.1.3 Service Pack 2.
+
+NOTE: SAS initialization used:
+      real time           2.78 seconds
+      cpu time            0.45 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\InflateEnroll.sas
+8          *
+9          * Given an input dset of MRNs and dates over which the user
+10         * wants enroll records, this macro creates an old-style 1-rec-
+11         * per-member-per-month type dset, covering the specified
+12         * period.
+13         *********************************************/
+14         
+15         %macro GetInflatedEnroll(InSet       /* Name of the dset containing the CHSIDs of the
+15       !  ppl whose ENROLL recs you want. */
+16                                 , StartDt    /* The start of the period over which you want
+16       ! ENROLL recs, e.g., 01Jan1991 */
+17                                 , EndDt      /* The end of the period over which you want
+17       ! ENROLL recs, e.g., 30Jun2003 */
+18                                 , OutSet     /* The name of the output dataset. */
+19                                 , EarliestYear = 1980
+20                                 ) ;
+21         
+22            /*
+23         
+24               The major challenge will be dealing with any site-
+25               specific value-added vars that I dont know about.  I
+26               will need to generate a list of non-key vars and wrap
+27               them up in aggregate functions, without knowing
+28               anything about them.
+29         
+30               I will arbitrarily choose to wrap them in max().
+31         
+32            */
+33         
+34            libname enr "&_EnrollLib" access = readonly ;
+2                                        The SAS System              12:54 Monday, July 31, 2006
+
+35         
+36            proc sql ;
+37               * Step 1: get the start/stop ENROLL recs that cover any part of the period of
+37       ! interest ;
+38               CREATE TABLE _svelte_enroll AS
+39               SELECT e.*
+40               FROM enr.&_enrolldata AS e INNER JOIN
+41                     &InSet AS i
+42               ON    e.MRN = i.MRN
+43               WHERE ("&StartDt"d between e.enr_start and e.enr_end) OR
+44                     ("&EndDt"d   between e.enr_start and e.enr_end)
+45               ORDER BY mrn, enr_start
+46               ;
+47         
+48               * While we are here, lets build a SELECT list for any non-standard vars that
+48       ! might exist. ;
+49               reset noprint ;
+50               SELECT 'max(' || compress(name) || ') as ' || name
+51               INTO :agg_vars separated by ', '
+52               FROM dictionary.columns
+53               where libname = 'VDW' AND
+54                     memname = 'ENRLSEED' AND
+55                     name not in ('MRN', 'ENR_YEAR', 'ENR_MONTH')
+56               ;
+57         
+58            quit ;
+59         
+60            data _flags ;
+61               do ENR_Year = &EarliestYear to year("&sysdate"d) ;
+62                  do ENR_Month = 1 to 12 ;
+63                     _enr_dat = mdy(enr_month, 15, enr_year) ;
+64                     * Only output those recs that fall within the start/end dates ;
+65                     if "&StartDt"d le _enr_dat le "&EndDt"d then output ;
+66                  end ;
+67               end ;
+68            run ;
+69         
+70            proc sql ;
+71               alter table _flags add primary key (_enr_dat) ;
+72         
+73               create table &OutSet as
+74               select
+75                    p.MRN
+76                  , f.ENR_Year
+77                  , f.ENR_Month
+78                  , &agg_vars
+79               from  _svelte_enroll as p CROSS JOIN
+80                     _flags as f
+81               where f._enr_dat BETWEEN p.enr_start AND p.enr_end
+82               group by p.mrn, ENR_Year, ENR_Month ;
+83            quit ;
+84         
+85         %mend GetInflatedEnroll ;
+3                                        The SAS System              12:54 Monday, July 31, 2006
+
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           3.59 seconds
+      cpu time            0.55 seconds
+      

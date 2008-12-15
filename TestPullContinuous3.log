@@ -1,0 +1,781 @@
+1                                                          The SAS System                               10:49 Monday, April 16, 2007
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           1.97 seconds
+      cpu time            0.40 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * TestPullContinuous3.sas
+8          *
+9          * <<purpose>>
+10         *********************************************/
+11         
+12         /* This is managed in the login script so that it doesnt
+13            actually try to login when the machine is not connected
+14            to the network */
+15         %include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P020206).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           0.29 seconds
+      cpu time            0.26 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System             10:49 Monday, April 16, 2007
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    * Set the typical libnames... ;
+3    %let DWROOT = \\ctrhs-sas\warehouse\SasData\ ;
+4    libname consumer  "&DWROOT.Consumer" ;
+NOTE: Libref CONSUMER was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer
+5    libname chsid     "&DWROOT.CHSID" ;
+NOTE: Libref CHSID was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CHSID
+6    libname demogs    "&DWROOT.Consumer Demographics" ;
+NOTE: Libref DEMOGS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer Demographics
+7    libname enroll    "&DWROOT.Enrollment" ;
+NOTE: Libref ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Enrollment
+8    libname nac       "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libref NAC was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+9    libname naaccr    "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libname NAACCR refers to the same physical library as NAC.
+NOTE: Libref NAACCR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+10   libname baseline  "&DWROOT.Baseline" ;
+NOTE: Libref BASELINE was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Baseline
+11   libname arpa      "&DWROOT.arpa" ;
+NOTE: Libref ARPA was successfully assigned as follows: 
+      Engine:        V9 
+3                                        The SAS System             10:49 Monday, April 16, 2007
+
+      Physical Name: \\ctrhs-sas\warehouse\SasData\arpa
+12   libname mbhist    "&DWROOT.mbhist" ;
+NOTE: Libref MBHIST was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbhist
+13   libname mbcurr    "&DWROOT.mbcurr" ;
+NOTE: Libref MBCURR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbcurr
+14   libname claims    "&DWROOT.claims" ;
+NOTE: Libref CLAIMS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\claims
+15   libname death     "&DWROOT.death" ;
+NOTE: Libref DEATH was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\death
+16   libname hosp      "&DWROOT.Hospital" ;
+NOTE: Libref HOSP was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+17   libname VDW       "&DWROOT.CRN_VDW" ;
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   libname hosps     "&DWROOT.hospital" ;
+NOTE: Libname HOSPS refers to the same physical library as HOSP.
+NOTE: Libref HOSPS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+19   libname rx        "&DWROOT.rx" ;
+NOTE: Libref RX was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\rx
+20   libname s         "\\ctrhs-sas\sasuser\pardre1" ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+21   
+22   footnote "Program file: &CurrFile " ;
+23   
+24   
+25   options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ;
+26   
+27   libname s '\\ctrhs-sas\sasuser\pardre1' ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+28   * libname s 's:\' ;
+29   
+30   %macro MakeV2TestData ;
+31      data test_people ;
+32      input MRN $ 1-10 expected_outcome $ 12-70 should_live $ 71-74 ;
+4                                        The SAS System             10:49 Monday, April 16, 2007
+
+33      datalines ;
+34      Bobby      No gaps at all.                                            Yes
+35      Johnny     One acceptable pre-index gap.                              Yes
+36      Joey       Several acceptable post-index gaps.                        Yes
+37      Dee-dee    One UNACCEPTABLE pre-index gap.                            NO
+38      PJ         One acceptable post-index gap.                             Yes
+39      Jean       One acceptable big gap straddling the index date.          Yes
+40      Mark       All enrollment prior to period of interest UNACCEPTABLE.   NO
+41      Jane       All enrollment after period of interest UNACCEPTABLE.      NO
+42      Jose       One UNACCEPTABLE post-index gap.                           NO
+43      Ann        A single record falling at the start of the pd             NO
+44      Don        One straddle-gap too big pre-index                         NO
+45      Terry      One straddle-gap too big post-index                        NO
+46      Roy        No enrollment after index + 1 month                        NO
+47      ;
+48      run ;
+49   
+50      * Everybody starts out w/a full complement of data. ;
+51      data test_enroll ;
+52         set test_people ;
+53         do enr_year = 2001 to 2006 ;
+54            do enr_month = 1 to 12 ;
+55               enr_date = mdy(enr_month, 1, enr_year) ;
+56               output ;
+57            end ;
+58         end ;
+59         keep mrn enr_year enr_month enr_date ;
+60         format enr_date mmddyy10. ;
+61      run ;
+62   
+63      * Now we surgically remove some data to make gaps. ;
+64      proc sql ;
+65   
+66         * Bobby      No gaps at all.                                   ;
+67   
+68         * Johnny     One acceptable pre-index gap.                     ;
+69         delete from test_enroll
+70         where MRN = 'Johnny' and
+71               enr_date in ('01Aug2002'd)
+72         ;
+73         * Joey       Several acceptable post-index gaps.               ;
+74         delete from test_enroll
+75         where MRN = 'Joey' and
+76               enr_date in ('01Aug2003'd, '01Sep2003'd,
+77                            '01Dec2003'd, '01Jan2004'd,
+78                            '01Mar2004'd, '01Apr2004'd)
+79         ;
+80         * Dee-dee    One UNACCEPTABLE pre-index gap. ;
+81         delete from test_enroll
+82         where MRN = 'Dee-dee' and
+83               enr_date in ('01Aug2002'd, '01Sep2002'd)
+84         ;
+85         * PJ         One acceptable post-index gap.                    ;
+5                                        The SAS System             10:49 Monday, April 16, 2007
+
+86         delete from test_enroll
+87         where MRN = 'PJ' and
+88               enr_date in ('01May2004'd, '01Jun2004'd)
+89         ;
+90         * Jean       One acceptable big gap straddling the index date. ;
+91         delete from test_enroll
+92         where MRN = 'Jean' and
+93               enr_date between '01May2003'd and '01Aug2003'd
+94         ;
+95   
+96         * Mark       All enrollment prior to period of interest UNACCEPTABLE. ;
+97         delete from test_enroll
+98         where MRN = 'Mark' and
+99               enr_date ge '01Jun2002'd
+100        ;
+101  
+102        * Jane       All enrollment after period of interest UNACCEPTABLE.   ;
+103        delete from test_enroll
+104        where MRN = 'Jane' and
+105              enr_date le '01Jan2005'd
+106        ;
+107        * Jose       One UNACCEPTABLE post-index gap.                        ;
+108        delete from test_enroll
+109        where MRN = 'Jose' and
+110              enr_date in ('01Apr2004'd, '01May2004'd,
+111                           '01Jun2004'd)
+112        ;
+113        * Ann        A single record falling at the start of the pd          ;
+114        delete from test_enroll
+115        where MRN = 'Ann' and
+116              enr_date ne '01Jun1993'd
+117        ;
+118        * Don        One straddle-gap too big pre-index  ;
+119        delete from test_enroll
+120        where MRN = 'Don' and
+121              enr_date between '01Apr2003'd and '01Aug2003'd
+122        ;
+123        * Terry      One straddle-gap too big post-index ;
+124        delete from test_enroll
+125        where MRN = 'Terry' and
+126              enr_date between '01May2003'd and '01Sep2003'd
+127        ;
+128        * Roy        No enrollment after index + 1 month ;
+129        delete from test_enroll
+130        where MRN = 'Roy' and
+131              enr_date gt '01Jul2003'd
+132        ;
+133     quit ;
+134  
+135     data s.test_enroll ;
+136        set test_enroll ;
+137     run ;
+138     * Collapse the v2 data down into something w/start/stops. ;
+6                                        The SAS System             10:49 Monday, April 16, 2007
+
+139  
+140     %include "\\home\pardre1\Reference\CollapsePeriods.sas" ;
+141  
+142     data gnu ;
+143        set s.test_enroll ;
+144        start_date = enr_date ;
+145        end_date = intnx('MONTH', start_date, 0, 'E') ;
+146        drop enr_: ;
+147     run ;
+148  
+149     options mprint ;
+150  
+151     %CollapsePeriods(Lib     = work  /* Name of the library containing the dset you want 
+collapsed */
+152                    , DSet    = gnu  /* Name of the dset you want collapsed. */
+153                    , RecStart= start_date     /* Name of the var that contains the period 
+start dates. */
+154                    , RecEnd  = end_date     /* Name of the var that contains the period end 
+dates. */
+155                    , DaysTol = 2  /* The number of days gap to tolerate in evaluating 
+whether one period is contiguous w/another. */
+156                    , Debug   = 0  /* 0/1 flag indicating whether you want the PUT 
+statements to run (PRODUCES A LOT OF OUTPUT!). */
+157                    ) ;
+158  
+159     data s.test_start_stop ;
+160        set gnu ;
+161     run ;
+162  
+163  %mend MakeV2TestData ;
+164  
+165  /*
+166     These data are of course derived from the V2 test data.
+167     Correct results are:
+168        Survivors
+169           Bobby
+170           Johnny
+171           PJ
+172           Jean
+173        Non-survivors
+174           Dee-dee
+175           Mark
+176           Jane
+177           Jose
+178           Ann
+179           Don
+180           Terry
+181           Roy
+182  */
+183  data test_enroll ;
+184  input MRN $ @13 enr_start mmddyy10. @26 enr_end mmddyy10. ;
+185  format enr_start enr_end mmddyy10. ;
+186  datalines ;
+7                                        The SAS System             10:49 Monday, April 16, 2007
+
+
+NOTE: The data set WORK.TEST_ENROLL has 23 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.03 seconds
+      
+
+210  ;
+211  
+212  %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+274  
+275  filename crn_macs  "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\CRN_VDW_MACROS.sas" ;
+276  
+277  %include crn_macs ;
+4264  
+4265  %*include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\PullContinuous3.sas" ;
+4266  /*
+4267  options mprint ;
+4268  
+4269  data test_people ;
+4270  input MRN $ 1-8 expected_outcome $ 12-70 should_live $ 71-74 ;
+4271  datalines ;
+4272  Bobby      No gaps at all.                                            Yes
+4273  Johnny     One acceptable pre-index gap.                              Yes
+4274  Joey       Several acceptable post-index gaps.                        Yes
+4275  Dee-dee    One UNACCEPTABLE pre-index gap.                            NO
+4276  PJ         One acceptable post-index gap.                             Yes
+4277  Jean       One acceptable big gap straddling the index date.          Yes
+4278  Mark       All enrollment prior to period of interest UNACCEPTABLE.   NO
+4279  Jane       All enrollment after period of interest UNACCEPTABLE.      NO
+4280  Jose       One UNACCEPTABLE post-index gap.                           NO
+4281  Ann        A single record falling at the start of the pd             NO
+4282  Don        One straddle-gap too big pre-index                         NO
+4283  Terry      One straddle-gap too big post-index                        NO
+4284  Roy        No enrollment after index + 1 month                        NO
+4285  ;
+4286  run ;
+4287  
+4288  proc sql ;
+4289     title "Unaccounted for!" ;
+4290     select p.*
+4291     from test_people as p left join
+4292           test_enroll as e
+4293     on    p.mrn = e.mrn
+4294     where e.mrn is null ;
+4295  quit ;
+4296  
+4297  options source2 ;
+4298  
+4299  %PullContinuous3(InSet                   = test_people
+4300                 , OutSet                  = s.survivors
+4301                 , IndexDate               = '01Jun2003'd
+4302                 , PreIndexEnrolledMonths  = 12
+8                                        The SAS System             10:49 Monday, April 16, 2007
+
+4303                 , PreIndexGapTolerance    = 1
+4304                 , PostIndexEnrolledMonths = 16
+4305                 , PostIndexGapTolerance   = 2
+4306                 , EnrollDset              = test_enroll
+4307                 , DebugOut                = s
+4308                 ) ;
+4309  
+4310  
+4311  proc sql ;
+4312     title "Survivors" ;
+4313     select * from s.survivors ;
+4314  
+4315     title "Non-survivors" ;
+4316     select * from test_people where MRN not in (select MRN from s.survivors) ;
+4317  
+4318  quit ;
+4319  */
+4320  
+4321  * Grab a test set of people ;
+4322  
+4323  %macro MakeTestPeople(OutSet, Letter, SizeLim) ;
+4324     proc sql outobs = &SizeLim NOWARN ;
+4325        create table &OutSet as
+4326        select mrn
+4327        from vdw.demog
+4328        where substr(mrn, 8, 1) = "&Letter"
+4329        ;
+4330     quit ;
+4331  %mend MakeTestPeople ;
+4332  
+4333  %*include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\PullContinuous3.sas" ;
+4334  
+4335  
+4336  %MakeTestPeople(OutSet = s.test_pc_people, Letter = L, SizeLim = 2000) ;
+NOTE: Table S.TEST_PC_PEOPLE created, with 2000 rows and 1 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.28 seconds
+      cpu time            0.07 seconds
+      
+
+4337  
+4338  * Grab out their enroll records ;
+4339  proc sql ;
+4340     create table s.new_enroll as
+4341     select e.*
+4342     from vdw.enroll2 as e INNER JOIN
+4343           s.test_pc_people as p
+4344     on    e.mrn =  p.mrn
+4345     ;
+NOTE: Table S.NEW_ENROLL created, with 4511 rows and 14 columns.
+
+4346  quit ;
+9                                        The SAS System             10:49 Monday, April 16, 2007
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           19.71 seconds
+      cpu time            4.15 seconds
+      
+
+4347  
+4348  * Create an exploded version of enroll for use w/the old macro. ;
+4349  %include "\\groups\data\CTRHS\CHS\pardre1\GetV1VDWEnrollData.sas" ;
+4496  
+4497  %GetV1VDWEnrollData(InSet      = s.test_pc_people
+4498                    , OutSet     = s.old_enroll
+4499                    , EnrollData = s.new_enroll
+4500                    ) ;
+NOTE: Libname __VDW refers to the same physical library as VDW.
+NOTE: Libref __VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: SAS threaded sort was used.
+NOTE: Table WORK.__ENROLL created, with 4511 rows and 15 columns.
+
+NOTE: Table WORK.__BAD_DATES created, with 0 rows and 15 columns.
+
+NOTE: Table WORK.__BAD_DATES has been dropped.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.26 seconds
+      cpu time            0.10 seconds
+      
+
+NOTE: Libref __VDW has been deassigned.
+
+NOTE: There were 4511 observations read from the data set WORK.__ENROLL.
+NOTE: The data set WORK.__EXPLODED has 72246 observations and 14 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.39 seconds
+      cpu time            0.29 seconds
+      
+
+NOTE: Table WORK.__ENROLL has been dropped.
+NOTE: SAS threaded sort was used.
+NOTE: Table WORK.__OVERLAPS created, with 0 rows and 15 columns.
+
+NOTE: Table WORK.__OVERLAPS has been dropped.
+NOTE: SAS threaded sort was used.
+NOTE: Table S.OLD_ENROLL created, with 72246 rows and 14 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.56 seconds
+      cpu time            0.48 seconds
+      
+
+4501  * 12 months prior to 01-june-2003 (01-june-2002) to 16 months post (31-oct-2004) ;
+4502  
+4503  * This one ran in: real time  = 1:32.72   cpu time = 1.73 seconds ;
+10                                       The SAS System             10:49 Monday, April 16, 2007
+
+4504  
+4505  data gnu ;
+4506     set s.test_pc_people ;
+4507     idat = '01Jun2003'd ;
+4508  run ;
+
+NOTE: There were 2000 observations read from the data set S.TEST_PC_PEOPLE.
+NOTE: The data set WORK.GNU has 2000 observations and 2 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+4509  
+4510  proc sql ;
+4511     create table drop_me as
+4512     select *, '30jun2003'd as idat
+4513     from gnu(obs = 10 drop = idat)
+4514     ;
+NOTE: Table WORK.DROP_ME created, with 10 rows and 2 columns.
+
+4515  
+4516     insert into gnu
+4517     select * from drop_me
+4518     ;
+NOTE: 10 rows were inserted into WORK.GNU.
+
+4519  
+4520     drop table drop_me
+4521     ;
+NOTE: Table WORK.DROP_ME has been dropped.
+4522  
+4523  quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.09 seconds
+      cpu time            0.03 seconds
+      
+
+4524  
+4525  %PullContinuous(InSet                    = gnu
+4526                 , OutSet                  = s.pc3_survivors
+4527                 , IndexDate               = idat
+4528                 , PreIndexEnrolledMonths  = 12
+4529                 , PreIndexGapTolerance    = 1
+4530                 , PostIndexEnrolledMonths = 16
+4531                 , PostIndexGapTolerance   = 2
+4532                 , EnrollDset              = s.new_enroll
+4533                 ) ;
+
+
+==============================================================
+
+Macro PullContinuous:
+11                                       The SAS System             10:49 Monday, April 16, 2007
+
+
+Creating a dataset "s.pc3_survivors", which will look exactly like
+dataset "gnu", except that anyone not enrolled for
+12 months prior to idat (disregarding gaps
+of up to 1 month(s)) AND 16
+months after idat (disregarding gaps of up to
+2 month(s)) will be eliminated.
+
+==============================================================
+
+
+NOTE: Libname __ENROLL refers to the same physical library as VDW.
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.__IDS created, with 2010 rows and 4 columns.
+
+NOTE: Table WORK.__DROP_ME created, with 10 rows and 2 columns.
+
+
+
+
+
+
+ERROR: 10 MRNs appear more than once in the input datset with different index dates!
+ERROR: 10 MRNs appear more than once in the input datset with different index dates!
+ERROR: 10 MRNs appear more than once in the input datset with different index dates!
+
+See the .lst file for a list of duplicated MRNs
+
+
+
+
+
+4534  
+4535  
+4536  * This one ran in real time           1:35.33      cpu time            1.54 seconds ;
+4537  %PullContinuous2(InSet                   = gnu
+4538                 , OutSet                  = s.pc2_survivors
+4539                 , IndexDate               = idat
+4540                 , PreIndexEnrolledMonths  = 12
+4541                 , PreIndexGapTolerance    = 1
+4542                 , PostIndexEnrolledMonths = 16
+4543                 , PostIndexGapTolerance   = 2
+4544                 , EnrollDset              = s.old_enroll
+4545                 ) ;
+
+
+==============================================================
+
+Macro PullContinuous2a:
+
+Creating a dataset "s.pc2_survivors", which will look exactly like
+12                                       The SAS System             10:49 Monday, April 16, 2007
+
+dataset "gnu", except that anyone not enrolled for
+12 months prior to idat (disregarding gaps
+of up to 1 month(s)) AND 16
+months after idat (disregarding gaps of up to
+2 month(s)) will be eliminated.
+
+==============================================================
+
+
+NOTE: Libname __ENROLL refers to the same physical library as VDW.
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: The PROCEDURE SQL printed page 1.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.40 seconds
+      cpu time            0.09 seconds
+      
+
+NOTE: Table S.PC2_SURVIVORS created, with 0 rows and 2 columns.
+NOTE: Statement transforms to:
+
+        select E.mrn, MDY(E.enr_month, 1, E.enr_year) as EnrollDate format=MMDDYY10.0, I.idat 
+as IDate format=MMDDYY10.0
+          from S.OLD_ENROLL E inner join WORK.GNU I on E.mrn=I.mrn
+         where E.enr_year between YEAR(INTNX('MONTH', I.IDate, -13)) and YEAR(INTNX('MONTH', 
+I.IDate, 18));
+
+NOTE: Table WORK._GRIST created, with 13303 rows and 3 columns.
+
+NOTE: Statement transforms to:
+
+        delete
+          from WORK._GRIST
+         where _GRIST.EnrollDate not between INTNX('MONTH', _GRIST.IDate, -13) and 
+INTNX('MONTH', _GRIST.IDate, 18);
+
+NOTE: 1545 rows were deleted from WORK._GRIST.
+
+NOTE: Statement transforms to:
+
+        select _GRIST.mrn
+          from WORK._GRIST
+      group by _GRIST.mrn
+        having COUNT(*)>=((13+18)+1);
+
+NOTE: Table WORK._CONTINUOUSLY_ENROLLED created, with 219 rows and 1 columns.
+
+
+
+219 people were continuously enrolled during the pre/post
+index date period of interest.
+
+13                                       The SAS System             10:49 Monday, April 16, 2007
+
+
+NOTE: Statement transforms to:
+
+        insert
+          into S.PC2_SURVIVORS(PC2_SURVIVORS.mrn, PC2_SURVIVORS.idat)
+        select GNU.mrn, GNU.idat
+          from WORK.GNU
+         where GNU.mrn in 
+               ( select _CONTINUOUSLY_ENROLLED.mrn
+                   from WORK._CONTINUOUSLY_ENROLLED
+               );
+
+NOTE: 220 rows were inserted into S.PC2_SURVIVORS.
+
+NOTE: Statement transforms to:
+
+        delete
+          from WORK._GRIST
+         where _GRIST.mrn in 
+               ( select _CONTINUOUSLY_ENROLLED.mrn
+                   from WORK._CONTINUOUSLY_ENROLLED
+               );
+
+NOTE: 7040 rows were deleted from WORK._GRIST.
+
+NOTE: Table WORK._CONTINUOUSLY_ENROLLED has been dropped.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.82 seconds
+      cpu time            0.60 seconds
+      
+
+
+NOTE: There were 4718 observations read from the data set WORK._GRIST.
+NOTE: SAS sort was used.
+NOTE: The data set WORK._GRIST has 4718 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.12 seconds
+      cpu time            0.07 seconds
+      
+
+
+NOTE: Missing values were generated as a result of performing an operation on missing values.
+      Each place is given by: (Number of times) at (Line):(Column).
+      1 at 4545:122   1 at 4545:160   
+NOTE: There were 4718 observations read from the data set WORK._GRIST.
+NOTE: The data set WORK._INSUFFICIENTLY_ENROLLED has 353 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.07 seconds
+      cpu time            0.01 seconds
+      
+
+NOTE: 4117 rows were deleted from WORK._GRIST.
+
+14                                       The SAS System             10:49 Monday, April 16, 2007
+
+NOTE: 20 rows were inserted into S.PC2_SURVIVORS.
+
+NOTE: Table WORK._GRIST has been dropped.
+NOTE: Table WORK._INSUFFICIENTLY_ENROLLED has been dropped.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.14 seconds
+      cpu time            0.07 seconds
+      
+
+NOTE: Libref __ENROLL has been deassigned.
+4546  
+4547  proc sql ;
+4548     create table s.survived_2_butnot_3 as
+4549     select s2.mrn
+4550     from s.pc2_survivors as s2 LEFT JOIN
+4551           s.pc3_survivors as s3
+4552     on    s2.mrn = s3.mrn
+4553     where s3.mrn IS NULL
+4554     ;
+NOTE: Table S.SURVIVED_2_BUTNOT_3 created, with 0 rows and 1 columns.
+
+4555  
+4556     create table s.survived_3_butnot_2 as
+4557     select s3.mrn
+4558     from s.pc2_survivors as s2 RIGHT JOIN
+4559           s.pc3_survivors as s3
+4560     on    s2.mrn = s3.mrn
+4561     where s2.mrn IS NULL
+4562     ;
+NOTE: Table S.SURVIVED_3_BUTNOT_2 created, with 0 rows and 1 columns.
+
+4563  
+4564     create table s.survived_2_butnot_3_enroll3 as
+4565     select e.*
+4566     from  s.new_enroll as e INNER JOIN
+4567           s.survived_2_butnot_3 as p
+4568     on    e.mrn = p.mrn
+4569     order by e.mrn, e.enr_start
+4570     ;
+NOTE: Table S.SURVIVED_2_BUTNOT_3_ENROLL3 created, with 0 rows and 14 columns.
+
+4571     create table s.survived_2_butnot_3_enroll2 as
+4572     select e.*
+4573     from  s.old_enroll as e INNER JOIN
+4574           s.survived_2_butnot_3 as p
+4575     on    e.mrn = p.mrn
+4576     order by e.mrn, e.enr_year, e.enr_month
+4577     ;
+NOTE: SAS threaded sort was used.
+NOTE: Table S.SURVIVED_2_BUTNOT_3_ENROLL2 created, with 0 rows and 14 columns.
+
+4578  quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+15                                       The SAS System             10:49 Monday, April 16, 2007
+
+      real time           0.29 seconds
+      cpu time            0.09 seconds
+      
+
+4579  
+4580  *PullContinuous8(InSet                   = s.survived_2_butnot_3
+4581                 , OutSet                  = s.drop_me
+4582                 , IndexDate               = '01Jun2003'd
+4583                 , PreIndexEnrolledMonths  = 12
+4584                 , PreIndexGapTolerance    = 1
+4585                 , PostIndexEnrolledMonths = 16
+4586                 , PostIndexGapTolerance   = 2
+4587                 , EnrollDset              = s.survived_2_butnot_3_enroll3
+4588                 , DebugOut                = s
+4589                 ) ;
+NOTE: Remote submit to CHSDWSAS complete.
+ERROR: Errors printed on page 11.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           37.49 seconds
+      cpu time            1.05 seconds
+      

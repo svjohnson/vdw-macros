@@ -1,0 +1,398 @@
+1                                                          The SAS System                        13:07 Wednesday, September 27, 2006
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 3
+
+NOTE: SAS initialization used:
+      real time           2.73 seconds
+      cpu time            0.46 seconds
+      
+1          %include '\\home\rosstr1\My SAS Files\Scripts\Remote\RemoteStart.sas';
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.01.01M3P061705).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Unable to open SASUSER.PROFILE. WORK.PROFILE will be opened instead.
+NOTE: All profile changes will be lost at the end of the session.
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688002.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 2
+
+NOTE: SAS initialization used:
+      real time           0.29 seconds
+      cpu time            0.23 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                        The SAS System      13:07 Wednesday, September 27, 2006
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    
+3    *Roy's footnote idea;
+4    /*
+5    proc sql noprint ;
+6       select trim(XPath)
+7       into :CurrFile separated by ' '
+8       from dictionary.extfiles
+9       where fileref like "#LN00006" ;
+10      ;
+11   quit ;
+12   */
+13   
+14   footnote "Program Run on &Sysdate" ;
+15   
+16   %let _Root = \\ctrhs-sas\warehouse\SasData\ ;
+17   libname vdw "&_Root.CRN_VDW";
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   
+19   %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas";
+81   
+82   /***************************************************************************
+83   ****************************************************************************
+84   * Programmer:
+85   *   Tyler Ross
+86   *   Center For Health Studies
+87   *   (206) 287-2927
+88   *   ross.t@ghc.org
+89   *
+90   * History: Created September 27, 2006
+91   
+92   * Purpose:
+93   *   Pulls all people with a systolic and-or diastolic BP reading above
+3                                        The SAS System      13:07 Wednesday, September 27, 2006
+
+94   *     specified threasholds over specified dates.
+95   *
+96   ***************************************************************************
+97   **************************************************************************/
+98   
+99   %macro Hypertension_BP(outfile, startdate, enddate,
+100                         Diastolic_Min = 90, Systolic_Min = 140,
+101                         Strict_Equality = 0, Either = 1);
+102  
+103  %if %sysfunc(abs("&StartDate"d > "&EndDate"d))=1 %then %do;
+104    %put PROBLEM: The StartDate must be on or before the EndDate;
+105    %put PROBLEM: Doing Nothing;
+106    %goto exit;
+107  %end;
+108  %if (&Diastolic_Min < 0 OR &Systolic_Min < 0) %then %do;
+109    %put PROBLEM: The min values for BP must be non-negative;
+110    %put Diastolic_Min = &Diastolic_Min. , Systolic_Min = &Systolic_Min.;
+111    %put PROBLEM: Doing Nothing;
+112    %goto exit;
+113  %end;
+114  %if (&Strict_Equality. ^= 0 AND &Strict_Equality. ^= 1) %then %do;
+115    %put PROBLEM: The Strict_Equality variable must be 0 or 1;
+116    %put Strict_Equality = &Strict_Equality;
+117    %put PROBLEM: Doing Nothing;
+118    %goto exit;
+119  %end;
+120  %if (&Either. ^= 0 AND &Either. ^= 1) %then %do;
+121    %put PROBLEM: The Either variable must be 0 or 1;
+122    %put Either = &Either;
+123    %put PROBLEM: Doing Nothing;
+124    %goto exit;
+125  %end;
+126  
+127  *Create conditional;
+128  %if (&Strict_Equality. = 0 AND &Either. = 1) %then %do;
+129    %let Conditional= max(Diastolic) >= &Diastolic_Min.
+130                   OR max(Systolic)  >= &Systolic_Min.;
+131  %end;
+132  %else %if (&Strict_Equality. = 1 AND &Either. = 1) %then %do;
+133    %let Conditional= max(Diastolic) > &Diastolic_Min.
+134                   OR max(Systolic)  > &Systolic_Min.;
+135  %end;
+136  %else %if (&Strict_Equality. = 0 AND &Either. = 0) %then %do;
+137    %let Conditional= max(Diastolic) >= &Diastolic_Min.
+138                  AND max(Systolic)  >= &Systolic_Min.;
+139  %end;
+140  %else %if (&Strict_Equality. = 1 AND &Either. = 0) %then %do;
+141    %let Conditional= max(Diastolic) > &Diastolic_Min.
+142                  AND max(Systolic)  > &Systolic_Min.;
+143  %end;
+144  
+145  libname vs "&_VitalLib";
+146  
+4                                        The SAS System      13:07 Wednesday, September 27, 2006
+
+147  proc sql;
+148   create table &outfile. as
+149     select mrn
+150          , max(Diastolic) as Max_Diastolic
+151   label = "Person's highest diastolic reading between &StartDate. and &EndDate."
+152          , max(Systolic)  as Max_Systolic
+153   label = "Person's highest systolic reading between &StartDate. and &EndDate."
+154     from vs.&_VitalData. (where=(Measure_Date between "&StartDate"d
+155                                                   AND "&EndDate"d  ))
+156     group by mrn
+157     having &Conditional.
+158   ;
+159  quit;
+160  
+161  %exit: %mend Hypertension_BP;
+162  
+163  *TEST SECTION;
+164  proc format;
+165    value sysf
+166      low  -  0    = "Non-positive"
+167      0   <-< 130  = "<130"
+168      130  -< 140  = "130 to 139"
+169      140          = "140"
+170      140 <-< 160  = "140 to 159"
+171      160  -< 180  = "160 to 179"
+172      180  -  high = "180+"
+173    ;
+NOTE: Format SYSF has been output.
+174    value diaf
+175      low  -  0    = "Non-positive"
+176      0   <-< 80   = "<80"
+177      80   -< 90   = "80 to 89"
+178      90           = "90"
+179      90  <-< 100  = "90 to 99"
+180      100  -< 110  = "100 to 110"
+181      110  -  high = "110+"
+182    ;
+NOTE: Format DIAF has been output.
+183  quit;
+
+NOTE: PROCEDURE FORMAT used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+
+184  *Problem 1;
+185  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2002);
+PROBLEM: The StartDate must be on or before the EndDate
+PROBLEM: Doing Nothing
+186  *Problem 2;
+187  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+188                   Diastolic_Min=-5, Systolic_Min=10);
+PROBLEM: The min values for BP must be non-negative
+5                                        The SAS System      13:07 Wednesday, September 27, 2006
+
+Diastolic_Min = -5 , Systolic_Min = 10
+PROBLEM: Doing Nothing
+189  *Problem 3;
+190  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+191                   Strict_Equality=Y);
+PROBLEM: The Strict_Equality variable must be 0 or 1
+Strict_Equality = Y
+PROBLEM: Doing Nothing
+192  *Problem 4;
+193  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+194                   Either=2);
+PROBLEM: The Either variable must be 0 or 1
+Either = 2
+PROBLEM: Doing Nothing
+195  
+196  
+197  *Success 1;
+198  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006);
+NOTE: Libname VS refers to the same physical library as VDW.
+NOTE: Libref VS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.TESTING created, with 103647 rows and 3 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           5.41 seconds
+      cpu time            2.21 seconds
+      
+
+199  proc freq data=testing;
+200    title "Success 1";
+201    format Max_Diastolic diaf. Max_Systolic sysf.;
+202    table Max_Diastolic*Max_Systolic /missing;
+203  run;
+
+NOTE: There were 103647 observations read from the data set WORK.TESTING.
+NOTE: The PROCEDURE FREQ printed page 1.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.15 seconds
+      cpu time            0.11 seconds
+      
+
+204  proc sort data=testing NODUPKEY; by mrn; run;
+
+NOTE: There were 103647 observations read from the data set WORK.TESTING.
+NOTE: 0 observations with duplicate key values were deleted.
+NOTE: The data set WORK.TESTING has 103647 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.24 seconds
+      cpu time            0.26 seconds
+      
+
+205  *Success 2;
+6                                        The SAS System      13:07 Wednesday, September 27, 2006
+
+206  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+207                   Diastolic_Min=85, Systolic_Min=135);
+NOTE: Libname VS refers to the same physical library as VDW.
+NOTE: Libref VS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.TESTING created, with 125663 rows and 3 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           3.52 seconds
+      cpu time            1.76 seconds
+      
+
+208  proc freq data=testing;
+209    title "Success 2";
+210    format Max_Diastolic diaf. Max_Systolic sysf.;
+211    table Max_Diastolic*Max_Systolic /missing;
+212  run;
+
+NOTE: There were 125663 observations read from the data set WORK.TESTING.
+NOTE: The PROCEDURE FREQ printed page 2.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.17 seconds
+      cpu time            0.14 seconds
+      
+
+213  *Success 3;
+214  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+215                   Strict_Equality=1, Either=1);
+NOTE: Libname VS refers to the same physical library as VDW.
+NOTE: Libref VS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.TESTING created, with 85242 rows and 3 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           2.10 seconds
+      cpu time            1.78 seconds
+      
+
+216  proc freq data=testing;
+217    title "Success 3";
+218    format Max_Diastolic diaf. Max_Systolic sysf.;
+219    table Max_Diastolic*Max_Systolic /missing;
+220  run;
+
+NOTE: There were 85242 observations read from the data set WORK.TESTING.
+NOTE: The PROCEDURE FREQ printed page 3.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.13 seconds
+      cpu time            0.11 seconds
+      
+
+7                                        The SAS System      13:07 Wednesday, September 27, 2006
+
+221  *Success 4;
+222  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+223                   Strict_Equality=0, Either=0);
+NOTE: Libname VS refers to the same physical library as VDW.
+NOTE: Libref VS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.TESTING created, with 42819 rows and 3 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           1.98 seconds
+      cpu time            1.65 seconds
+      
+
+224  proc freq data=testing;
+225    title "Success 4";
+226    format Max_Diastolic diaf. Max_Systolic sysf.;
+227    table Max_Diastolic*Max_Systolic /missing;
+228  run;
+
+NOTE: There were 42819 observations read from the data set WORK.TESTING.
+NOTE: The PROCEDURE FREQ printed page 4.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.09 seconds
+      cpu time            0.06 seconds
+      
+
+229  *Success 5;
+230  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+231                   Strict_Equality=1, Either=0);
+NOTE: Libname VS refers to the same physical library as VDW.
+NOTE: Libref VS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.TESTING created, with 28964 rows and 3 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           1.54 seconds
+      cpu time            1.43 seconds
+      
+
+232  proc freq data=testing;
+233    title "Success 5";
+234    format Max_Diastolic diaf. Max_Systolic sysf.;
+235    table Max_Diastolic*Max_Systolic /missing;
+236  run;
+
+NOTE: There were 28964 observations read from the data set WORK.TESTING.
+NOTE: The PROCEDURE FREQ printed page 5.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.06 seconds
+      cpu time            0.01 seconds
+      
+8                                        The SAS System      13:07 Wednesday, September 27, 2006
+
+
+237  *Success 6;
+238  %Hypertension_BP(outfile= testing, startdate= 04Jan2005, enddate= 15Feb2006,
+239                   Diastolic_Min=90, Systolic_Min=150, Strict_Equality=1, Either=0);
+NOTE: Libname VS refers to the same physical library as VDW.
+NOTE: Libref VS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.TESTING created, with 20543 rows and 3 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           1.60 seconds
+      cpu time            1.57 seconds
+      
+
+240  proc freq data=testing;
+241    title "Success 6";
+242    format Max_Diastolic diaf. Max_Systolic sysf.;
+243    table Max_Diastolic*Max_Systolic /missing;
+244  run;
+
+NOTE: There were 20543 observations read from the data set WORK.TESTING.
+NOTE: The PROCEDURE FREQ printed page 6.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.07 seconds
+      cpu time            0.01 seconds
+      
+
+NOTE: Remote submit to CHSDWSAS complete.
+13         signoff chsdwsas;
+NOTE: Remote signoff from CHSDWSAS commencing.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           19.10 seconds
+      cpu time            11.62 seconds
+      
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: SAS/CONNECT conversation terminated.
+NOTE: Remote signoff from CHSDWSAS complete.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           23.88 seconds
+      cpu time            0.87 seconds
+      

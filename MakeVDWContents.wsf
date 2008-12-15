@@ -1,0 +1,257 @@
+<package>
+   <job id="Quick proc contents">
+      <?job error="true" debug="true" ?>
+      <runtime>
+      <description>
+         Produces and batch submits a quickie SAS program that does a PROC CONTENTS On
+         the dataset(s) named in the arguments.  Call it without arguments to create a
+         shortcut in your Send To folder to make it easy to use from Windows Explorer.
+      </description>
+      <unnamed
+         name       = "datasetname"
+         helpstring = "The full path and filename of the file containing the dataset for which you want a PROC CONTENTS"
+         many       = "true"
+         required   = "false"
+      />
+      </runtime>
+      <object ID="WinShell"   progid="WScript.Shell"/>
+      <object ID="Network"    progid="WScript.Network"/>
+      <object ID="FSO"        progid="Scripting.FileSystemObject"/>
+      <script language="VBScript">
+         Option Explicit
+         Dim SASProgName
+         ' Const vbYes = 6
+         ' TODO: Add a case 0 that offers to put an icon on the user's Send To menu
+         Select Case WScript.Arguments.Count
+            Case 0
+               If Len(CheckForSAS()) > 0 Then
+                  If vbYes = MsgBox("This script produces PROC CONTENTS output for the dataset file named in the argument." _
+                                 & vbCrLf & vbCrLf & "Would you like a shortcut to this script put in your SendTo menu?", vbYesNo) Then
+                     Call CreateShortcut
+                  End If
+               Else
+                  WScript.Echo "This script is only useful on machines that have a SAS install--it looks like this machine does not have one."
+               End If
+            Case Else
+               Dim f
+               For Each f in WScript.Arguments.Unnamed
+                  ' MsgBox f
+                  Call Main(f)
+               Next
+               ' Call Main
+            ' Case Else
+            '    With WScript
+            '       .Arguments.ShowUsage
+            '       .Quit
+            '     End With
+         End Select
+         ' WScript.Echo "Finished running " & WScript.ScriptName
+         WinShell.Popup "Finished running " & WScript.ScriptName, 5
+
+         ' ================================================
+         Sub Main(dsetfile)
+         Dim dsetname
+         Dim dsetextension
+         Dim dsetlib
+         Dim tempprog
+         Dim BaseFileName
+         Dim LogFile
+         Dim ListFile
+         Dim RunLine
+         Dim SASExe
+         Const DQ = """"
+         Const SHOWNORMAL = 1
+         Const MINIMIZE_NOT_ACTIVE = 7
+
+            ' dsetfile = WScript.Arguments.Unnamed(0)
+            ' Did we really get a filename in the argument?
+            If FSO.FileExists(dsetfile) Then
+
+               dsetname = FSO.GetBaseName(dsetfile)
+               dsetextension = FSO.GetExtensionName(dsetfile)
+               dsetlib = FSO.GetParentFolderName(dsetfile)
+
+               ' Is the file really a SAS dataset?
+               Select Case LCase(dsetextension)
+                  ' Case "sas7bdat"
+                  Case "sas7bdat", "sd2", "sas7bvew"
+                     ' wscript.Echo "The file named in the argument is a sas dataset"
+                     ' WScript.Echo "The dataset name is """ & dsetname & """"
+                     ' WScript.Echo "The libname statement will point to """ & dsetlib & """"
+                     ' All is well--continue below.
+                  Case Else
+                     With WScript
+                        .Echo "Problem--""" & dsetfile & """ is not obviously a sas dataset file!  Skipping..."
+                        Exit Sub
+                     End With
+               End Select
+
+               ' Is SAS installed on this machine?
+               SASExe = CheckForSAS
+               If Len(SASExe) > 0 Then
+                  ' WScript.Echo "Found SAS on your machine"
+                  ' All is well--continue below.
+               Else
+                  With WScript
+                     .Echo "Problem--sas.exe not found where the registry says it should be!"
+                     .Quit
+                  End With
+               End If
+               ' Get a temp file name to use for the program
+               Set tempprog = CreateTempfile(dsetname)
+               ' Write the following statements to the program file:
+               '   options nocenter linesize = 72 ;
+               '   libname quickie "<<folder containing dsetfile>>" ;
+               '   proc contents data = quickie.<<dsetfile>> position ;
+               '   endsas ;
+               With tempprog
+                  .WriteLine("options nofmterr nocenter linesize = 72 ;")
+                  .WriteLine("")
+                  .WriteLine("proc format ;        ")
+                  .WriteLine("   value $mask       ")
+                  .WriteLine("      other = 'xxxxx'")
+                  .WriteLine("   ;                 ")
+                  .WriteLine("quit ;               ")
+                  .WriteLine("")
+                  .WriteLine("libname q " & DQ & dsetlib & DQ & " ;")
+                  ' TODO? Come up with a pretty css file & reference that from a network share?
+                  ' .WriteLine("ods html path = """ & FSO.GetParentFolderName(SASProgName)  & """ (URL = NONE) body = """ & dsetname & ".html"" (title= '" & dsetname & "') stylesheet=(URL='http://ctrhs-devnet2/pardre1/light_on_dark.css') ;")
+                  .WriteLine("ods html path = ""\\ctrhs-devnet2\pardre1"" (URL = NONE) body = """ & dsetname & ".html"" (title= '" & dsetname & "') stylesheet=(URL='http://ctrhs-devnet2/pardre1/light_on_dark.css') ;")
+                  .WriteLine("title "" Contents of " & dsetname & """ ;")
+                  .WriteLine("proc contents data = q." & dsetname & " varnum ;")
+                  .WriteLine("proc print data = q." & dsetname & "(obs = 20) ;")
+                  .WriteLine("format mrn consumno chsid $mask. ;")
+                  .WriteLine("run ;")
+                  .WriteLine("ods htmlcss close ;")
+                  .WriteLine("endsas ;")
+                  .Close
+               End With
+
+               ' batch-submit this file to sas.
+               BaseFileName = FSO.GetParentFolderName(SASProgName) & "\" & FSO.GetBaseName(SASProgName)
+               LogFile = BaseFileName & ".log"
+               ListFile = BaseFileName & ".lst"
+
+               RunLine =         DQ & SASExe       & DQ _
+                  & " -sysin " & DQ & SASProgName  & DQ _
+                  & " -log   " & DQ & LogFile      & DQ _
+                  & " -print " & DQ & ListFile     & DQ _
+                  & " -nologo"
+
+               ' WScript.Echo "Run line would be:" & vbCrLf & RunLine
+
+               ' Call WinShell.Run(RunLine, SHOWNORMAL, True)
+               Call WinShell.Run(RunLine, MINIMIZE_NOT_ACTIVE, True)
+
+               ' check log file for errors
+               If CheckLog(LogFile) Then
+                  WScript.Echo "Sorry--the resulting file ran with errors--log follows."
+                  WinShell.Run(DQ & LogFile & DQ)
+               Else
+                  ' Delete the program and log files
+                  FSO.DeleteFile(Logfile)
+                  ' FSO.DeleteFile(Listfile)
+                  FSO.DeleteFile(SASProgName)
+
+                  ' shellexecute the list file--synchronously, so we can clean up later.
+                  ' Why doesn't this work?
+                  ' If FSO.FileExists(ListFile) Then
+                  '    ' Call WinShell.Run(DQ & ListFile & DQ)
+                  '    Call WinShell.Run("IEXPLORE.EXE " & DQ & FSO.GetParentFolderName(SASProgName) & "\" & dsetname & ".html" & DQ)
+                  ' End If
+               End If
+
+            Else
+               With WScript
+                  .Echo "Problem--""" & dsetfile & """ not found!  Skipping..."
+                  ' .Quit
+                  ' Exit Sub
+               End With
+            End If
+         End Sub
+         ' ================================================
+         Public Function CheckLog(LogFilePath)
+         Dim booReturn
+         Dim LogFile
+         Dim Contents
+         Dim Rgx
+         Const FORREADING = 1
+            booReturn = True
+            Set LogFile = FSO.OpenTextFile(LogFilePath, FORREADING)
+            Contents = LogFile.ReadAll
+            Set Rgx = New RegExp
+            With Rgx
+               ' .Pattern = "error|warning"
+               ' .Pattern = "^error"
+               ' .Pattern = "(error:|warning:|uninitialized)(?! your system is scheduled to expire on)"
+               .Pattern = "(error:|warning:|uninitialized)(?! (Variable (CONSUMNO|CHSID|MRN) not found|Unable to copy SASUSER registry|the .{4,15} product with which|your system is scheduled))"
+               .IgnoreCase = True
+               booReturn = .Test(Contents)
+            End With
+             CheckLog = booReturn
+         End Function
+         ' ================================================
+         Public Function CheckForSAS
+            Dim SASVer
+            Dim SASExe
+            On Error Resume Next
+            SASVer = WinShell.RegRead("HKEY_LOCAL_MACHINE\SOFTWARE\SAS Institute Inc.\The SAS System\CurrentVersion\CurrentVersion")
+            SASExe = WinShell.RegRead("HKEY_LOCAL_MACHINE\SOFTWARE\SAS Institute Inc.\The SAS System\" & SASVer & "\DefaultRoot") & "\sas.exe"
+            If err.Number = 0 Then
+               If FSO.FileExists(SASExe) Then
+                  CheckForSAS = SASExe
+               Else
+                  CheckForSAS = ""
+               End If
+            Else
+               CheckForSAS = ""
+            End If
+            err.Clear
+         End Function
+         ' ================================================
+         ' Public Function CreateTempFile
+         '    Dim tfolder, tname, tfile
+         '    Const TemporaryFolder = 2
+         '    Set tfolder = fso.GetSpecialFolder(TemporaryFolder)
+         '    tname = fso.GetTempName & ".sas"
+         '    SASProgName = tfolder.Path & "\" & tname
+         '    ' WScript.Echo "Temp file is """ & SASProgName & """"
+         '    Set tfile = tfolder.CreateTextFile(tname)
+         '    Set CreateTempFile = tfile
+         ' End Function
+         ' ================================================
+         Public Function CreateTempFile(DsetName)
+            Dim tfolder, tname, tfile
+            Const TemporaryFolder = 2
+            Set tfolder = fso.GetSpecialFolder(TemporaryFolder)
+            tname = "QuickContents" & UCase(DsetName) & ".sas"
+            SASProgName = tfolder.Path & "\" & tname
+            ' WScript.Echo "Temp file is """ & SASProgName & """"
+            Set tfile = tfolder.CreateTextFile(tname, true)
+            Set CreateTempFile = tfile
+         End Function
+         ' ================================================
+         Public Function CreateShortcut
+         Dim ScriptName
+         Dim SendTo
+         Dim ShrtPath
+         Dim shrt
+         ScriptName = FSO.GetBaseName(WScript.ScriptName)
+         ShrtPath = WinShell.SpecialFolders("SendTo") & "\" & ScriptName & ".lnk"
+         ' WScript.Echo ShrtPath
+         Set shrt = WinShell.CreateShortcut(ShrtPath)
+         With shrt
+            .TargetPath = WScript.ScriptFullName
+            .save
+         End With
+
+         WScript.Echo "You should now have a shortcut in Send To.  To run the script:" _
+            & vbCrLf & vbCrLf & "   - Navigate to the dataset file in Windows Explorer. " _
+            & vbCrLf & "   - Right-click on the file." _
+            & vbCrLf & "   - Select """ & ScriptName & """ from the Send To menu."
+
+         End Function
+         ' ================================================
+      </script>
+   </job>
+</package>
