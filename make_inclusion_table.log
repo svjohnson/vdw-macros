@@ -1,0 +1,163 @@
+1                                                          The SAS System                           12:56 Tuesday, December 16, 2008
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           6.74 seconds
+      cpu time            0.74 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\make_inclusion_table.sas
+8          *
+9          * <<purpose>>
+10         *********************************************/
+11         
+12         %macro make_inclusion_table(cohort = ) ;
+13           libname __d "&_DemographicLib" access = readonly ;
+14           %local demog ;
+15           %let demog = __d.&_DemographicData ;
+16         
+17           proc format cntlout = s.drop_me ;
+18             value $Hispani
+19               'Y' = '1 Hispanic or Latino'
+20               'N' = '2 Not Hispanic or Latino'
+21               ' '
+22               , ''
+23               , Missing = '3 Unknown (Individuals not reporting ethnicity)'
+24             ;
+25             value $Gender
+26               'M' = 'Males'
+27               'F' = 'Females'
+28               Other = 'Unknown or Not Reported'
+29             ;
+30         
+31             /*
+32             I would love it if someone could check my geography here--I am especially
+33             unsure of the Native Hawaiian or Other Pac Islander category.
+34             */
+35             value $Race
+36               '01' = '5 White'
+37               '02' = '4 Black or African American'
+2                                        The SAS System         12:56 Tuesday, December 16, 2008
+
+38               '03' = '1 American Indian/Alaska Native'
+39               '04'
+40               , '05'
+41               , '06'
+42               , '08'
+43               , '09'
+44               , '10'
+45               , '11'
+46               , '12'
+47               , '13'
+48               , '14'
+49               , '96' = '2 Asian'
+50                 '07'
+51               , '20'
+52               , '21'
+53               , '22'
+54               , '25'
+55               , '26'
+56               , '27'
+57               , '28'
+58               , '30'
+59               , '31'
+60               , '32'
+61               , '97' = '3 Native Hawaiian or Other Pacific Islander'
+62                 '-1' = '6 More than one race'
+63               Other = '7 Unknown or Not Reported'
+64             ;
+65           quit ;
+66         
+67           * TODO: the macro should check for the presence of gender, race1 and hispanic, and
+67       ! only pull them if necessary. ;
+68           proc sql ;
+69             create table _reportable as
+70             select d.mrn, d.race1 as race label = "Racial Category"
+71                   , d.hispanic label = "Ethnic Category"
+72                   , d.gender label = "Sex/Gender"
+73             from &demog as d INNER JOIN
+74                  &cohort as c
+75             on    d.mrn = c.mrn
+76             ;
+77         
+78             create table genders (gender char(1)) ;
+79             insert into genders(gender) values ('F') ;
+80             insert into genders(gender) values ('M') ;
+81             insert into genders(gender) values ('U') ;
+82         
+83             create table races(race char(2)) ;
+84             insert into races(race) values ('01') ;
+85             insert into races(race) values ('02') ;
+86             insert into races(race) values ('03') ;
+87             insert into races(race) values ('04') ;
+88         
+89             create table ethnicities(hispanic char(1)) ;
+3                                        The SAS System         12:56 Tuesday, December 16, 2008
+
+90             insert into ethnicities(hispanic) values('Y') ;
+91             insert into ethnicities(hispanic) values('N') ;
+92             insert into ethnicities(hispanic) values(' ') ;
+93         
+94             create table class_levels as
+95             select gender, race, hispanic
+96             from genders CROSS JOIN races CROSS JOIN ethnicities ;
+97         
+98           quit ;
+99         
+100          /*
+101          proc freq order = formatted ;
+102            tables (hispanic race)*gender / missing norow nocol nopercent ;
+103            format race $race. hispanic $hispani. gender $gender. ;
+104          run ;
+105          */
+106        
+107          title1 "Inclusion Enrollment Report" ;
+108        
+109          title2 "PART A TOTAL ENROLLMENT REPORT" ;
+110          proc tabulate missing format = comma15.0 order = formatted classdata = class_levels
+110      !  ;
+111            class hispanic race gender ;
+112            keylabel N = ' ' ;
+113            tables hispanic all='Total of all subjects:', gender all = 'Total' / printmiss
+113      ! box = 'Ethnic Category' ;
+114            tables race all='Total of all subjects:', gender all = 'Total' / printmiss box =
+114      ! 'Racial Categories' ;
+115            format race $race. hispanic $hispani. gender $gender. ;
+116          quit ;
+117        
+118          title2 "PART B HISPANIC ENROLLMENT REPORT" ;
+119          proc tabulate missing format = comma15.0 order = formatted ;
+120            class hispanic race gender ;
+121            keylabel N = ' ' ;
+122            tables race all='Total of Hispanics or Latinos:', gender all = 'Total' /
+122      ! printmiss box = 'Racial Categories' ;
+123            format race $race. hispanic $hispani. gender $gender. ;
+124            where put(hispanic, $hispani.) = '1 Hispanic or Latino' ;
+125          quit ;
+126        
+127          libname __d clear ;
+128        
+129        %mend make_inclusion_table ;
+130        
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           7.11 seconds
+      cpu time            0.84 seconds
+      
