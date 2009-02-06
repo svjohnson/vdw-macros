@@ -1,0 +1,135 @@
+1                                                          The SAS System                              12:20 Friday, January 9, 2009
+
+NOTE: Unable to open SASUSER.REGSTRY. WORK.REGSTRY will be opened instead.
+NOTE: All registry changes will be lost at the end of the session.
+
+NOTE: Copyright (c) 2002-2003 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) 9.1 (TS1M3)
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 0009688001.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS 9.1.3 Service Pack 4
+
+NOTE: SAS initialization used:
+      real time           21.39 seconds
+      cpu time            0.87 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * StdVars.sas
+8          *
+9          * A site-modified program that specifies a set of standard macro variables
+10         * for things that vary by site (e.g., libname definitions) and yet should be
+11         * relatively static.  The intent here is to minimize the amount of site-programmer
+12         * editing required for new programs that use the VDW.
+13         *
+14         *********************************************/
+15         
+16         * OLD VARIABLES ;
+17           * libname locations specs ;
+18           %let _TumorLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+19           %let _EnrollLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+20           %let _DemographicLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+21           %let _RxLib                   = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+22           %let _UtilizationLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+23           %let _RxRiskLib               = \\ctrhs-sas\warehouse\sasdata\rxrisk  ;
+24           %let _VitalLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+25           %let _CensusLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+26           %let _LabLib                  = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+27           %let _Deathlib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+28         
+29           * dataset name specs ;
+30           %let _TumorData               = tumor ;
+31           %let _EnrollData              = enroll2 ;
+32           %let _DemographicData         = demog ;
+33           %let _RxData                  = rx ;
+34           %let _EverNdcData             = everndc ;
+35           %let _UtilizationData         = utilization ;
+36           %let _DeathData               = death ;
+37           %let _CODData                 = cod ;
+2                                        The SAS System            12:20 Friday, January 9, 2009
+
+38           %let _DxData                  = dx ;
+39           %let _PxData                  = px ;
+40           %let _ProviderSpecialtyData   = specfile ;
+41           %let _VitalData               = vitalsigns ;
+42           %let _CensusData              = census2000 ;
+43           %let _LabData                 = lab_results ;
+44           %let _LabDataCharacter        = lab_results_character ;
+45         
+46           /*
+47              Site code--pls use the following:
+48              01 = GHC
+49              02 = KPNW
+50              03 = KPNC
+51              04 = KPSC
+52              05 = KPHI
+53              06 = KPCO
+54              07 = HP	 (HealthPartners)
+55              08 = HPHC (Harvard Pilgrim Health Care)
+56              09 = FALLON
+57              10 = HFHS (Henry Ford)
+58              11 = KPG
+59              12 = LSHS (Lovelace)
+60              13 = MCRF (Marshfield)
+61              14 = GHS  (Geisinger)
+62           */
+63         
+64           %let _SiteCode = 01 ;
+65         
+66         * NEW VARIABLES ;
+67         
+68           * Making this intentionally wacky so as to keep from colliding w/names likely to be
+68       !  chosen in application programs. ;
+69           libname __vdw "&_TumorLib" access = readonly ;
+NOTE: Libref __VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\sasdata\crn_vdw
+70         
+71           %let _vdw_tumor               = __vdw.tumor ;
+72           %let _vdw_enroll              = __vdw.enroll2 ;
+73           %let _vdw_demographic         = __vdw.demog ;
+74           %let _vdw_rx                  = __vdw.rx ;
+75           %let _vdw_everndc             = __vdw.everndc ;
+76           %let _vdw_utilization         = __vdw.utilization ;
+77           %let _vdw_death               = __vdw.death ;
+78           %let _vdw_cause_of_death      = __vdw.cod ;
+79           %let _vdw_dx                  = __vdw.dx ;
+80           %let _vdw_px                  = __vdw.px ;
+81           %let _vdw_provider_specialty  = __vdw.specfile ;
+82           %let _vdw_vitalsigns          = __vdw.vitalsigns ;
+83           %let _vdw_census              = __vdw.census2000 ;
+84           %let _vdw_lab                 = __vdw.lab_results ;
+85           %let _vdw_lab_character       = __vdw.lab_results_character ;
+86         
+3                                        The SAS System            12:20 Friday, January 9, 2009
+
+87         
+88         * NEW REFERENCE TO THE STANDARD MACROS FILE ;
+89         * next.wiki.centerforhealthstudies.org  ;
+90         * vdw.hmoresearchnetwork.org ;
+91           filename vdw_macs  FTP     "standard_macros.sas"
+92                              HOST  = "next.wiki.centerforhealthstudies.org"
+93                              CD    = "/vdwcode"
+94                              PASS  = XXXXXXXXXXXXX
+95                              USER  = "VDWReader" ;
+96         
+97           %include vdw_macs ;
+NOTE: 220 Microsoft FTP Service
+ERROR: Physical file does not exist, standard_macros.sas.
+ERROR: Cannot open %INCLUDE file VDW_MACS.
+98           run ;
+
+ERROR: Errors printed on page 3.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           25.40 seconds
+      cpu time            1.09 seconds
+      
