@@ -93,7 +93,6 @@ run;
       libname __rx clear ;
    %end ;
 %mend GetRxForDrugs ;
-
 %macro GetRxForPeopleAndDrugs(
            People   /* The name of a dataset containing the people
                        whose fills you want. */
@@ -380,16 +379,19 @@ run;
 
     %if &SQLOBS > 0 %then %do ;
       %do i = 1 %to 5 ;
-        %PUT BCD2 NOTE: There is at least one, and may be as many as %eval(&SQLOBS/2) people with > 1 tumor dignosed on the same day, each with different receptor statuses or stages. ;
+        %PUT BCD2 NOTE: There may be as many as %eval(&SQLOBS/2) people with > 1 tumor dignosed on the same day, each with different receptor statuses or stages. ;
+        %PUT BCD2 NOTE: The macro will output composite records for each such person e.g., w/max(stage), ER+ if any are +, etc.. ;
       %end ;
       %if %length(&OutMultFirsts) > 0 %then %do ;
         create table &OutMultFirsts as
         select *
         from _multiple_firsts
         ;
-        %do i = 1 %to 5 ;
-          %put BCD2 NOTE: The multiple-first-tumor records have been written out to &OutMultFirsts ;
-        %end ;
+
+        %put BCD2 NOTE: The multiple-first-tumor records have been written out to &OutMultFirsts ;
+        %put BCD2 NOTE: The multiple-first-tumor records have been written out to &OutMultFirsts ;
+        %put BCD2 NOTE: The multiple-first-tumor records have been written out to &OutMultFirsts ;
+        %put BCD2 NOTE: The multiple-first-tumor records have been written out to &OutMultFirsts ;
       %end ;
 
     %end ;
@@ -2004,7 +2006,7 @@ proc datasets nolist ;
    %put ;
    %put ============================================================== ;
    %put ;
-   %put Macro GetFollowUpTime V0.91: ;
+   %put Macro GetFollowUpTime V0.90: ;
    %put ;
    %put Creating a dset "&OutSet", which will look just like "&People" except ;
    %put that it will have an additional variable "&CallEndDateVar", which will ;
@@ -2020,10 +2022,8 @@ proc datasets nolist ;
 
    libname __enroll "&_EnrollLib" access = readonly ;
 
-   proc sql noprint ;
-
-
-      %** Grab ENROLL recs for our ppl of interest where the periods overlap the period between &IndexDate and EndDate ;
+   proc sql ;
+    %* Grab ENROLL recs for our ppl of interest where the periods overlap the period between &IndexDate and EndDate ;
       create table &DebugOut..__enroll as
       select p.mrn
             , e.enr_start
@@ -2033,8 +2033,8 @@ proc datasets nolist ;
       from  &People as p INNER JOIN
             &EnrollDset as e
       on    p.MRN = e.MRN
-      where intnx('day', &IndexDate, -&GapTolerance, 'same') le e.enr_end AND
-            intnx('day', &EndDate  ,  &GapTolerance, 'same') ge e.enr_start
+      where &IndexDate le e.enr_end AND
+            &EndDate   ge e.enr_start
       order by mrn, enr_start
       ;
    quit ;
@@ -2047,16 +2047,7 @@ proc datasets nolist ;
                   , DaysTol  = &GapTolerance /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
                   ) ;
 
-  ** Handle the (I would hope rare) case where someone is not enrolled on their index ;
-  ** date, and the start of their enrollment is more than &GapTolerance days away. ;
-  proc sql ;
-    delete from &DebugOut..__enroll
-    where (enr_start - idate) gt &GapTolerance
-    ;
-  quit ;
-
-
-   ** The end of contiguous enrollment is enr_end on the rec w/the earliest enr_start ;
+   * The end of contiguous enrollment is enr_end on the rec w/the earliest enr_start ;
    proc sort data = &DebugOut..__enroll out = &DebugOut..__collapsed_enroll ;
       by mrn enr_start ;
    run ;
@@ -2150,10 +2141,6 @@ proc datasets nolist ;
 *		- Added disease-specific sub-categories for adults & children.
 * Modified: 10/20/2006
 *   - Adjusted enrollment merge to match new enrollment specs
-* Modified 3/24/2009 [RP]
-*   - Fixed some of the joins so that this will run on sas 9.2.
-*   - Prettied up some of the code
-*   - Made the CondCodes{i} comparison literals text so this will run w/dsoptions="note2err".
 *
 * Users of RxRisk should cite these two papers, on which the work is based:
 *
@@ -2342,6 +2329,8 @@ proc datasets nolist ;
   */
 
 	/* For adult, compute a cost factor for Medicaid when present  */
+
+
 	create table medicaid_lookup as
   select a.code
       , c.cost
@@ -2381,6 +2370,7 @@ proc datasets nolist ;
   */
 
 	/* For pediatric model, compute a cost factor for Medicaid when present  */
+
 
   create table caidchld as
   select  c.*
@@ -2456,7 +2446,7 @@ proc datasets nolist ;
 	%let keepvars=MRN Model cost;
 	data work3(keep=MRN model cost);
    		set work1(keep=&keepvars)
-          work2(keep=&keepvars)
+		    work2(keep=&keepvars)
 			caseinfo(keep=&keepvars)
 			carecost(keep=&keepvars)
 			caidcost(keep=&keepvars)
@@ -2503,147 +2493,167 @@ proc datasets nolist ;
 	/*Keep first instance of each disease*/
 	proc sort data=DiseaseAll nodupkey; by mrn code; run;
 
-  proc sort data=DiseaseAll; by mrn age; run;
-
+    proc sort data=DiseaseAll; by mrn age; run;
 	proc transpose data=DiseaseAll out=DiseaseAll prefix=CondCode;
 		var code;
 		by mrn age;
 	run;
 
-  %local flag_names ;
-  %let flag_names = Acne Allerg Alpha Amino Anxiety Asthma ADD Bipolar CAD
-                		CLS CAH PRV CF Dep Dm2 Eczema Epi ESRD GAD Glaucoma Gout
-                		GHD HD Hemophilia HIV Hyperlip HTN Immunod Iron IBS Lead
-                		Liver Malabs Malig Ostomy Pain Inflame Parkin Pituitary
-                		Psych Renal RDS RA Sickle	Steroid Thyroid Trache
-                		Transplant TB ;
-
 	/*Assign diseases*/
-	data DiseaseAll (keep=mrn Acne--TB) ;
+	data DiseaseAll (keep=mrn Acne--TB);
 		set DiseaseAll;
-		length &flag_names 3 ;
+		length Acne Allerg Alpha Amino Anxiety Asthma ADD Bipolar CAD CLS CAH PRV
+		       CF Dep Dm2 Eczema Epi ESRD GAD Glaucoma Gout GHD HD Hemophilia HIV
+		       Hyperlip HTN Immunod Iron IBS Lead	Liver Malabs Malig Ostomy Pain
+		       Inflame Parkin Pituitary Psych Renal RDS RA Sickle	Steroid Thyroid
+		       Trache Transplant TB 3
+		;
 
-		array Conds{*} &flag_names ;
-
+		array Conds{*} Acne Allerg Alpha Amino Anxiety Asthma ADD Bipolar CAD CLS
+		        CAH PRV CF Dep Dm2 Eczema	Epi ESRD GAD Glaucoma Gout GHD HD
+		        Hemophilia HIV Hyperlip HTN Immunod Iron IBS Lead	Liver Malabs Malig
+		        Ostomy Pain Inflame Parkin Pituitary Psych Renal RDS RA Sickle
+		        Steroid Thyroid Trache Transplant TB
+		;
 		do i = 1 to dim(Conds);
    			Conds{i} = 0;
 		end;
-
 		array CondCodes{*} CondCode1-CondCode&MaxDisease.;
-
 		do i = 1 to dim(CondCodes);
-			if CondCodes{i} 	   = '1' & age<&adultage.   then Acne       =1 ;
-			else if CondCodes{i} = '2' & age<&adultage. 	then Allerg     =1 ;
-			else if CondCodes{i} = '3' & age<&adultage. 	then Alpha      =1 ;
-			else if CondCodes{i} = '4' & age<&adultage. 	then Amino      =1 ;
-   		else if CondCodes{i} = '5'  					        then Anxiety    =1 ;
-   		else if CondCodes{i} = '6'  					        then Asthma     =1 ;
-			else if CondCodes{i} = '7' & age<&adultage. 	then ADD        =1 ;
-   		else if CondCodes{i} = '8'  					        then Bipolar    =1 ;
-   	  else if CondCodes{i} = '9'  					        then CAD        =1 ;
-			else if CondCodes{i} = '10' & age<&adultage. 	then CLS        =1 ;
-			else if CondCodes{i} = '11' & age<&adultage.	then CAH        =1 ;
-			else if CondCodes{i} = '12' & age>=&adultage.	then PRV        =1 ;
-			else if CondCodes{i} = '13' 					        then CF         =1 ;
-			else if CondCodes{i} = '14' 					        then Dep        =1 ;
-			else if CondCodes{i} = '15' 					        then Dm2        =1 ;
-			else if CondCodes{i} = '16' & age<&adultage.	then Eczema     =1 ;
-			else if CondCodes{i} = '17' 					        then Epi        =1 ;
-			else if CondCodes{i} = '18' & age>=&adultage.	then ESRD       =1 ;
-			else if CondCodes{i} = '19' 					        then GAD        =1 ;
-			else if CondCodes{i} = '20' & age>=&adultage.	then Glaucoma   =1 ;
-			else if CondCodes{i} = '21' & age>=&adultage.	then Gout       =1 ;
-			else if CondCodes{i} = '22' & age<&adultage.	then GHD        =1 ;
-			else if CondCodes{i} = '23' & age>=&adultage.	then HD         =1 ;
-			else if CondCodes{i} = '24' & age<&adultage.	then Hemophilia =1 ;
-			else if CondCodes{i} = '25' 					        then HIV        =1 ;
-			else if CondCodes{i} = '26' 					        then Hyperlip   =1 ;
-			else if CondCodes{i} = '27' & age>=&adultage.	then HTN        =1 ;
-			else if CondCodes{i} = '28' & age<&adultage.	then Immunod    =1 ;
-			else if CondCodes{i} = '29' & age<&adultage.	then Iron       =1 ;
-			else if CondCodes{i} = '30' 					        then IBS        =1 ;
-			else if CondCodes{i} = '31' & age<&adultage.	then Lead       =1 ;
-			else if CondCodes{i} = '32' 					        then Liver      =1 ;
-			else if CondCodes{i} = '33' & age<&adultage.	then Malabs     =1 ;
-			else if CondCodes{i} = '34' 					        then Malig      =1 ;
-			else if CondCodes{i} = '35' & age<&adultage.	then Ostomy     =1 ;
-			else if CondCodes{i} = '36' & age<&adultage.	then Pain       =1 ;
-			else if CondCodes{i} = '37' & age<&adultage.	then Inflame    =1 ;
-			else if CondCodes{i} = '38' & age>=&adultage.	then Parkin     =1 ;
-			else if CondCodes{i} = '39' & age<&adultage.	then Pituitary  =1 ;
-			else if CondCodes{i} = '40' 					        then Psych      =1 ;
-			else if CondCodes{i} = '41' 					        then Renal      =1 ;
-			else if CondCodes{i} = '42' & age<&adultage.	then RDS        =1 ;
-   		else if CondCodes{i} = '43' 					        then RA         =1 ;
-			else if CondCodes{i} = '44' & age<&adultage.	then Sickle     =1 ;
-			else if CondCodes{i} = '45' & age<&adultage.	then Steroid    =1 ;
-			else if CondCodes{i} = '46' 					        then Thyroid    =1 ;
-			else if CondCodes{i} = '47' & age<&adultage.	then Trache     =1 ;
-			else if CondCodes{i} = '48' 					        then Transplant =1 ;
-   		else if CondCodes{i} = '49' 					        then TB         =1 ;
+			if CondCodes{i} 	 = 1 & age<&adultage. 	  then Acne=1;
+			else if CondCodes{i} = 2 & age<&adultage. 	then Allerg=1;
+			else if CondCodes{i} = 3 & age<&adultage. 	then Alpha=1;
+			else if CondCodes{i} = 4 & age<&adultage. 	then Amino=1;
+   		else if CondCodes{i} = 5  					        then Anxiety=1;
+   		else if CondCodes{i} = 6  					        then Asthma=1;
+			else if CondCodes{i} = 7 & age<&adultage. 	then ADD=1;
+   		else if CondCodes{i} = 8  					        then Bipolar=1;
+   	  else if CondCodes{i} = 9  					        then CAD=1;
+			else if CondCodes{i} = 10 & age<&adultage. 	then CLS=1;
+			else if CondCodes{i} = 11 & age<&adultage.	then CAH=1;
+			else if CondCodes{i} = 12 & age>=&adultage.	then PRV=1;
+			else if CondCodes{i} = 13 					        then CF=1;
+			else if CondCodes{i} = 14 					        then Dep=1;
+			else if CondCodes{i} = 15 					        then Dm2=1;
+			else if CondCodes{i} = 16 & age<&adultage.	then Eczema=1;
+			else if CondCodes{i} = 17 					        then Epi=1;
+			else if CondCodes{i} = 18 & age>=&adultage.	then ESRD=1;
+			else if CondCodes{i} = 19 					        then GAD=1;
+			else if CondCodes{i} = 20 & age>=&adultage.	then Glaucoma=1;
+			else if CondCodes{i} = 21 & age>=&adultage.	then Gout=1;
+			else if CondCodes{i} = 22 & age<&adultage.	then GHD=1;
+			else if CondCodes{i} = 23 & age>=&adultage.	then HD=1;
+			else if CondCodes{i} = 24 & age<&adultage.	then Hemophilia=1;
+			else if CondCodes{i} = 25 					        then HIV=1;
+			else if CondCodes{i} = 26 					        then Hyperlip=1;
+			else if CondCodes{i} = 27 & age>=&adultage.	then HTN=1;
+			else if CondCodes{i} = 28 & age<&adultage.	then Immunod=1;
+			else if CondCodes{i} = 29 & age<&adultage.	then Iron=1;
+			else if CondCodes{i} = 30 					        then IBS=1;
+			else if CondCodes{i} = 31 & age<&adultage.	then Lead=1;
+			else if CondCodes{i} = 32 					        then Liver=1;
+			else if CondCodes{i} = 33 & age<&adultage.	then Malabs=1;
+			else if CondCodes{i} = 34 					        then Malig=1;
+			else if CondCodes{i} = 35 & age<&adultage.	then Ostomy=1;
+			else if CondCodes{i} = 36 & age<&adultage.	then Pain=1;
+			else if CondCodes{i} = 37 & age<&adultage.	then Inflame=1;
+			else if CondCodes{i} = 38 & age>=&adultage.	then Parkin=1;
+			else if CondCodes{i} = 39 & age<&adultage.	then Pituitary=1;
+			else if CondCodes{i} = 40 					        then Psych=1;
+			else if CondCodes{i} = 41 					        then Renal=1;
+			else if CondCodes{i} = 42 & age<&adultage.	then RDS=1;
+   		else if CondCodes{i} = 43 					        then RA=1;
+			else if CondCodes{i} = 44 & age<&adultage.	then Sickle=1;
+			else if CondCodes{i} = 45 & age<&adultage.	then Steroid=1;
+			else if CondCodes{i} = 46 					        then Thyroid=1;
+			else if CondCodes{i} = 47 & age<&adultage.	then Trache=1;
+			else if CondCodes{i} = 48 					        then Transplant=1;
+   		else if CondCodes{i} = 49 					        then TB=1;
 		end;
 	run;
 
-   proc sql;
-   /*Create Output File*/
-   create table &outfile as
-   select a.MRN
-         , a.rxrisk                                   label ='RxRisk Comorbidity'
-         , a.model                                    label ='Adult vs Pediatric Model'
-         , coalesce(b.Acne        , 0) as Acne        label ='P1 Acne'                            length=3
-         , coalesce(b.Allerg      , 0) as Allerg      label ='P2 Allergic Rhinitis'               length=3
-         , coalesce(b.Alpha       , 0) as Alpha       label ='P3 Alpha'                           length=3
-         , coalesce(b.Amino       , 0) as Amino       label ='P4 Amino Acid Disorders'            length=3
-         , coalesce(b.Anxiety     , 0) as Anxiety     label ='AP5 Anxiety and Tension'            length=3
-         , coalesce(b.Asthma      , 0) as Asthma      label ='AP6 Asthma'                         length=3
-         , coalesce(b.ADD         , 0) as ADD         label ='P7 Attention Deficit Disorder'      length=3
-         , coalesce(b.Bipolar     , 0) as Bipolar     label ='AP8 Bipolar Disorder'               length=3
-         , coalesce(b.CAD         , 0) as CAD         label ='AP9 Cardiac Disease'                length=3
-         , coalesce(b.CLS         , 0) as CLS         label ='P10 Central Line Supplies'          length=3
-         , coalesce(b.CAH         , 0) as CAH         label ='P11 Congenital Adrenal Hypoplasia'  length=3
-         , coalesce(b.PRV         , 0) as PRV         label ='A12 Coronary/Peripheral Vasc'       length=3
-         , coalesce(b.CF          , 0) as CF          label ='AP13 Cystic Fibrosis'               length=3
-         , coalesce(b.Dep         , 0) as Dep         label ='AP14 Depression'                    length=3
-         , coalesce(b.Dm2         , 0) as Dm2         label ='AP15 Diabetes'                      length=3
-         , coalesce(b.Eczema      , 0) as Eczema      label ='P16 Eczema'                         length=3
-         , coalesce(b.Epi         , 0) as Epi         label ='AP17 Epilepsy'                      length=3
-         , coalesce(b.ESRD        , 0) as ESRD        label ='A18 ESRD'                           length=3
-         , coalesce(b.GAD         , 0) as GAD         label ='AP19 Gastric Acid Disorder'         length=3
-         , coalesce(b.Glaucoma    , 0) as Glaucoma    label ='A20 Glaucoma'                       length=3
-         , coalesce(b.Gout        , 0) as Gout        label ='A21 Gout'                           length=3
-         , coalesce(b.GHD         , 0) as GHD         label ='P22 Growth Hormone Deficiency'      length=3
-         , coalesce(b.HD          , 0) as HD          label ='A23 Heart Disease/Hypertension'     length=3
-         , coalesce(b.Hemophilia  , 0) as Hemophilia  label ='P24 Hemophilia'                     length=3
-         , coalesce(b.HIV         , 0) as HIV         label ='AP25 HIV'                           length=3
-         , coalesce(b.Hyperlip    , 0) as Hyperlip    label ='AP26 Hyperlipidemia'                length=3
-         , coalesce(b.HTN         , 0) as HTN         label ='A27 Hypertension'                   length=3
-         , coalesce(b.Immunod     , 0) as Immunod     label ='P28 Immunodeficiency'               length=3
-         , coalesce(b.Iron        , 0) as Iron        label ='P29 Iron Overload'                  length=3
-         , coalesce(b.IBS         , 0) as IBS         label ='AP30 Irritable Bowel Syndrome'      length=3
-         , coalesce(b.Lead        , 0) as Lead        label ='P31 Lead Poisoning'                 length=3
-         , coalesce(b.Liver       , 0) as Liver       label ='AP32 Liver Disease'                 length=3
-         , coalesce(b.Malabs      , 0) as Malabs      label ='P33 Malabsorbtion'                  length=3
-         , coalesce(b.Malig       , 0) as Malig       label ='AP34 Malignancies'                  length=3
-         , coalesce(b.Ostomy      , 0) as Ostomy      label ='P35 Ostomy'                         length=3
-         , coalesce(b.Pain        , 0) as Pain        label ='P36 Pain'                           length=3
-         , coalesce(b.Inflame     , 0) as Inflame     label ='P37 Pain and Inflammation'          length=3
-         , coalesce(b.Parkin      , 0) as Parkin      label ='A38 Parkinsons Disease'             length=3
-         , coalesce(b.Pituitary   , 0) as Pituitary   label ='P39 Pituitary Hormone'              length=3
-         , coalesce(b.Psych       , 0) as Psych       label ='AP40 Psychotic Illness'             length=3
-         , coalesce(b.Renal       , 0) as Renal       label ='AP41 Renal Disease'                 length=3
-         , coalesce(b.RDS         , 0) as RDS         label ='P42 Respiratory Distriess Syndrome' length=3
-         , coalesce(b.RA          , 0) as RA          label ='AP43 Rheumatoid Arthritis'          length=3
-         , coalesce(b.Sickle      , 0) as Sickle      label ='P44 Sickle Cell Anemia'             length=3
-         , coalesce(b.Steroid     , 0) as Steroid     label ='P45 Steroid Dependent Disease'      length=3
-         , coalesce(b.Thyroid     , 0) as Thyroid     label ='AP46 Thyroid Disorder'              length=3
-         , coalesce(b.Trache      , 0) as Trache      label ='P47 Tracheostomy'                   length=3
-         , coalesce(b.Transplant  , 0) as Transplant  label ='AP48 Transplant'                    length=3
-         , coalesce(b.TB          , 0) as TB          label ='AP49 Tuberculosis'                  length=3
-   from work4 as a
-      LEFT JOIN
-       DiseaseAll as b
-   on a.mrn=b.mrn
-   ;
+	proc sql;
+	/*Create Output File*/
+	create table &outfile as
+	select a.MRN
+			 , a.rxrisk							            label ='RxRisk Comorbidity'
+			 , a.model							            label ='Adult vs Pediatric Model'
+		   , coalesce(b.Acne , 0) as Acne 		label ='P1 Acne'              length=3
+		   , coalesce(b.Allerg , 0) as Allerg label ='P2 Allergic Rhinitis' length=3
+		   , coalesce(b.Alpha , 0) as Alpha 	label ='P3 Alpha'             length=3
+		   , coalesce(b.Amino , 0) as Amino	  label ='P4 Amino Acid Disorders'
+		                                                                    length=3
+		   , coalesce(b.Anxiety , 0) as Anxiety label ='AP5 Anxiety and Tension'
+		                                                                    length=3
+		   , coalesce(b.Asthma , 0) as Asthma label ='AP6 Asthma'           length=3
+		   , coalesce(b.ADD , 0) as ADD 		  label ='P7 Attention Deficit Disorder'
+		                                                                    length=3
+		   , coalesce(b.Bipolar , 0) as Bipolar label ='AP8 Bipolar Disorder'
+		                                                                    length=3
+		   , coalesce(b.CAD , 0) as CAD		    label ='AP9 Cardiac Disease'  length=3
+		   , coalesce(b.CLS , 0) as CLS	      label ='P10 Central Line Supplies'
+		                                                                    length=3
+		   , coalesce(b.CAH , 0) as CAH	  label ='P11 Congenital Adrenal Hypoplasia'
+		                                                                    length=3
+		   , coalesce(b.PRV , 0) as PRV	      label ='A12 Coronary/Peripheral Vasc'
+		                                                                    length=3
+		   , coalesce(b.CF , 0) as CF		      label ='AP13 Cystic Fibrosis' length=3
+		   , coalesce(b.Dep , 0) as Dep	      label ='AP14 Depression'      length=3
+		   , coalesce(b.Dm2 , 0) as Dm2	      label ='AP15 Diabetes'        length=3
+		   , coalesce(b.Eczema , 0) as Eczema	label ='P16 Eczema'           length=3
+		   , coalesce(b.Epi , 0) as Epi		    label ='AP17 Epilepsy'        length=3
+		   , coalesce(b.ESRD , 0) as ESRD		  label ='A18 ESRD'             length=3
+		   , coalesce(b.GAD , 0) as GAD	label ='AP19 Gastric Acid Disorder' length=3
+		   , coalesce(b.Glaucoma , 0) as Glaucoma label ='A20 Glaucoma'     length=3
+		   , coalesce(b.Gout , 0) as Gout		  label ='A21 Gout'             length=3
+		   , coalesce(b.GHD , 0) as GHD		    label ='P22 Growth Hormone Deficiency'
+		                                                                    length=3
+		   , coalesce(b.HD , 0) as HD			   label ='A23 Heart Disease/Hypertension'
+		                                                                    length=3
+		   , coalesce(b.Hemophilia , 0) as Hemophilia label ='P24 Hemophilia'
+		                                                                    length=3
+		   , coalesce(b.HIV , 0) as HIV		    label ='AP25 HIV'             length=3
+		   , coalesce(b.Hyperlip , 0) as Hyperlip label ='AP26 Hyperlipidemia'
+		                                                                    length=3
+		   , coalesce(b.HTN , 0) as HTN		    label ='A27 Hypertension'     length=3
+		   , coalesce(b.Immunod , 0) as Immunod label ='P28 Immunodeficiency'
+		                                                                    length=3
+		   , coalesce(b.Iron , 0) as Iron		  label ='P29 Iron Overload'    length=3
+		   , coalesce(b.IBS , 0) as IBS		    label ='AP30 Irritable Bowel Syndrome'
+		                                                                    length=3
+		   , coalesce(b.Lead , 0) as Lead		  label ='P31 Lead Poisoning'   length=3
+		   , coalesce(b.Liver , 0) as Liver	  label ='AP32 Liver Disease'   length=3
+		   , coalesce(b.Malabs , 0) as Malabs	label ='P33 Malabsorbtion'    length=3
+		   , coalesce(b.Malig , 0) as Malig	  label ='AP34 Malignancies'    length=3
+		   , coalesce(b.Ostomy , 0) as Ostomy	label ='P35 Ostomy'           length=3
+		   , coalesce(b.Pain , 0) as Pain		  label ='P36 Pain'             length=3
+		   , coalesce(b.Inflame , 0) as Inflame label ='P37 Pain and Inflammation'
+		                                                                    length=3
+		   , coalesce(b.Parkin , 0) as Parkin	label ='A38 Parkinsons Disease'
+		                                                                    length=3
+		   , coalesce(b.Pituitary , 0) as Pituitary label ='P39 Pituitary Hormone'
+		                                                                    length=3
+		   , coalesce(b.Psych , 0) as Psych	label ='AP40 Psychotic Illness' length=3
+		   , coalesce(b.Renal , 0) as Renal	label ='AP41 Renal Disease'     length=3
+		   , coalesce(b.RDS , 0) as RDS	label ='P42 Respiratory Distriess Syndrome'
+		                                                                    length=3
+		   , coalesce(b.RA , 0) as RA		label ='AP43 Rheumatoid Arthritis'  length=3
+		   , coalesce(b.Sickle , 0) as Sickle	label ='P44 Sickle Cell Anemia'
+		                                                                    length=3
+		   , coalesce(b.Steroid,0) as Steroid label ='P45 Steroid Dependent Disease'
+		                                                                    length=3
+		   , coalesce(b.Thyroid , 0) as Thyroid label ='AP46 Thyroid Disorder'
+		                                                                    length=3
+		   , coalesce(b.Trache , 0) as Trache	label ='P47 Tracheostomy'     length=3
+		   , coalesce(b.Transplant,0) as Transplant label ='AP48 Transplant'
+		                                                                    length=3
+		   , coalesce(b.TB, 0) as TB			label ='AP49 Tuberculosis'        length=3
+
+	from work4 as a
+		LEFT JOIN
+		 DiseaseAll as b
+	on a.mrn=b.mrn
+	;
 
 	drop table work4;
 	quit;
@@ -4156,36 +4166,20 @@ run;
 */
 
    proc sql noprint ;
-      ** How many days long is the period of interest? ;
+      * How many days long is the period of interest? ;
       create table dual (x char(1)) ;
       insert into dual(x) values ('x') ;
       select ("&EndDt"d - "&StartDt"d + 1) as TotDays
-            , intnx('day', "&StartDt"d, -&DaysTol, 'same') as earliest_start format = date9.
-            , intnx('day', "&EndDt"d  ,  &DaysTol, 'same') as latest_end     format = date9.
-               into :TotDays, :EarliestStart, :LatestEnd
+               into :TotDays
       from  dual ;
    quit ;
 
    %put ;
    %put ;
-   %put SimpleContinuous macro--pulling continuous enrollment information for the MRNs in &People ;
+   %put ContinuousEnroll macro--pulling continuous enrollment information for the MRNs in &People ;
    %put between &StartDt and &EndDt (&TotDays days total).;
    %put ;
    %put ;
-
-/*
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-*/
-
 
    proc sql ;
       * Uniquify the list of MRNs, just in case ;
@@ -4201,8 +4195,8 @@ run;
       from &EnrollDset as e INNER JOIN
           _ids as i
       on    e.MRN = i.MRN
-      where "&EarliestStart"d le e.enr_end AND
-            "&LatestEnd"d     ge e.enr_start
+      where "&StartDt"d le e.enr_end AND
+            "&EndDt"d   ge e.enr_start
             ;
 
    * Collapse any contiguous periods of enrollment. ;
@@ -4357,12 +4351,11 @@ run;
    quit ;
 
    * ROY--CHANGE THIS BACK TO PULLING FROM THE FTP SERVER!!! ;
-  filename kid_bmi   FTP     "gc-calculate-BIV.sas"
-                     HOST  = "vdw.hmoresearchnetwork.org"
-                     CD    = "/vdwcode"
-                     PASS  = "%2hilario36"
-                     USER  = "VDWReader" ;
-
+   filename kid_bmi   FTP     "gc-calculate-BIV.sas"
+                      HOST  = "centerforhealthstudies.org"
+                      CD    = "/CRNSAS"
+                      PASS  = "%1thunder#dog"
+                      USER  = "CRNReader" ;
 
    * filename kid_bmi "\\groups\data\CTRHS\Crn\S D R C\VDW\VitalSigns\gc-calculate-BIV.sas" ;
 

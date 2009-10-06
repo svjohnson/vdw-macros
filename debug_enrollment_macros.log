@@ -1,0 +1,463 @@
+1                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+NOTE: Copyright (c) 2002-2008 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.2 (TS1M0) 
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 70007081.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS initialization used:
+      real time           4.63 seconds
+      cpu time            0.51 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Center For Health Studies
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\debug_enrollment_macros.sas
+8          *
+9          * Kay Theis found discrepancies between %SimpleContinuous and %GetFollowUpTime.
+10         * This program helped me to find and fix them.
+11         *
+12         * This program should be run as a check any time either macro is altered.
+13         *
+14         *********************************************/
+15         
+16         /* This is managed in the login script so that it doesnt
+17            actually try to login when the machine is not connected
+18            to the network */
+19         %include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.04 seconds
+      cpu time            0.01 seconds
+      
+
+NOTE: Remote signon to CHSDWSAS commencing (SAS Release 9.02.01M0P020508).
+NOTE: Script file 'tcpwin.scr' entered.
+NOTE: Logged onto Windows... Starting remote SAS now.
+NOTE: SAS/CONNECT conversation established.
+NOTE: Copyright (c) 2002-2008 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.2 (TS1M0) 
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 70007082.
+NOTE: This session is executing on the NET_SRV  platform.
+
+
+
+NOTE: SAS initialization used:
+      real time           0.42 seconds
+      cpu time            0.15 seconds
+      
+NOTE: Remote signon to CHSDWSAS complete.
+2                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+NOTE: Remote submit to CHSDWSAS commencing.
+1    ***********************;
+2    * Set the typical libnames... ;
+3    %let DWROOT = \\ctrhs-sas\warehouse\SasData\ ;
+4    libname consumer  "&DWROOT.Consumer" ;
+NOTE: Libref CONSUMER was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer
+5    libname chsid     "&DWROOT.CHSID" ;
+NOTE: Libref CHSID was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CHSID
+6    libname demogs    "&DWROOT.Consumer Demographics" ;
+NOTE: Libref DEMOGS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Consumer Demographics
+7    libname enroll    "&DWROOT.Enrollment" ;
+NOTE: Libref ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Enrollment
+8    libname nac       "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libref NAC was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+9    libname naaccr    "&DWROOT.Cancer\Naaccr" ;
+NOTE: Libname NAACCR refers to the same physical library as NAC.
+NOTE: Libref NAACCR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Cancer\Naaccr
+10   libname baseline  "&DWROOT.Baseline" ;
+NOTE: Libref BASELINE was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Baseline
+11   libname arpa      "&DWROOT.arpa" ;
+NOTE: Libref ARPA was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\arpa
+12   libname mbhist    "&DWROOT.mbhist" ;
+NOTE: Libref MBHIST was successfully assigned as follows: 
+      Engine:        V9 
+3                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbhist
+13   libname mbcurr    "&DWROOT.mbcurr" ;
+NOTE: Libref MBCURR was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\mbcurr
+14   libname claims    "&DWROOT.claims" ;
+NOTE: Libref CLAIMS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\claims
+15   libname death     "&DWROOT.death" ;
+NOTE: Libref DEATH was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\death
+16   libname hosp      "&DWROOT.Hospital" ;
+NOTE: Libref HOSP was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+17   libname VDW       "&DWROOT.CRN_VDW" ;
+NOTE: Libref VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+18   libname hosps     "&DWROOT.hospital" ;
+NOTE: Libname HOSPS refers to the same physical library as HOSP.
+NOTE: Libref HOSPS was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\Hospital
+19   libname rx        "&DWROOT.rx" ;
+NOTE: Libref RX was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\rx
+20   libname lab       "&DWROOT.lab" ;
+NOTE: Libref LAB was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\lab
+21   libname s         "\\ctrhs-sas\sasuser\pardre1" ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1
+22   
+23   footnote "Program file: &CurrFile " ;
+24   
+25   
+26   options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' dsoptions="note2err" ;
+27   
+28   libname s '\\ctrhs-sas\sasuser\pardre1\debug_enrollment' ;
+NOTE: Libref S was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\sasuser\pardre1\debug_enrollment
+29   
+30   data main ;
+31     set s.roy(keep = mrn) ;
+32   run ;
+
+4                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+NOTE: There were 9285 observations read from the data set S.ROY.
+NOTE: The data set WORK.MAIN has 9285 observations and 1 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.09 seconds
+      cpu time            0.04 seconds
+      
+
+33   
+34   %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+NOTE: Libname __VDW refers to the same physical library as VDW.
+NOTE: Libref __VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+131  %**include vdw_macs ;
+132  
+133  %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas" ;
+4711  
+4712  %**let my_start_date = 01Oct2006 ;
+4713  %let my_start_date = 01jan2007 ;
+4714  %let my_end_date = 31Dec2008 ;
+4715  
+4716  ** try 01jan2007 as an index/start ;
+4717  
+4718  %GetFollowUpTime(
+4719                   People=main
+4720                 , IndexDate="&my_start_date"d
+4721                 , EndDate="&my_end_date"d
+4722                 , GapTolerance=90
+4723                 , CallEndDateVar=disenroll_date
+4724                 , OutSet  = s.disenrollment
+4725                 , DebugOut = work
+4726                   ) ;
+
+
+==============================================================
+
+Macro GetFollowUpTime V0.91:
+
+Creating a dset "s.disenrollment", which will look just like "main" except
+that it will have an additional variable "disenroll_date", which will
+hold the earliest of date-of-last-enrollment, or "31Dec2008"d (or, if the
+person was not enrolled at all a missing value).
+
+THIS IS BETA SOFTWARE-PLEASE SCRUTINIZE THE RESULTS AND REPORT PROBLEMS
+
+==============================================================
+
+
+NOTE: Libname __ENROLL refers to the same physical library as __VDW.
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: SAS threaded sort was used.
+5                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+NOTE: Table WORK.__ENROLL created, with 23696 rows and 5 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           1:09.67
+      cpu time            9.18 seconds
+      
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           38.65 seconds
+      cpu time            2.54 seconds
+      
+
+VarList is mrn idate edate
+
+NOTE: There were 23696 observations read from the data set WORK.__ENROLL.
+NOTE: SAS sort was used.
+NOTE: 0 observations with duplicate key values were deleted.
+NOTE: The data set WORK.__ENROLL has 23696 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.62 seconds
+      cpu time            0.03 seconds
+      
+
+
+NOTE: There were 23696 observations read from the data set WORK.__ENROLL.
+NOTE: The data set WORK.__ENROLL has 9361 observations and 7 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.31 seconds
+      cpu time            0.04 seconds
+      
+
+
+NOTE: There were 9361 observations read from the data set WORK.__ENROLL.
+NOTE: The data set WORK.__ENROLL has 9361 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.28 seconds
+      cpu time            0.00 seconds
+      
+
+NOTE: 74 rows were deleted from WORK.__ENROLL.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.07 seconds
+      cpu time            0.00 seconds
+      
+
+
+NOTE: There were 9287 observations read from the data set WORK.__ENROLL.
+NOTE: SAS sort was used.
+NOTE: The data set WORK.__COLLAPSED_ENROLL has 9287 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.12 seconds
+      cpu time            0.03 seconds
+6                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+      
+
+
+NOTE: There were 9287 observations read from the data set WORK.__COLLAPSED_ENROLL.
+NOTE: SAS sort was used.
+NOTE: 2 observations with duplicate key values were deleted.
+NOTE: The data set WORK.__FIRST_PERIODS has 9285 observations and 5 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.20 seconds
+      cpu time            0.03 seconds
+      
+
+NOTE: Table S.DISENROLLMENT created, with 9285 rows and 2 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.56 seconds
+      cpu time            0.07 seconds
+      
+
+4727  run;
+4728  
+4729  %SimpleContinuous(
+4730                   People=main
+4731                  , StartDt= &my_start_date
+4732                  , Enddt= &my_end_date
+4733                  , DaysTol = 90
+4734                  , outset = s.enrollment
+4735                  );
+NOTE: Libname __ENROLL refers to the same physical library as __VDW.
+NOTE: Libref __ENROLL was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\SasData\CRN_VDW
+NOTE: Table WORK.DUAL created, with 0 rows and 1 columns.
+NOTE: 1 row was inserted into WORK.DUAL.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.09 seconds
+      cpu time            0.01 seconds
+      
+
+
+
+SimpleContinuous macro--pulling continuous enrollment information for the MRNs in main
+between 01jan2007 and 31Dec2008 (     731 days total).
+
+
+NOTE: Table WORK._IDS created, with 9285 rows and 1 columns.
+
+NOTE: Table WORK._PERIODS created, with 23696 rows and 3 columns.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           28.21 seconds
+      cpu time            4.29 seconds
+7                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+      
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           29.79 seconds
+      cpu time            2.18 seconds
+      
+
+VarList is mrn
+
+NOTE: There were 23696 observations read from the data set WORK._PERIODS.
+NOTE: SAS sort was used.
+NOTE: 0 observations with duplicate key values were deleted.
+NOTE: The data set WORK._PERIODS has 23696 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.46 seconds
+      cpu time            0.06 seconds
+      
+
+
+NOTE: There were 23696 observations read from the data set WORK._PERIODS.
+NOTE: The data set WORK._PERIODS has 9361 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.36 seconds
+      cpu time            0.04 seconds
+      
+
+
+NOTE: There were 9361 observations read from the data set WORK._PERIODS.
+NOTE: The data set WORK._PERIODS has 9361 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.26 seconds
+      cpu time            0.01 seconds
+      
+
+NOTE: Table WORK._PERIOD_DAYS created, with 9361 rows and 2 columns.
+
+NOTE: Table S.ENROLLMENT created, with 9285 rows and 3 columns.
+
+NOTE: No rows were inserted into S.ENROLLMENT.
+
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.70 seconds
+      cpu time            0.12 seconds
+      
+
+NOTE: Libref __ENROLL has been deassigned.
+4736  run;
+4737  
+4738  proc freq data = s.enrollment ;
+4739    tables continuouslyenrolled / missing ;
+4740  run ;
+
+NOTE: There were 9285 observations read from the data set S.ENROLLMENT.
+8                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+NOTE: The PROCEDURE FREQ printed page 1.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.17 seconds
+      cpu time            0.06 seconds
+      
+
+4741  
+4742  proc freq data = s.disenrollment ;
+4743    tables disenroll_date / missing ;
+4744  run ;
+
+NOTE: There were 9285 observations read from the data set S.DISENROLLMENT.
+NOTE: The PROCEDURE FREQ printed page 2.
+NOTE: PROCEDURE FREQ used (Total process time):
+      real time           0.14 seconds
+      cpu time            0.01 seconds
+      
+
+4745  
+4746  proc sql ;
+4747    create table s.discreps as
+4748    select mrn, 'passed gfut, but not sc' as reason
+4749    from s.disenrollment
+4750    where disenroll_date = "&my_end_date"d AND mrn not in (select mrn from s.enrollment where continuouslyenrolled = 1)
+4751    ;
+NOTE: Table S.DISCREPS created, with 0 rows and 2 columns.
+
+4752  
+4753    insert into s.discreps
+4754    select e.mrn, 'passed sc, but not gfut' as reason
+4755    from s.enrollment as e
+4756    where e.continuouslyenrolled = 1 and mrn not in (select mrn from s.disenrollment where disenroll_date = "&my_end_date"d) ;
+NOTE: No rows were inserted into S.DISCREPS.
+
+4757  
+4758    create table s.raw_enroll as
+4759    select e.mrn, enr_start, enr_end
+4760    from vdw.enroll2 as e INNER JOIN
+4761        s.discreps as m
+4762    on    e.mrn = m.mrn
+4763    order by e.mrn, enr_start, enr_end
+4764    ;
+NOTE: SAS threaded sort was used.
+NOTE: Table S.RAW_ENROLL created, with 0 rows and 3 columns.
+
+4765  
+4766  quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.45 seconds
+      cpu time            0.14 seconds
+      
+
+4767  
+9                                                          The SAS System                               09:51 Tuesday, July 28, 2009
+
+4768  /*
+4769  gfut is more liberal than sc--it lets in 2 more people.
+4770  
+4771  These people were both
+4772  
+4773  proc sql ;
+4774    delete from main
+4775    where mrn not in (select mrn from s.discreps)
+4776    ;
+4777  quit ;
+4778  
+4779  %SimpleContinuous(
+4780                   People=main
+4781                  , StartDt= 01Oct2006
+4782                  , Enddt= 31Dec2008
+4783                  , DaysTol = 90
+4784                  , outset = s.discrep_enrollment
+4785                  );
+4786  
+4787  proc freq data = s.discrep_enrollment ;
+4788    tables continuouslyenrolled / missing ;
+4789  run ;
+4790  */
+4791  
+4792  
+4793  /*
+4794    Now we have a problem w/GFUT--its too generous.
+4795      not enrolled on index & gap from index to first enrollment is too long.
+4796  
+4797  */
+NOTE: Remote submit to CHSDWSAS complete.
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           3:08.15
+      cpu time            1.21 seconds
+      

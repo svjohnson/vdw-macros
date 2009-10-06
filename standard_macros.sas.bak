@@ -93,7 +93,6 @@ run;
       libname __rx clear ;
    %end ;
 %mend GetRxForDrugs ;
-
 %macro GetRxForPeopleAndDrugs(
            People   /* The name of a dataset containing the people
                        whose fills you want. */

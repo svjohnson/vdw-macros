@@ -31,7 +31,7 @@
   %let _EnrollData              = enroll2 ;
   %let _DemographicData         = demog ;
   %let _RxData                  = rx ;
-  %let _EverNdcData             = everndc ;
+  %let _EverNdcData             = EverNDC_1998_2007 ;
   %let _UtilizationData         = utilization ;
   %let _DeathData               = death ;
   %let _CODData                 = cod ;
@@ -70,21 +70,21 @@
   * Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
   libname __vdw "&_TumorLib" access = readonly ;
 
-  %let _vdw_tumor               = __vdw.tumor ;
-  %let _vdw_enroll              = __vdw.enroll2 ;
-  %let _vdw_demographic         = __vdw.demog ;
-  %let _vdw_rx                  = __vdw.rx ;
-  %let _vdw_everndc             = __vdw.everndc ;
-  %let _vdw_utilization         = __vdw.utilization ;
-  %let _vdw_death               = __vdw.death ;
-  %let _vdw_cause_of_death      = __vdw.cod ;
-  %let _vdw_dx                  = __vdw.dx ;
-  %let _vdw_px                  = __vdw.px ;
-  %let _vdw_provider_specialty  = __vdw.specfile ;
-  %let _vdw_vitalsigns          = __vdw.vitalsigns ;
-  %let _vdw_census              = __vdw.census2000 ;
-  %let _vdw_lab                 = __vdw.lab_results ;
-  %let _vdw_lab_character       = __vdw.lab_results_character ;
+  %let _vdw_tumor               = __vdw.&_TumorData ;
+  %let _vdw_enroll              = __vdw.&_EnrollData ;
+  %let _vdw_demographic         = __vdw.&_DemographicData ;
+  %let _vdw_rx                  = __vdw.&_RxData ;
+  %let _vdw_everndc             = __vdw.&_EverNdcData ;
+  %let _vdw_utilization         = __vdw.&_UtilizationData ;
+  %let _vdw_death               = __vdw.&_DeathData ;
+  %let _vdw_cause_of_death      = __vdw.&_CODData ;
+  %let _vdw_dx                  = __vdw.&_DxData ;
+  %let _vdw_px                  = __vdw.&_PxData ;
+  %let _vdw_provider_specialty  = __vdw.&_ProviderSpecialtyData ;
+  %let _vdw_vitalsigns          = __vdw.&_VitalData ;
+  %let _vdw_census              = __vdw.&_CensusData ;
+  %let _vdw_lab                 = __vdw.&_LabData ;
+  %let _vdw_lab_character       = __vdw.&_LabDataCharacter ;
 
 
 * NEW REFERENCE TO THE STANDARD MACROS FILE ;
