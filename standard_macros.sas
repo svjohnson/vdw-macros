@@ -4,9 +4,19 @@
 * (206) 287-2078
 * pardee.r@ghc.org
 *
-* \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\CRN_VDW_MACROS.sas
+* \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas
 *
 * Contains standard VDW macros for use against VDW data.
+*
+* These macros are documented here:
+* https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/vdw-standard-macros
+*
+* Anything documented on that page is supported--please report bugs to pardee.r@ghc.org.
+*
+* You will find other macros in this file--most are helpers for the documented macros.  There may
+* also be a vestigial macro or two (there are none when I write this comment, but who knows what
+* the future may bring?).  Any such macros are unsupported.
+*
 *********************************************/
 
 * Utility macro for fairly precisely calculating age. ;
