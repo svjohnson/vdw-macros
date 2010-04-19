@@ -1,0 +1,334 @@
+1                                                          The SAS System                               07:20 Monday, April 19, 2010
+
+NOTE: Copyright (c) 2002-2008 by SAS Institute Inc., Cary, NC, USA. 
+NOTE: SAS (r) Proprietary Software 9.2 (TS1M0) 
+      Licensed to GROUP HEALTH COOPERATIVE OF PUGET SOUND, Site 70007081.
+NOTE: This session is executing on the XP_PRO  platform.
+
+
+
+NOTE: SAS initialization used:
+      real time           5.37 seconds
+      cpu time            1.03 seconds
+      
+1          /*********************************************
+2          * Roy Pardee
+3          * Group Health Research Institute
+4          * (206) 287-2078
+5          * pardee.r@ghc.org
+6          *
+7          * \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\TestSimpleContinuous2.sas
+8          *
+9          * Investigate a problem w/%sc reported by Sharon Fuller, and hopefully
+10         * serve as a solid test suite going forward.
+11         *
+12         * Period of interest is all of 2003 and 2004, we will allow 90 days gaps.
+13         *********************************************/
+14         
+15         %**include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
+16         
+17         options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' dsoptions="note2err" NOSQLREMERGE ;
+18         
+19         %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+NOTE: Libref __VDW was successfully assigned as follows: 
+      Engine:        V9 
+      Physical Name: \\ctrhs-sas\warehouse\sasdata\crn_vdw
+116        
+117        %**let macfile = \\ctrhs-sas\Warehouse\Sasdata\CRN_VDW\lib\standard_macros.sas ;  ** <-- Non-updated version. ;
+118        %let macfile = \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas ;  ** <-- Working copy. ;
+119        
+120        %include "&macfile" ;
+4643       
+4644       data fake_people ;
+4645         infile datalines truncover ;
+4646         input
+4647           @1  mrn         $char10.
+4648           @11 ce_expected 1.0
+4649           @13 description $char100.
+4650         ;
+4651       datalines ;
+
+NOTE: The data set WORK.FAKE_PEOPLE has 9 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.01 seconds
+      cpu time            0.01 seconds
+      
+2 The SAS System                                                                                                          07:20 Monday, April 19, 2010
+
+ERROR: Undetermined I/O failure.
+
+4661       ;
+4662       run ;
+4663       data fake_enroll ;
+4664         input
+4665           @1    mrn         $char10.
+4666           @11   enr_start   date9.
+4667           @23   enr_end     date9.
+4668         ;
+4669         format
+4670           enr_: mmddyy10.
+4671         ;
+4672       datalines ;
+
+NOTE: The data set WORK.FAKE_ENROLL has 13 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+4686       ;
+4687       run ;
+4688       
+4689       options mprint ;
+4690       
+4691       %SimpleContinuous(People    = fake_people  /* A dataset of MRNs whose enrollment we are considering. */
+4692                        , StartDt  = 01jan2003    /* A date literal identifying the start of the period of interest. */
+4693                        , EndDt    = 31dec2004    /* A date literal identifying the end of the period of interest. */
+4694                        , DaysTol  = 90    /* The # of days gap between otherwise contiguous periods of enrollment that is tolerable. */
+4695                        , OutSet   = fake_out    /* Name of the desired output dset */
+4696                        , EnrollDset = fake_enroll /* For testing. */
+4697                        ) ;
+MPRINT(SIMPLECONTINUOUS):   proc sql noprint ;
+MPRINT(SIMPLECONTINUOUS):   ** How many days long is the period of interest? ;
+MPRINT(SIMPLECONTINUOUS):   create table dual (x char(1)) ;
+NOTE: Table WORK.DUAL created, with 0 rows and 1 columns.
+MPRINT(SIMPLECONTINUOUS):   insert into dual(x) values ('x') ;
+NOTE: 1 row was inserted into WORK.DUAL.
+
+MPRINT(SIMPLECONTINUOUS):   select ("31dec2004"d - "01jan2003"d + 1) as TotDays into :TotDays from dual ;
+MPRINT(SIMPLECONTINUOUS):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.01 seconds
+      
+
+
+
+SimpleContinuous macro--pulling continuous enrollment information for the MRNs in fake_people
+between 01jan2003 and 31dec2004 (     731 days total).
+
+
+3 The SAS System                                                                                                          07:20 Monday, April 19, 2010
+
+MPRINT(SIMPLECONTINUOUS):   proc sql ;
+MPRINT(SIMPLECONTINUOUS):   ** Uniquify the list of MRNs, just in case ;
+MPRINT(SIMPLECONTINUOUS):   create table _ids as select distinct MRN from fake_people ;
+NOTE: Table WORK._IDS created, with 9 rows and 1 columns.
+
+MPRINT(SIMPLECONTINUOUS):   ** Gather start/end dates from enroll that could possibly cover the period of interest. ;
+MPRINT(SIMPLECONTINUOUS):   ** We no longer look out past the POI--now we just manually correct gaps at the beginning and end of the POI. ;
+MPRINT(SIMPLECONTINUOUS):   create table _periods as select e.MRN , e.enr_start , e.enr_end from fake_enroll as e INNER JOIN _ids as i on e.MRN = 
+i.MRN where "01jan2003"d le e.enr_end AND "31dec2004"d ge e.enr_start ;
+NOTE: Table WORK._PERIODS created, with 11 rows and 3 columns.
+
+MPRINT(SIMPLECONTINUOUS):   ** Collapse any contiguous periods of enrollment. ;
+MPRINT(GETVARLIST):   ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.02 seconds
+      cpu time            0.02 seconds
+      
+
+MPRINT(GETVARLIST):   proc sql noprint ;
+MPRINT(GETVARLIST):   * describe table dictionary.columns ;
+MPRINT(GETVARLIST):   select name into :VarList separated by ' ' from dictionary.columns where memtype ne 'VIEW' AND upcase(compress(libname || '.' 
+|| memname)) = "WORK._PERIODS" AND upcase(name) not in ("ENR_START", "ENR_END") ;
+MPRINT(GETVARLIST):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.21 seconds
+      cpu time            0.18 seconds
+      
+
+MPRINT(COLLAPSEPERIODS):   ;
+VarList is mrn
+Length of varlist is 3
+MPRINT(COLLAPSEPERIODS):   proc sort nodupkey data = work._periods ;
+MPRINT(COLLAPSEPERIODS):   by MRN enr_start mrn enr_end ;
+MPRINT(COLLAPSEPERIODS):   run ;
+
+NOTE: There were 11 observations read from the data set WORK._PERIODS.
+NOTE: Duplicate BY variable(s) specified. Duplicates will be ignored.
+NOTE: SAS sort was used.
+NOTE: 0 observations with duplicate key values were deleted.
+NOTE: The data set WORK._PERIODS has 11 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+MPRINT(COLLAPSEPERIODS):   data work._periods ;
+MPRINT(COLLAPSEPERIODS):   retain PeriodStart PeriodEnd ;
+MPRINT(COLLAPSEPERIODS):   format PeriodStart PeriodEnd mmddyy10. ;
+MPRINT(COLLAPSEPERIODS):   set work._periods(rename = (enr_start = _enr_start enr_end = _enr_end)) ;
+MPRINT(COLLAPSEPERIODS):   by MRN mrn NOTSORTED ;
+MPRINT(COLLAPSEPERIODS):   if first.mrn then do ;
+MPRINT(COLLAPSEPERIODS):   * Start of a new period--initialize. ;
+MPRINT(COLLAPSEPERIODS):   PeriodStart = _enr_start ;
+4 The SAS System                                                                                                          07:20 Monday, April 19, 2010
+
+MPRINT(COLLAPSEPERIODS):   PeriodEnd = _enr_end ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   * else do ;
+MPRINT(COLLAPSEPERIODS):   * if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
+MPRINT(COLLAPSEPERIODS):   if (PeriodStart <= _enr_start <= (PeriodEnd + 90)) then do ;
+MPRINT(COLLAPSEPERIODS):   * Extend the period end out to whichever is longer--the period or the record. ;
+MPRINT(COLLAPSEPERIODS):   PeriodEnd = max(_enr_end, PeriodEnd) ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   else do ;
+MPRINT(COLLAPSEPERIODS):   * We are in a new period--output the last rec & reinitialize. ;
+MPRINT(COLLAPSEPERIODS):   output ;
+MPRINT(COLLAPSEPERIODS):   PeriodStart = _enr_start ;
+MPRINT(COLLAPSEPERIODS):   PeriodEnd = _enr_end ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   * end ;
+MPRINT(COLLAPSEPERIODS):   if last.mrn then do ;
+MPRINT(COLLAPSEPERIODS):   output ;
+MPRINT(COLLAPSEPERIODS):   end ;
+MPRINT(COLLAPSEPERIODS):   run ;
+
+NOTE: There were 11 observations read from the data set WORK._PERIODS.
+NOTE: The data set WORK._PERIODS has 9 observations and 5 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+MPRINT(COLLAPSEPERIODS):   * Now we have the actual start/stop dates in PeriodStart & PeriodEnd--rename those to ;
+MPRINT(COLLAPSEPERIODS):   * the original record start/stop variable names, and strip out any wacky recs where start comes after end ;
+MPRINT(COLLAPSEPERIODS):   data work._periods ;
+MPRINT(COLLAPSEPERIODS):   set work._periods(rename = (PeriodStart = enr_start PeriodEnd = enr_end)) ;
+MPRINT(COLLAPSEPERIODS):   * if PeriodStart le PeriodEnd ;
+MPRINT(COLLAPSEPERIODS):   drop _enr_start _enr_end ;
+MPRINT(COLLAPSEPERIODS):   run ;
+
+NOTE: There were 9 observations read from the data set WORK._PERIODS.
+NOTE: The data set WORK._PERIODS has 9 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.00 seconds
+      
+
+MPRINT(SIMPLECONTINUOUS):   ;
+MPRINT(SIMPLECONTINUOUS):   ** Now we worry about pre- and post-POI gaps. ;
+MPRINT(SIMPLECONTINUOUS):   proc sort data = _periods ;
+MPRINT(SIMPLECONTINUOUS):   by mrn enr_start ;
+MPRINT(SIMPLECONTINUOUS):   run ;
+
+NOTE: There were 9 observations read from the data set WORK._PERIODS.
+NOTE: SAS sort was used.
+NOTE: The data set WORK._PERIODS has 9 observations and 3 variables.
+NOTE: PROCEDURE SORT used (Total process time):
+      real time           0.00 seconds
+5 The SAS System                                                                                                          07:20 Monday, April 19, 2010
+
+      cpu time            0.00 seconds
+      
+
+MPRINT(SIMPLECONTINUOUS):   data _periods ;
+MPRINT(SIMPLECONTINUOUS):   set _periods ;
+MPRINT(SIMPLECONTINUOUS):   by mrn enr_start ;
+MPRINT(SIMPLECONTINUOUS):   if first.mrn then do ;
+MPRINT(SIMPLECONTINUOUS):   ** If enr_start is within &daystol days after &StartDt, we move enr_start to &StartDt (thereby closing the gap). ;
+MPRINT(SIMPLECONTINUOUS):   x = (enr_start - "01jan2003"d) ;
+MPRINT(SIMPLECONTINUOUS):   if 1 le (enr_start - "01jan2003"d) le 90 then do ;
+MPRINT(SIMPLECONTINUOUS):   ** put 'Correcting enr_start for ' mrn= ;
+MPRINT(SIMPLECONTINUOUS):   enr_start = "01jan2003"d ;
+MPRINT(SIMPLECONTINUOUS):   end ;
+MPRINT(SIMPLECONTINUOUS):   else do ;
+MPRINT(SIMPLECONTINUOUS):   ** put 'No need to correct enr_start for ' mrn= enr_start= 'diff is ' x ;
+MPRINT(SIMPLECONTINUOUS):   end ;
+MPRINT(SIMPLECONTINUOUS):   end ;
+MPRINT(SIMPLECONTINUOUS):   if last.mrn then do ;
+MPRINT(SIMPLECONTINUOUS):   ** If enr_end is within &daystol days before &EndDt, we move enr_end to &EndDt ;
+MPRINT(SIMPLECONTINUOUS):   if 1 le ("31dec2004"d - enr_end) le 90 then do ;
+MPRINT(SIMPLECONTINUOUS):   ** put 'Correcting enr_end for ' mrn= ;
+MPRINT(SIMPLECONTINUOUS):   enr_end = "31dec2004"d ;
+MPRINT(SIMPLECONTINUOUS):   end ;
+MPRINT(SIMPLECONTINUOUS):   end ;
+MPRINT(SIMPLECONTINUOUS):   drop x ;
+MPRINT(SIMPLECONTINUOUS):   run ;
+
+NOTE: There were 9 observations read from the data set WORK._PERIODS.
+NOTE: The data set WORK._PERIODS has 9 observations and 3 variables.
+NOTE: DATA statement used (Total process time):
+      real time           0.00 seconds
+      cpu time            0.01 seconds
+      
+
+MPRINT(SIMPLECONTINUOUS):   ** Calculate # of days between start & end date. ;
+MPRINT(SIMPLECONTINUOUS):   proc sql ;
+MPRINT(SIMPLECONTINUOUS):   create table _period_days as select MRN , (min("31dec2004"d, enr_end) - max("01jan2003"d, enr_start) + 1) as Days from 
+_periods ;
+NOTE: Table WORK._PERIOD_DAYS created, with 9 rows and 2 columns.
+
+MPRINT(SIMPLECONTINUOUS):   create table fake_out(label = "Enrollment information for the MRNs in fake_people") as select mrn , sum(days) as 
+CoveredDays label = "Number of enrolled days between 01jan2003 and 31dec2004" , (sum(days) ge 731) as ContinuouslyEnrolled label = "0/1 flag 
+answering was this person continuously enrolled from 01jan2003 to 31dec2004 (disregarding gaps up to 90 days)?" from _period_days group by mrn ;
+NOTE: Table WORK.FAKE_OUT created, with 8 rows and 3 columns.
+
+MPRINT(SIMPLECONTINUOUS):   insert into fake_out (MRN, CoveredDays, ContinuouslyEnrolled) select MRN, 0, 0 from _ids where mrn not in (select mrn 
+from _period_days) ;
+NOTE: 1 row was inserted into WORK.FAKE_OUT.
+
+MPRINT(SIMPLECONTINUOUS):   quit ;
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.10 seconds
+      cpu time            0.02 seconds
+6 The SAS System                                                                                                          07:20 Monday, April 19, 2010
+
+      
+
+4698       
+4699       ods html path = "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\" (URL=NONE)
+4700                body = "TestSimpleContinuous2.html"
+4701                (title = "TestSimpleContinuous2 output")
+4702                 ;
+NOTE: Writing HTML Body file: TestSimpleContinuous2.html
+4703       
+4704         title1 "Using &macfile" ;
+4705       
+4706         proc sql ;
+4707       
+4708           create table results as
+4709           select p.mrn, ce_expected, continuouslyenrolled, covereddays, description
+4710           from fake_people as p LEFT JOIN
+4711                 fake_out as o
+4712           on    p.mrn = o.mrn
+4713           ;
+NOTE: Table WORK.RESULTS created, with 9 rows and 5 columns.
+
+4714       
+4715           title2 "FAILED TESTS!!!" ;
+4716           select *
+4717           from results
+4718           where ce_expected ne continuouslyenrolled
+4719           order by ce_expected, mrn
+4720           ;
+NOTE: No rows were selected.
+4721           title2 "Passed tests." ;
+4722           select *
+4723           from results
+4724           where ce_expected eq continuouslyenrolled
+4725           order by ce_expected, mrn
+4726           ;
+4727       
+4728         quit ;
+NOTE: The PROCEDURE SQL printed page 1.
+NOTE: PROCEDURE SQL used (Total process time):
+      real time           0.13 seconds
+      cpu time            0.08 seconds
+      
+ERROR: Undetermined I/O failure.
+4729       
+4730       ods html close ;
+4731       
+
+
+ERROR: Errors printed on pages 2,6.
+
+NOTE: SAS Institute Inc., SAS Campus Drive, Cary, NC USA 27513-2414
+NOTE: The SAS System used:
+      real time           11.59 seconds
+7 The SAS System                                                                                                          07:20 Monday, April 19, 2010
+
+      cpu time            3.85 seconds
+      

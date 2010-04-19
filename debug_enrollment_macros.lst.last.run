@@ -1,4 +1,4 @@
-The SAS System                                                                                                        19:48 Friday,
+The SAS System                                                                                                        19:29 Friday,
 April 16, 2010   1
 
 The FREQ Procedure
@@ -8,8 +8,8 @@ The FREQ Procedure
     Continuously                             Cumulative    Cumulative
         Enrolled    Frequency     Percent     Frequency      Percent
 ---------------------------------------------------------------------
-               0         904        9.74           904         9.74
-               1        8381       90.26          9285       100.00
+               0         976       10.51           976        10.51
+               1        8309       89.49          9285       100.00
 
 
 
@@ -54,7 +54,7 @@ The FREQ Procedure
 
 
 Program file: \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\debug_enrollment_macros.sas
-The SAS System                                                                                                        19:48 Friday,
+The SAS System                                                                                                        19:29 Friday,
 April 16, 2010   2
 
 The FREQ Procedure

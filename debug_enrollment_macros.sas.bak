@@ -42,8 +42,8 @@ options mprint mlogic ;
 
 %SimpleContinuous(
                  People=main
-                , StartDt = &my_start_date
-                , Enddt = &my_end_date
+                , StartDt= &my_start_date
+                , Enddt= &my_end_date
                 , DaysTol = 90
                 , outset = s.enrollment
                 );

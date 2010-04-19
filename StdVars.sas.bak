@@ -62,7 +62,7 @@
   */
 
   %let _SiteCode = 01 ;
-  %let _SiteAbbr = GHC;
+  %let _SiteAbbr = GH ;
   %let _SiteName = Group Health ;
 
 * NEW VARIABLES ;

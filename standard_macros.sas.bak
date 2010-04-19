@@ -4,7 +4,7 @@
 * (206) 287-2078
 * pardee.r@ghc.org
 *
-* \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\CRN_VDW_MACROS.sas
+* \\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas
 *
 * Contains standard VDW macros for use against VDW data.
 *
@@ -1632,6 +1632,7 @@ proc datasets nolist ;
 %macro GetVarList(DSet         /* Name of the dset you want collapsed. */
                 , RecStart     /* Name of the var that contains the period start dates. */
                 , RecEnd       /* Name of the var that contains the period end dates. */
+               , PersonID  = MRN   /* Name of the var that contains a unique person identifier. */
                 ) ;
 
    %* This is also a helper macro for CollapsePeriods--it creates a global macro var ;
@@ -1693,7 +1694,9 @@ proc datasets nolist ;
 
 %mend GetVarList ;
 
-%macro CollapsePeriods(Lib          /* Name of the library containing the dset you want collapsed */
+
+** DEPRECATED--DO NOT USE. ;
+%macro OLDCollapsePeriods(Lib          /* Name of the library containing the dset you want collapsed */
                      , DSet         /* Name of the dset you want collapsed. */
                      , RecStart     /* Name of the var that contains the period start dates. */
                      , RecEnd       /* Name of the var that contains the period end dates. */
@@ -1776,7 +1779,103 @@ proc datasets nolist ;
       * if PeriodStart le PeriodEnd ;
       drop _&RecStart _&RecEnd ;
    run ;
+%mend OLDCollapsePeriods ;
+
+%macro CollapsePeriods(Lib          /* Name of the library containing the dset you want collapsed */
+                     , DSet         /* Name of the dset you want collapsed. */
+                     , RecStart     /* Name of the var that contains the period start dates. */
+                     , RecEnd       /* Name of the var that contains the period end dates. */
+                     , PersonID  = MRN   /* Name of the var that contains a unique person identifier. */
+                     , DaysTol = 1  /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
+                     , Debug   = 0  /* 0/1 flag indicating whether you want the PUT statements to run (PRODUCES A LOT OF OUTPUT!). */
+                     ) ;
+
+   %* Takes an input mbhist dataset and collapses contiguous time periods where the variables ;
+   %* other than the ones defining period start/stop dates dont change. ;
+
+   %* Adapted from Mark Terjesons code posted to sas-l: http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0003d&L=sas-l&D=0&P=18578 ;
+
+   %* This defines VarList ;
+   %GetVarList( Dset = &Lib..&Dset
+              , RecStart = &RecStart
+              , RecEnd = &RecEnd
+              , PersonID = &PersonID) ;
+
+   %put VarList is &VarList ;
+
+   %put Length of varlist is %length(&varlist) ;
+
+   %if %length(&varlist) = 0 %then %do ;
+      %let LastVar = &PersonID ;
+   %end ;
+   %else %do ;
+      %let LastVar = %LastWord(&VarList) ;
+   %end ;
+
+   proc sort nodupkey data = &Lib..&Dset ;
+      by &PersonID &RecStart &VarList &RecEnd ;
+   run ;
+
+   data &Lib..&Dset ;
+      retain PeriodStart PeriodEnd ;
+      format PeriodStart PeriodEnd mmddyy10. ;
+      set &Lib..&Dset(rename = (&RecStart = _&RecStart
+                                &RecEnd   = _&RecEnd)) ;
+
+      by &PersonID &VarList NOTSORTED ;
+
+      if first.&LastVar then do ;
+         * Start of a new period--initialize. ;
+         PeriodStart = _&RecStart ;
+         PeriodEnd   = _&RecEnd ;
+         %if &Debug = 1 %then %do ;
+            put "First &LastVar:          " _N_ = PeriodStart =  _&RecStart =  PeriodEnd =  _&RecEnd = ;
+         %end ;
+      end ;
+      * else do ;
+         /*
+            Checking "contiguousity":
+            If this records start date falls w/in (or butts up against) the
+            current period (plus tolerance), then extend the current period out to this
+            records end date.
+         */
+         * if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
+         if (PeriodStart <= _&RecStart <= (PeriodEnd + &DaysTol)) then do ;
+            * Extend the period end out to whichever is longer--the period or the record. ;
+            PeriodEnd = max(_&RecEnd, PeriodEnd) ;
+            %if &Debug = 1 %then %do ;
+               put "Extending period end:   " _N_ = PeriodStart =  _&RecStart =  PeriodEnd =  _&RecEnd = ;
+            %end ;
+         end ;
+         else do ;
+            * We are in a new period--output the last rec & reinitialize. ;
+            output ;
+            PeriodStart = _&RecStart ;
+            PeriodEnd   = _&RecEnd ;
+         end ;
+      * end ;
+      /*
+         Likewise, if this is our last value of the last var on our BY list, we are about to start a new period.
+         Spit out the record--the new period vars get initialized above in the "if first.&LastVar..."
+         block.
+      */
+      if last.&LastVar then do ;
+         %if &Debug = 1 %then %do ;
+            put "Last &LastVar:           " _N_ = PeriodStart =  _&RecStart =  PeriodEnd =  _&RecEnd = ;
+         %end ;
+         output ;
+      end ;
+   run ;
+   * Now we have the actual start/stop dates in PeriodStart & PeriodEnd--rename those to ;
+   * the original record start/stop variable names, and strip out any wacky recs where start comes after end ;
+   data &Lib..&Dset ;
+      set &Lib..&Dset(rename = (PeriodStart = &RecStart
+                          PeriodEnd   = &RecEnd)) ;
+      * if PeriodStart le PeriodEnd ;
+      drop _&RecStart _&RecEnd ;
+   run ;
 %mend CollapsePeriods ;
+
 
 %macro GetFollowUpTime(People    /* Dset of MRNs */
                , IndexDate       /* Name of a date var in &People, or else a
@@ -1790,19 +1889,20 @@ proc datasets nolist ;
                , CallEndDateVar  /* What name should we give the date var that
                                     will hold the end of the f/up period? */
                , OutSet          /* The name of the output dataset. */
-               , DebugOut = work           /* Libname to save interim dsets to for debugging--leave set to work to discard these. */
+               , DebugOut = work /* Libname to save interim dsets to for debugging--leave set to work to discard these. */
                , EnrollDset = __enroll.&_EnrollData /* Supply your own enroll data if you like. */
+               , Reverse = 0     /* **(JW 30DEC2009) Look backwards from IndexDate? 1=Reverse */
                  ) ;
 
    %put ;
    %put ;
    %put ============================================================== ;
    %put ;
-   %put Macro GetFollowUpTime V0.91: ;
+   %put Macro GetFollowUpTime V0.91 (REVISED for Reverse look by JW):  ;
    %put ;
-   %put Creating a dset "&OutSet", which will look just like "&People" except ;
+   %put Creating a dset "&OutSet", which will look just like "&People" except  ;
    %put that it will have an additional variable "&CallEndDateVar", which will ;
-   %put hold the earliest of date-of-last-enrollment, or &EndDate (or, if the ;
+   %put hold the earliest of date-of-last-enrollment, or &EndDate (or, if the  ;
    %put person was not enrolled at all a missing value). ;
    %put ;
    %put THIS IS BETA SOFTWARE-PLEASE SCRUTINIZE THE RESULTS AND REPORT PROBLEMS;
@@ -1827,17 +1927,36 @@ proc datasets nolist ;
       from  &People as p INNER JOIN
             &EnrollDset as e
       on    p.MRN = e.MRN
-      where intnx('day', &IndexDate, -&GapTolerance, 'same') le e.enr_end AND
-            intnx('day', &EndDate  ,  &GapTolerance, 'same') ge e.enr_start
-      order by mrn, enr_start
+
+      %IF &Reverse.=1 %THEN %DO;
+      %**(JCW 18FEB2010);
+          where intnx('day', &EndDate.  , -&GapTolerance, 'sameday') <= e.enr_end
+            and intnx('day', &IndexDate.,  &GapTolerance, 'sameday') >= e.enr_start
+      %END;
+      %ELSE %DO;
+          where intnx('day', &IndexDate., -&GapTolerance, 'sameday') <= e.enr_end
+            AND intnx('day', &EndDate.  ,  &GapTolerance, 'sameday') >= e.enr_start
+      %END;
+
+      order by mrn,
+
+      %IF &Reverse.=1 %THEN %DO;
+      %**(JCW 30DEC2009);
+          enr_end DESC
+      %END;
+      %ELSE %DO;
+          enr_start
+      %END;
+
       ;
    quit ;
 
-   * Collapse contiguous periods down. ;
-   %CollapsePeriods(Lib      = &DebugOut          /* Name of the library containing the dset you want collapsed */
+   *** Collapse contiguous periods down. ;
+   %CollapsePeriods(Lib      = &DebugOut     /* Name of the library containing the dset you want collapsed */
                   , DSet     = __enroll      /* Name of the dset you want collapsed. */
                   , RecStart = enr_start     /* Name of the var that contains the period start dates. */
                   , RecEnd   = enr_end       /* Name of the var that contains the period end dates. */
+                  , PersonID = MRN
                   , DaysTol  = &GapTolerance /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
                   ) ;
 
@@ -1845,7 +1964,12 @@ proc datasets nolist ;
   ** date, and the start of their enrollment is more than &GapTolerance days away. ;
   proc sql ;
     delete from &DebugOut..__enroll
-    where (enr_start - idate) gt &GapTolerance
+    %IF &Reverse.=1 %THEN %DO;
+      where (idate-enr_end) gt &GapTolerance
+    %END;
+    %ELSE %DO;
+      where (enr_start - idate) gt &GapTolerance
+    %END;
     ;
   quit ;
 
@@ -1861,14 +1985,24 @@ proc datasets nolist ;
 
    proc sql ;
       create table &OutSet as
-      select p.* , min(e.edate, e.enr_end) as &CallEndDateVar format = mmddyy10.
+      select p.* ,
+
+      %IF &Reverse.=1 %THEN %DO;
+      %**(JCW 30DEC2009);
+        max(e.edate, e.enr_start)
+      %END;
+      %ELSE %DO;
+        min(e.edate, e.enr_end)
+      %END;
+      as &CallEndDateVar format = mmddyy10.
+
       from  &People as p LEFT JOIN
             &DebugOut..__first_periods as e
       on    p.mrn = e.mrn
       ;
    quit ;
 
-%mend GetFollowUpTime ;
+%mend GetFollowUpTime;
 
 %macro GetRxRiskForPeople(InFile, OutFile, IndexDt);
 /*************************************************
@@ -3933,10 +4067,8 @@ run;
                      , EndDt        /* A date literal identifying the end of the period of interest. */
                      , DaysTol      /* The # of days gap between otherwise contiguous periods of enrollment that is tolerable. */
                      , OutSet       /* Name of the desired output dset */
-                     , EnrollDset = __enroll.&_EnrollData /* For testing. */
+                     , EnrollDset = &_vdw_enroll /* For testing. */
                      ) ;
-
-   libname __enroll "&_EnrollLib" access = readonly ;
 
 /*
 
@@ -3954,9 +4086,7 @@ run;
       create table dual (x char(1)) ;
       insert into dual(x) values ('x') ;
       select ("&EndDt"d - "&StartDt"d + 1) as TotDays
-            , intnx('day', "&StartDt"d, -&DaysTol, 'same') as earliest_start format = date9.
-            , intnx('day', "&EndDt"d  ,  &DaysTol, 'same') as latest_end     format = date9.
-               into :TotDays, :EarliestStart, :LatestEnd
+               into :TotDays
       from  dual ;
    quit ;
 
@@ -3967,27 +4097,15 @@ run;
    %put ;
    %put ;
 
-/*
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-  %put Earliest start = &EarliestStart and Latest End = &LatestEnd  ;
-*/
-
 
    proc sql ;
-      * Uniquify the list of MRNs, just in case ;
+      ** Uniquify the list of MRNs, just in case ;
       create table _ids as
       select distinct MRN
       from &People ;
 
-      * Gather start/end dates from enrlseed that could possibly cover the period of interest. ;
+      ** Gather start/end dates from enroll that could possibly cover the period of interest. ;
+      ** We no longer look out past the POI--now we just manually correct gaps at the beginning and end of the POI. ;
       create table _periods as
       select e.MRN
            , e.enr_start
@@ -3995,42 +4113,75 @@ run;
       from &EnrollDset as e INNER JOIN
           _ids as i
       on    e.MRN = i.MRN
-      where "&EarliestStart"d le e.enr_end AND
-            "&LatestEnd"d     ge e.enr_start
+      where "&StartDt"d le e.enr_end AND
+            "&EndDt"d   ge e.enr_start
             ;
 
-   * Collapse any contiguous periods of enrollment. ;
+      /* where "&EarliestStart"d le e.enr_end AND
+            "&LatestEnd"d     ge e.enr_start
+      */
+
+
+   ** Collapse any contiguous periods of enrollment. ;
    %CollapsePeriods(Lib       = work      /* Name of the library containing the dset you want collapsed */
                   , DSet      = _periods  /* Name of the dset you want collapsed. */
                   , RecStart  = enr_start   /* Name of the var that contains the period start dates. */
                   , RecEnd    = enr_end     /* Name of the var that contains the period end dates. */
+                  , PersonID  = MRN
                   , DaysTol   = &DaysTol  /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
-                  , Debug     = 0         /* 0/1 flag indicating whether you want the PUT statements to run (PRODUCES A LOT OF OUTPUT!). */
                   ) ;
 
-   * Calculate # of days between start & end date. ;
+  **  Now we worry about pre- and post-POI gaps. ;
+  proc sort data = _periods ;
+    by mrn enr_start ;
+  run ;
+
+  data _periods ;
+    set _periods ;
+    by mrn enr_start ;
+    if first.mrn then do ;
+      ** If enr_start is within &daystol days after &StartDt, we move enr_start to &StartDt (thereby closing the gap). ;
+      x = (enr_start - "&StartDt"d) ;
+      if 1 le (enr_start - "&StartDt"d) le &DaysTol then do ;
+         ** put 'Correcting enr_start for ' mrn= ;
+         enr_start = "&StartDt"d ;
+       end ;
+       else do ;
+        ** put 'No need to correct enr_start for ' mrn= enr_start= 'diff is ' x ;
+       end ;
+    end ;
+    if last.mrn then do ;
+      ** If enr_end is within &daystol days before &EndDt, we move enr_end to &EndDt ;
+      if 1 le ("&EndDt"d - enr_end) le &DaysTol then do ;
+        ** put 'Correcting enr_end for ' mrn= ;
+        enr_end = "&EndDt"d ;
+      end ;
+    end ;
+    drop x ;
+  run ;
+
+   ** Calculate # of days between start & end date. ;
    proc sql ;
       create table _period_days as
       select MRN
             , (min("&EndDt"d, enr_end) - max("&StartDt"d, enr_start) + 1) as Days
       from _periods
+      where CALCULATED days > 0
       ;
 
       create table &OutSet(label = "Enrollment information for the MRNs in &People") as
       select mrn
             , sum(days) as CoveredDays label = "Number of enrolled days between &StartDt and &EndDt"
-            , (sum(days) = &TotDays) as ContinuouslyEnrolled label = "0/1 flag answering was this person continuously enrolled from &StartDt to &EndDt. (disregarding gaps up to &DaysTol days)?"
+            , (sum(days) ge &TotDays) as ContinuouslyEnrolled label = "0/1 flag answering was this person continuously enrolled from &StartDt to &EndDt. (disregarding gaps up to &DaysTol days)?"
       from _period_days
       group by mrn
       ;
       insert into &OutSet (MRN, CoveredDays, ContinuouslyEnrolled)
       select MRN, 0, 0
       from _ids
-      where mrn not in (select mrn from _periods)
+      where mrn not in (select mrn from _period_days)
       ;
    quit ;
-
-   libname __enroll CLEAR ;
 
 %mend SimpleContinuous ;
 
@@ -4091,7 +4242,7 @@ run;
    %put  ;
    %put The output dataset will contain a variable calculated by the CDCs ;
    %put normative sample percentile score program found here: ;
-   %put http://www.cdc.gov/nccdphp/dnpa/growthcharts/sas.htm ;
+   %put http://www.cdc.gov/nccdphp/dnpao/growthcharts/resources/sas.htm ;
    %put ;
    %put From this variable (called BMIPCT) you can categorize the children ;
    %put into normal/overweight/obese brackets with the following format: ;
