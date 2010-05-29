@@ -12,12 +12,12 @@
 /* This is managed in the login script so that it doesnt
    actually try to login when the machine is not connected
    to the network */
-%include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+%**include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
 options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ;
 
 libname s '\\ctrhs-sas\sasuser\pardre1' ;
-* libname s 's:\' ;
+** libname s 's:\' ;
 
 %macro MakeV2TestData ;
    data test_people ;
@@ -183,7 +183,7 @@ Don         01/01/2001   03/31/2003
 Don         09/01/2003   12/31/2006
 Jane        02/01/2005   12/31/2006
 Jean        01/01/2001   04/30/2003
-Jean        09/01/2003   12/31/2006
+Jean        08/01/2003   12/31/2006
 Joey        01/01/2001   07/31/2003
 Joey        10/01/2003   11/30/2003
 Joey        02/01/2004   02/29/2004
@@ -203,12 +203,10 @@ Ann         06/01/2003   06/30/2003
 
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
 
-filename crn_macs  "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\CRN_VDW_MACROS.sas" ;
+**filename crn_macs  "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_MACROS.sas" ;
 
-%include crn_macs ;
+%include vdw_macs ;
 
-%*include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\PullContinuous3.sas" ;
-/*
 options mprint ;
 
 data test_people ;
@@ -241,7 +239,9 @@ quit ;
 
 options source2 ;
 
-%PullContinuous3(InSet                   = test_people
+options mlogic mprint ;
+
+%PullContinuous(InSet                   = test_people
                , OutSet                  = s.survivors
                , IndexDate               = '01Jun2003'd
                , PreIndexEnrolledMonths  = 12
@@ -261,7 +261,9 @@ proc sql ;
    select * from test_people where MRN not in (select MRN from s.survivors) ;
 
 quit ;
-*/
+
+/*
+endsas ;
 
 * Grab a test set of people ;
 
@@ -386,4 +388,4 @@ quit ;
                , EnrollDset              = s.survived_2_butnot_3_enroll3
                , DebugOut                = s
                ) ;
-
+*/

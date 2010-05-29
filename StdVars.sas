@@ -13,8 +13,9 @@
 *
 *********************************************/
 
-* OLD VARIABLES ;
-  * libname locations specs ;
+
+** OLD VARIABLES--THESE ARE DEPRECATED--new code should use the single var names below. ;
+  ** libname locations specs ;
   %let _TumorLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
   %let _EnrollLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
   %let _DemographicLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
@@ -26,7 +27,7 @@
   %let _LabLib                  = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
   %let _Deathlib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
 
-  * dataset name specs ;
+  ** dataset name specs ;
   %let _TumorData               = tumor ;
   %let _EnrollData              = enroll2 ;
   %let _DemographicData         = demog ;
@@ -43,32 +44,15 @@
   %let _LabData                 = lab_results ;
   %let _LabDataCharacter        = lab_results_character ;
 
-  /*
-     Site code--pls use the following:
-     01 = GHC
-     02 = KPNW
-     03 = KPNC
-     04 = KPSC
-     05 = KPHI
-     06 = KPCO
-     07 = HP	 (HealthPartners)
-     08 = HPHC (Harvard Pilgrim Health Care)
-     09 = FALLON
-     10 = HFHS (Henry Ford)
-     11 = KPG
-     12 = LSHS (Lovelace)
-     13 = MCRF (Marshfield)
-     14 = GHS  (Geisinger)
-  */
 
-  %let _SiteCode = 01 ;
-  %let _SiteAbbr = GHC;
-  %let _SiteName = Group Health ;
 
-* NEW VARIABLES ;
+** NEW VARIABLES ;
 
-  * Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
-  libname __vdw "&_TumorLib" access = readonly ;
+  ** Note that this could easily be a sas/access specification, if you wanted to store your VDW data in say, a server database. ;
+  ** You are also free to define any number of different libnames, if your VDW dsets are stored in different locations. ;
+  ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
+  libname __vdw "&_TumorLib"          access = readonly ;
+  libname __scr "&_TumorLib\scratch"  access = readonly ;
 
   %let _vdw_tumor               = __vdw.&_TumorData ;
   %let _vdw_enroll              = __vdw.&_EnrollData ;
@@ -76,8 +60,6 @@
   %let _vdw_rx                  = __vdw.&_RxData ;
   %let _vdw_everndc             = __vdw.&_EverNdcData ;
   %let _vdw_utilization         = __vdw.&_UtilizationData ;
-  %let _vdw_death               = __vdw.&_DeathData ;
-  %let _vdw_cause_of_death      = __vdw.&_CODData ;
   %let _vdw_dx                  = __vdw.&_DxData ;
   %let _vdw_px                  = __vdw.&_PxData ;
   %let _vdw_provider_specialty  = __vdw.&_ProviderSpecialtyData ;
@@ -85,12 +67,47 @@
   %let _vdw_census              = __vdw.&_CensusData ;
   %let _vdw_lab                 = __vdw.&_LabData ;
   %let _vdw_lab_character       = __vdw.&_LabDataCharacter ;
+  %let _vdw_death               = __vdw.&_DeathData ;
+  %let _vdw_cause_of_death      = __vdw.&_CODData ;
 
 
-* NEW REFERENCE TO THE STANDARD MACROS FILE ;
+** NEW REFERENCE TO THE STANDARD MACROS FILE ;
   filename vdw_macs  FTP     "standard_macros.sas"
                      HOST  = "vdw.hmoresearchnetwork.org"
                      CD    = "/vdwcode"
                      PASS  = "%2hilario36"
                      USER  = "VDWReader" ;
+
+
+  /*
+    Site code--pls use the codes/abbreviations listed on:
+    https://appliedresearch.cancer.gov/crnportal/other-resources/orientation/participating-sites/overview
+  */
+
+  %let _SiteCode = 01 ;
+  %let _SiteAbbr = GHC;
+  %let _SiteName = Group Health ;
+
+
+** Version 3 Milestone file variables. ;
+
+  ** These vars should point to datasets/views that meet the specs for the indicated milestone. ;
+  ** So e.g., the data named in _vdw_enroll_m1 should have a var called enrollment_basis on it. ;
+  ** These vars are temporary--will only exist during the v2 -> v3 transition.  ;
+  ** See https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/version-3/implementation-plan for details. ;
+  %let _vdw_enroll_m1               = __vdw.enroll3_vw ;
+  %let _vdw_vitalsigns_m1           = __scr.vitalsigns_v3 ;
+
+  %let _vdw_utilization_m2          = ;
+  %let _vdw_dx_m2                   = ;
+  %let _vdw_px_m2                   = ;
+  %let _vdw_vitalsigns_m2           = ;
+
+  %let _vdw_demographic_m3          = ;
+
+  %let _vdw_lab_m4                  = ;
+  %let _vdw_lab_character_m4        = ;
+
+  %let _vdw_provider_specialty_m5   = ;
+  %let _vdw_enroll_m6               = ;
 
