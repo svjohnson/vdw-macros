@@ -1839,9 +1839,10 @@ proc datasets nolist ;
             current period (plus tolerance), then extend the current period out to this
             records end date.
          */
-         * if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
-         if (PeriodStart <= _&RecStart <= (PeriodEnd + &DaysTol)) then do ;
-            * Extend the period end out to whichever is longer--the period or the record. ;
+         ** if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
+         ** RP20100504: fixing a bug when using a tolerance of zero days. ;
+         if (PeriodStart <= _&RecStart <= (PeriodEnd + max(&DaysTol, 1))) then do ;
+            ** Extend the period end out to whichever is longer--the period or the record. ;
             PeriodEnd = max(_&RecEnd, PeriodEnd) ;
             %if &Debug = 1 %then %do ;
                put "Extending period end:   " _N_ = PeriodStart =  _&RecStart =  PeriodEnd =  _&RecEnd = ;
@@ -1950,6 +1951,10 @@ proc datasets nolist ;
 
       ;
    quit ;
+
+  data &debugout..__pre_collapse_enroll ;
+    set &debugout..__enroll ;
+  run ;
 
    *** Collapse contiguous periods down. ;
    %CollapsePeriods(Lib      = &DebugOut     /* Name of the library containing the dset you want collapsed */
