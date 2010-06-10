@@ -4211,7 +4211,7 @@ run;
       			INNER JOIN &People as p
       			on    d.MRN = p.MRN
       			where d.ADate BETWEEN "&StartDt"d AND "&EndDt"d AND
-      						d.px in (select &PxLst..px from &PxLst) ;
+      						d.px in (select pl.px from &PxLst as pl)
       ;
       quit ;
    %end ;
