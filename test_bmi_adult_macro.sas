@@ -15,7 +15,8 @@ options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>
 
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
 
-%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\BMI_Adult_Macro.sas" ;
+%**include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\BMI_Adult_Macro.sas" ;
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas" ;
 
 %macro get_test_cohort(outobs = s.test_vitals, n = 50) ;
   proc sql outobs = &n nowarn ;
@@ -27,7 +28,7 @@ options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>
   quit ;
 %mend ;
 
-%**get_test_cohort ;
+%get_test_cohort ;
 
 options mprint ;
 

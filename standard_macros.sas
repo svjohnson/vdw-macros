@@ -4525,3 +4525,270 @@ run;
 
 %mend make_inclusion_table ;
 
+************************************************************************;
+** Program: BMI_adult_macro.sas                                        *;
+**                                                                     *;
+** Purpose: Calculate BMI for adults and include a flag for reason     *;
+**          that a BMI was not calculated. This flag can have values   *;
+**          of:  MISSING AGE                                           *;
+**               UNDER AGE 18                                          *;
+**               NO WT                                                 *;
+**               NO HT                                                 *;
+**               NO HT OR WT                                           *;
+**               WT OUT OF RANGE                                       *;
+**               BMI OUT OF RANGE                                      *;
+**                                                                     *;
+**          The BMI algorithm and cut-off recommendations were         *;
+**          reviewed by the Obesity special interest group.            *;
+**          This is meant to flag only those extreme values or         *;
+**          situations where there is reason to suspect a data entry   *;
+**          error, and further review may be warranted.                *;
+**                                                                     *;
+**          The macro assumes that the program is placed into the      *;
+**          middle of a program. It assumes that libnames have been    *;
+**          defined prior to the macro call, and indicates that the    *;
+**          macro parameters have be fully qualified dataset names.    *;
+**                                                                     *;
+**                                                                     *;
+**         Three variables are created:                                *;
+**                                                                     *;
+**         VARIABLE       DECRIPTION                  FORMAT           *;
+**         ---------------------------------------------------------   *;
+**         BMI            BMI FOR ADULTS              Numeric          *;
+**         HT_MEDIAN      MEDIAN HT FOR ADULTS        Numeric          *;
+**         BMI_flag       BMI QC FLAG                 $16.             *;
+**                                                                     *;
+** Author: G. Craig Wood, Geisinger Health System                      *;
+**         cwood@geisinger.edu                                         *;
+**                                                                     *;
+** Revisions: Intial Creation 6/7/2010                                 *;
+**                                                                     *;
+************************************************************************;
+** Macro Parameters:                                                   *;
+**                                                                     *;
+** VITALS_IN: These needs to have the following variables:             *;
+**        MRN, HT, WT, and measure_date.                               *;
+**        Feed in fully qualified name, i.e. use libname and           *;
+**        dataset name together if reading a permanent dataset.        *;
+**        This macro program assumes that desired libraries have been  *;
+**        defined previously in the program. StandardVars macro        *;
+**        variables can be used.                                       *;
+**                                                                     *;
+** DEMO_IN: These needs to have the following variables:               *;
+**        MRN, birth_date.                                             *;
+**        Feed in fully qualified name, i.e. use libname and           *;
+**        dataset name together if reading a permanent dataset.        *;
+**        This macro program assumes that desired libraries have been  *;
+**        defined previously in the program. StandardVars macro        *;
+**        variables can be used.                                       *;
+**                                                                     *;
+** VITALS_OUT: Feed in fully qualified name, i.e. use libname and      *;
+**        dataset name together if writing to a permanent dataset.     *;
+**                                                                     *;
+** KEEPVARS: Optional parameter indicating the values to keep in your  *;
+**           quality checking dataset.  May be left blank to simply    *;
+**           attach the two new variables to an existing dataset.      *;
+************************************************************************;
+** Examples of use:                                                    *;
+**                                                                     *;
+** %bp_flag(vitals_in=&_vdw_vitalsigns,                                *;
+**          demo_in=&_vdw_demographic,                                 *;
+**          vitals_out=BMI_qc,                                         *;
+**          keepvars= mrn measure_date BMI BMIFLAG)                    *;
+**                                                                     *;
+** %bp_flag(vitals_in=cohort_vitals,                                   *;
+**          demo_in=cohort_demo,                                       *;
+**          vitals_out=BMI_qc,                                         *;
+**          keepvars= mrn measure_date BMI BMIFLAG ht wt)              *;
+**                                                                     *;
+** %bp_flag(vitals_in=cohort_vitals,                                   *;
+**          demo_in=&_vdw_demographic,                                 *;
+**          vitals_out=lib_out.BMI_qc,                                 *;
+**          keepvars= )                                                *;
+**                                                                     *;
+************************************************************************;
+
+
+%MACRO BMI_adult_macro(vitals_in, demo_in, vitals_out, keepvars);
+
+
+PROC SQL;
+CREATE TABLE one AS SELECT A.*, B.birth_date, ((measure_date-birth_date)/365.25)AS AGE FROM &vitals_in A LEFT OUTER JOIN &demo_in  B
+ON A.MRN = B.MRN;
+QUIT;
+
+proc means noprint nway data=one; class mrn; var ht; WHERE (ht>=48 AND ht<=84) AND AGE>=18; output out=outHT (drop=_type_ _freq_) median=HT_median; run;
+proc sort; by mrn; run;
+
+data &vitals_out; merge one outht; by mrn;
+        %if &keepvars ne %then %do; keep &keepvars; %end;
+
+        format BMIflag $16.;
+
+        if age = . THEN BMIflag = 'MISSING AGE';
+        if age<18 AND age NE . then BMIflag='UNDER AGE 18';
+        if age<18 then HT_median=.;
+        if BMIflag=' ' and HT_median=. and wt=. then BMIflag='NO HT OR WT';
+        if BMIflag=' ' and HT_median=. then BMIflag='NO HT';
+        if BMIflag=' ' and wt=. then BMIflag='NO WT';
+        if BMIflag=' ' and wt ne . and (wt<50 or wt>700) then BMIflag='WT OUT OF RANGE';
+
+        if BMIflag=' ' then BMI=round((703*wt/(HT_median*HT_median)),0.01);
+        if BMIflag=' ' and BMI ne . and (BMI<15 or BMI>90) then do;
+                BMIflag='BMI OUT OF RANGE';
+                BMI=.;
+                end;
+        drop age birth_date;
+        run;
+
+
+PROC DATASETS NOLIST; DELETE one outht; QUIT;
+
+%MEND BMI_adult_macro;
+
+/*
+  GetAdultBMI
+
+  A little wrapper macro that lets users supply a cohort dset & an optional time period, for whom/over which they
+  would like BMI data (as calculated by the vital signs WGs official code).
+
+  Author: Roy Pardee
+*/
+%macro GetAdultBMI(people = , outset = , StartDt = "01jan1960"d, EndDt = "&sysdate"d) ;
+  proc sql ;
+    create table __in_demog as
+    select distinct p.mrn, birth_date
+    from  &people as p INNER JOIN
+          &_vdw_demographic as d
+    on    p.mrn = d.mrn
+    ;
+  quit ;
+
+  proc sql ;
+    create table __in_vitals as
+    select v.*
+    from  &_vdw_vitalsigns as v INNER JOIN
+          &people as p
+    on    v.mrn = p.mrn
+    where v.measure_date between &StartDt and &EndDt
+    ;
+  quit ;
+
+  %BMI_adult_macro(vitals_in = __in_vitals, demo_in = __in_demog, vitals_out = &outset) ;
+
+%mend GetAdultBMI ;
+
+************************************************************************;
+** Program: BP_FLAG.sas                                                 *;
+**                                                                     *;
+** Purpose: Create flags that can be used to determine quality of      *;
+**          systolic and diastolic blood pressure fields.              *;
+**          Cut-off recommendations reviewed by CVRN HTN Registry      *;
+**          site PIs on 5/12/2010. This is meant to flag only those    *;
+**          extreme values or situations where there is reason to      *;
+**          suspect a data entry error, and further review may be      *;
+**          warranted.                                                 *;
+**                                                                     *;
+**         Three variables are created:                                *;
+**                                                                     *;
+**         VARIABLE        VALUES                                      *;
+**         ---------------------------------------------------------   *;
+**         SYSTOLIC_QUAL   NULL, ABN_HIGH, ABN_LOW                     *;
+**         DIASTOLIC_QUAL  NULL, ABN_HIGH                              *;
+**         SYS_DIA_QUAL    SYSTOLIC <= DIASTOLIC, DIFFERENCE < 20,     *;
+**                         DIFFERENCE > 100                            *;
+**                                                                     *;
+**         Note that NULL is only used when the other paired value for *;
+**         the blood pressure is not null.                             *;
+**                                                                     *;
+** Author: Heather Tavel, KPCO                                         *;
+**         Heather.M.Tavel@kp.org                                      *;
+**                                                                     *;
+** Revisions: Intial Creation 5/28/2010                                *;
+**                                                                     *;
+************************************************************************;
+** Macro Parameters:                                                   *;
+**                                                                     *;
+** DSIN: Feed in fully qualified name, i.e. use libname and dataset    *;
+**       name together if reading a permanent dataset. This macro      *;
+**       program assumes that desired libraries have been defined      *;
+**       previously in the program. StandardVars macro variables can   *;
+**       be used.                                                      *;
+**                                                                     *;
+** DSOUT: Feed in fully qualified name, i.e. use libname and dataset   *;
+**        name together if writing to a permanent dataset.             *;
+**                                                                     *;
+** KEEPVARS: Optional parameter indicating the values to keep in your  *;
+**           quality checking dataset.  May be left blank to simply    *;
+**           attach the three quality checking variables to an         *;
+**           existing dataset.                                         *;
+************************************************************************;
+** Examples of use:                                                    *;
+**                                                                     *;
+** %bp_flag(dsin=&_vdw_vitalsigns,                                     *;
+**          dsout=bp_qc,                                               *;
+**          keepvars= mrn measure_date systolic diastolic)             *;
+**                                                                     *;
+** %bp_flag(dsin=cohort_vitals,                                        *;
+**          dsout=cohort_vitals,                                       *;
+**          keepvars=)                                                 *;
+**                                                                     *;
+** %bp_flag(dsin=&_vdw_vitalsigns,                                     *;
+**          dsout=studylib.cohort_vitals,                              *;
+**          keepvars=mrn measure_date systolic diastolic ht wt)        *;
+**                                                                     *;
+************************************************************************;
+%macro bp_flag(dsin, dsout, keepvars);
+
+data &dsout;
+ set &dsin
+     %if &keepvars ne %then %do; (keep=&keepvars)%end;
+     ;
+
+ ** Flag Systolic quality. Null values are suspect if diastolic exists ;
+
+ if systolic gt 300          then SYSTOLIC_QUAL = 'ABN_HIGH';
+  else if . < systolic < 50  then SYSTOLIC_QUAL = 'ABN_LOW';
+  else if (systolic = . and
+           diastolic ne .)   then SYSTOLIC_QUAL = 'NULL';
+
+ ** Flag diastolic quality. Diastolic can go as low as 0, so there is no;
+ ** lower limit.  Null values are OK in studies that may only care about;
+ ** systolic.  This is just informative just in case it is needed.      ;
+ ** DIA_ABN is set to 'NULL' only if a systolic value is entered on the ;
+ ** same record.                                                        ;
+
+ if diastolic gt 160          then DIASTOLIC_QUAL = 'ABN_HIGH';
+  else if (systolic ne . and
+           diastolic eq .)    then DIASTOLIC_QUAL = 'NULL';
+
+ ** Now look at a comparative view between systolic and diastolic       ;
+ ** systolic should always be greater than diastolic, and any difference;
+ ** less than 20 or greater than 100 is suspect and should be reviewed  ;
+ ** further.                                                            ;
+
+ if systolic ne .
+    and diastolic ne . then
+    do;
+	 if systolic < = diastolic
+                            then SYS_DIA_QUAL = 'SYSTOLIC <= DIASTOLIC';
+      else if systolic - diastolic < 20
+                            then SYS_DIA_QUAL = 'DIFFERENCE < 20';
+	  else if systolic-diastolic > 100
+                            then SYS_DIA_QUAL = 'DIFFERENCE > 100';
+	end;
+run;
+
+** Run a frequency on the results.  Can have more than one condition at ;
+** a time;
+
+proc freq data=&dsout;
+ tables SYSTOLIC_QUAL
+        DIASTOLIC_QUAL
+        SYS_DIA_QUAL
+        SYSTOLIC_QUAL*DIASTOLIC_QUAL
+		SYSTOLIC_QUAL*SYS_DIA_QUAL
+		DIASTOLIC_QUAL*SYS_DIA_QUAL/missing;
+run;
+
+%mend bp_flag;
