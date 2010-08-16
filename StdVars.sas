@@ -28,18 +28,18 @@
   %let _Deathlib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
 
   ** dataset name specs ;
+  %let _UtilizationData         = utilization_v2 ;
+  %let _DxData                  = dx_v2 ;
+  %let _PxData                  = px_v2 ;
   %let _TumorData               = tumor ;
   %let _EnrollData              = enroll2_vw ;
   %let _DemographicData         = demog ;
   %let _RxData                  = rx ;
   %let _EverNdcData             = EverNDC_1998_2007 ;
-  %let _UtilizationData         = utilization ;
   %let _DeathData               = death ;
   %let _CODData                 = cod ;
-  %let _DxData                  = dx ;
-  %let _PxData                  = px ;
   %let _ProviderSpecialtyData   = specfile ;
-  %let _VitalData               = vitalsigns ;
+  %let _VitalData               = vitalsigns_view ;
   %let _CensusData              = census2000 ;
   %let _LabData                 = lab_results ;
   %let _LabDataCharacter        = lab_results_character ;
@@ -96,11 +96,11 @@
   ** These vars are temporary--will only exist during the v2 -> v3 transition.  ;
   ** See https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/version-3/implementation-plan for details. ;
   %let _vdw_enroll_m1               = __vdw.enroll3_vw ;
-  %let _vdw_vitalsigns_m1           = __scr.vitalsigns_v3 ;
+  %let _vdw_vitalsigns_m1           = __vdw.vitalsigns;
 
-  %let _vdw_utilization_m2          = ;
-  %let _vdw_dx_m2                   = ;
-  %let _vdw_px_m2                   = ;
+  %let _vdw_utilization_m2          = __vdw.utilization ;
+  %let _vdw_dx_m2                   = __vdw.dx ;
+  %let _vdw_px_m2                   = __vdw.px ;
   %let _vdw_vitalsigns_m2           = ;
 
   %let _vdw_demographic_m3          = ;
