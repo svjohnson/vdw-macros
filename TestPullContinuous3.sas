@@ -205,7 +205,7 @@ Ann         06/01/2003   06/30/2003
 
 **filename crn_macs  "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_MACROS.sas" ;
 
-%include vdw_macs ;
+%**include vdw_macs ;
 
 options mprint ;
 
