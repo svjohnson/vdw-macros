@@ -33,11 +33,12 @@
   %let _DemographicData         = demog ;
   %let _RxData                  = rx ;
   %let _EverNdcData             = EverNDC_1998_2007 ;
-  %let _UtilizationData         = utilization ;
+  %let _UtilizationData         = utilization_view ;
+  %** [RP: 20100819] Changing these to the views temporarily until we can get the _v2 datasets back in sync w/the real ones. ;
+  %let _DxData                  = dx_view ;
+  %let _PxData                  = px_view ;
   %let _DeathData               = death ;
   %let _CODData                 = cod ;
-  %let _DxData                  = dx ;
-  %let _PxData                  = px ;
   %let _ProviderSpecialtyData   = specfile ;
   %let _VitalData               = vitalsigns ;
   %let _CensusData              = census2000 ;

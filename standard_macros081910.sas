@@ -39,7 +39,7 @@
       Gets the pharmacy fills for a specified set of people (identified by MRNs)
       which ocurred between the dates specified in StartDt and EndDt.
    */
-  
+   libname __rx "&_RxLib." access = readonly ;
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -50,13 +50,13 @@
       proc sql ;
          create table &OutSet as
          select r.*
-         from &_vdw_rx as r INNER JOIN
+         from __rx.&_RxData as r INNER JOIN
                &People as p
          on    r.MRN = p.MRN
          where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
- 
+   libname __rx clear;
 %mend GetRxForPeople ;
 /*********************************************************;
 * Testing GetRxForPeople (tested Ok 20041230 gh);
@@ -91,16 +91,16 @@ run;
      %put PROBLEM: Doing nothing. ;
    %end ;
    %else %do ;
-     
+      libname __rx "&_RxLib" access = readonly ;
       proc sql ;
          create table &OutSet as
          select r.*
-         from &_vdw_rx as r INNER JOIN
+         from __rx.&_RxData as r INNER JOIN
                &DrugLst as p
          on    r.NDC = p.NDC
          where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
-  
+      libname __rx clear ;
    %end ;
 %mend GetRxForDrugs ;
 
@@ -124,17 +124,17 @@ run;
     %put PROBLEM: Doing nothing. ;
    %end ;
    %else %do ;
-      
+      libname __rx "&_RxLib" access = readonly ;
       proc sql ;
   	    create table &OutSet as
 	  			select r.*
-   				from  &_vdw_rx as r
+   				from  __rx.&_Rxdata as r
    				INNER JOIN &People as p
    				on    r.MRN = p.MRN
    				where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d AND
          				r.NDC in (select _x.NDC from &DrugLst as _x) ;
       quit ;
-     
+      libname __rx clear ;
    %end ;
 %mend GetRxForPeopleAndDrugs ;
 
@@ -146,7 +146,7 @@ run;
          , EndDt   /* The date on which you want to stop collecting fills. */
          , Outset  /* The name of the output dataset containing the fills. */
          ) ;
-  
+   libname __dx "&_UtilizationLib" access = readonly ;
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -158,7 +158,7 @@ run;
       proc sql ;
         create table &outset as
 			  select d.*
-   			from  &_vdw_dx as d
+   			from  __dx.&_dxdata as d
    			INNER JOIN &People as p
    			on    d.MRN = p.MRN
    			where d.ADate BETWEEN "&StartDt"d AND "&EndDt"d AND
@@ -166,7 +166,7 @@ run;
         ;
       quit ;
    %end ;
-
+   libname __dx clear ;
 
 %mend GetDxForPeopleAndDx;
 
@@ -176,7 +176,7 @@ run;
       the input dataset.
    */
 
-
+   libname __rx "&_RxLib" access = readonly ;
 
    proc sql ;
       title2 "Extent of pharmacy data." ;
@@ -185,7 +185,7 @@ run;
                 format = mmddyy10. label = "Earliest recorded fill"
             , max(RxDate) as LastFill
                 format = mmddyy10. label = "Most recent recorded fill"
-      from &_vdw_rx ;
+      from __rx.&_RxData ;
 
       title2 "Number of fills for the list of NDCs in &DrugList" ;
       select d.generic
@@ -196,12 +196,12 @@ run;
             , max(r.RxDate) as LastFill
                 format = mmddyy10. label = "Date of most recent fill"
       from  &DrugList as d LEFT JOIN
-            &_vdw_rx as r
+            __rx.&_RxData as r
       on    d.NDC = r.NDC
       group by d.generic, d.NDC ;
    quit ;
 
-   
+   libname __rx clear ;
 %mend CountFills ;
 
 %macro BreastCancerDefinition01(StartDt = 01Jan1997
@@ -217,7 +217,7 @@ run;
                             20000823whmesprogramming_case_criteria.doc.
    */
 
-  
+   libname __tum "&_TumorLib" access = readonly ;
 
    proc sql number ;
       create table _AllBreastTumors as
@@ -226,7 +226,7 @@ run;
             , DtMrk1 as ERMarker
             , StageGen
             , StageAJ
-      from  &_vdw_tumor
+      from  __tum.&_TumorData
       where DxDate between "&StartDt"d and "&EndDt"d  AND
             ICDOSite between 'C500' and 'C509'        AND
             Gender = '2'                              AND
@@ -283,7 +283,7 @@ run;
       group by mrn, dxdate ;
    quit ;
 
-  
+   libname __tum clear ;
 
 %mend BreastCancerDefinition01 ;
 
@@ -420,7 +420,7 @@ run;
                      , PostIndexEnrolledMonths   /* The # of months of enrollment required post index date. */
                      , PostIndexGapTolerance     /* The length of enrollment gaps you consider to be ignorable for post-index date enrollment.*/
                      , DebugOut = work           /* Libname to save interim dsets to for debugging--leave set to work to discard these. */
-                     , EnrollDset = &_vdw_enroll /* For testing. */
+                     , EnrollDset = __enroll.&_EnrollData /* For testing. */
                      ) ;
 
    %* Validate the arguments. ;
@@ -458,7 +458,7 @@ run;
    %put ;
    %put ;
 
-   
+   libname __enroll "&_EnrollLib" access = readonly ;
 
    proc sql ;
       * Table of unique MRNs and the dates setting out the period of interest (earliest & latest). ;
@@ -702,7 +702,7 @@ run;
       Gets the procedures for a specified set of people (identified by MRNs)
       which ocurred between the dates specified in StartDt and EndDt.
    */
-   
+   libname __util "&_UtilizationLib" access = readonly ;
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -713,13 +713,13 @@ run;
       proc sql ;
          create table &OutSet as
          select r.*
-         from &_vdw_px as r INNER JOIN
+         from __util.&_PxData as r INNER JOIN
                &People as p
          on    r.MRN = p.MRN
          where r.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-  
+   libname __util clear ;
 %mend GetPxForPeople ;
 
 %macro GetUtilizationForPeople(
@@ -734,7 +734,7 @@ run;
       Gets the utilization records for a specified set of people (identified
       by MRNs) hich ocurred between the dates specified in StartDt and EndDt.
    */
- 
+   libname __util "&_UtilizationLib" access = readonly ;
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -745,13 +745,13 @@ run;
       proc sql ;
          create table &OutSet as
          select r.*
-         from &_vdw_utilization as r INNER JOIN
+         from __util.&_UtilizationData as r INNER JOIN
                &People as p
          on    r.MRN = p.MRN
          where r.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-   
+   libname __util clear ;
 %mend GetUtilizationForPeople ;
 
 /*********************************************************;
@@ -779,7 +779,7 @@ run;
       Gets the diagnoses for a specified set of people (identified by MRNs)
       which ocurred between the dates specified in StartDt and EndDt.
    */
-   
+   libname __util "&_UtilizationLib" access = readonly ;
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
     %put PROBLEM: Both parameters are set to "&People". ;
@@ -789,13 +789,13 @@ run;
       proc sql ;
          create table &OutSet as
          select r.*
-         from &_vdw_dx as r INNER JOIN
+         from __util.&_DxData as r INNER JOIN
                &People as p
          on    r.MRN = p.MRN
          where r.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-  
+   libname __util clear;
 %mend GetDxForPeople ;
 /*********************************************************;
 * Testing GetDxForPeople (tested ok 20041230 gh);
@@ -824,7 +824,7 @@ run;
      Gets the records for a specified set of diagnoses (identified by ICD9 code)
      which ocurred between the dates specified in StartDt and EndDt.
    */
- 
+   libname __util "&_UtilizationLib" access = readonly ;
    %if &DxLst = &Outset %then %do ;
     %put PROBLEM: The Diagnosis List dataset must be different from the;
     %put PROBLEM:   OutSet dataset;
@@ -835,13 +835,13 @@ run;
       proc sql ;
          create table &OutSet as
          select DBig.*
-         from  &_vdw_dx as DBig INNER JOIN
+         from  __util.&_DxData as DBig INNER JOIN
                &DxLst as DLittle
          on    DBIG.DX = Dlittle.&DxVarName.
          where Dbig.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-   
+   libname __util clear;
 %mend GetDxForDx ;
 /*********************************************************;
 * Testing GetDxForDx (tested 20041230 gh);
@@ -874,7 +874,7 @@ run;
      Gets the records for a specified set of diagnoses (identified by ICD9 code)
      which ocurred between the dates specified in StartDt and EndDt.
    */
- 
+   libname __util "&_UtilizationLib" access = readonly ;
    %if &PxLst = &Outset %then %do ;
     %put PROBLEM: The Px List dataset must be different from the OutSet dataset;
     %put PROBLEM: Both parameters are set to "&PxLst". ;
@@ -884,7 +884,7 @@ run;
       proc sql ;
          create table &OutSet as
          select PBig.*
-         from  &_vdw_px as PBig INNER JOIN
+         from  __util.&_PxData as PBig INNER JOIN
                &PxLst as PLittle
          on    PBig.PX = PLittle.&PxVarName.  and
                /* will this screw up use of an index? gh */
@@ -892,7 +892,7 @@ run;
          where Pbig.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-  
+   libname __util clear ;
 %mend GetPxForPx ;
 *********************************************************;
 * Testing GetPxForPx (tested 20041230 gh);
@@ -1161,7 +1161,7 @@ run;
 * subset to the utilization data of interest (add the people with no visits  *;
 *    back at the end                                                         *;
 ******************************************************************************;
-
+libname util "&_UtilizationLib." access = readonly ;
 
 **********************************************;
 * implement the Inpatient and Outpatient Flags;
@@ -1187,7 +1187,7 @@ proc sql &sqlopts ;
 
   create table  _DxSubset as
   select sample.mrn, &IndexDateVarName, adate, put(dx, $icd9cf.) as CodedDx
-  from &vdw_dx as d INNER JOIN _ppl as sample
+  from util.&_DxData as d INNER JOIN _ppl as sample
   ON    d.mrn = sample.mrn
   where adate between sample.&IndexDateVarName-1
                   and sample.&IndexDateVarName-365
@@ -1202,7 +1202,7 @@ proc sql &sqlopts ;
 
   create table _PxSubset as
   select p.*
-  from &_vdw_px as p, _ppl as sample
+  from util.&_PxData as p, _ppl as sample
   where p.mrn = sample.mrn
         and adate between sample.&IndexDateVarName-1
                       and sample.&IndexDateVarName-365
@@ -1468,7 +1468,7 @@ proc datasets nolist ;
    %*let debuglib = owt. ;
    %let debuglib = ;
 
-
+   libname __enroll "&_EnrollLib" access = readonly ;
 
    proc sql ;
 
@@ -1481,7 +1481,7 @@ proc datasets nolist ;
             , &IndexDate                  as idate       format = mmddyy10.
             , &EndDate                    as edate       format = mmddyy10.
             , mdy(enr_month, 1, enr_year) as EnrollDate  format = mmddyy10.
-      from &_vdw_enroll as e INNER JOIN
+      from __enroll.&_EnrollData as e INNER JOIN
             &People as p
       on    e.MRN = p.MRN
       where e.enr_year between year(&IndexDate) and year(&EndDate) AND
@@ -1614,7 +1614,7 @@ proc datasets nolist ;
       %if %length(&debuglib) = 0 %then drop table &debuglib._first_gaps ; ;
    quit ;
 
-   
+   libname __enroll clear ;
 %mend OldGetFollowUpTime ;
 
 %macro LastWord(WordList) ;
@@ -1891,7 +1891,7 @@ proc datasets nolist ;
                                     will hold the end of the f/up period? */
                , OutSet          /* The name of the output dataset. */
                , DebugOut = work /* Libname to save interim dsets to for debugging--leave set to work to discard these. */
-               , EnrollDset = &_vdw_enroll /* Supply your own enroll data if you like. */
+               , EnrollDset = __enroll.&_EnrollData /* Supply your own enroll data if you like. */
                , Reverse = 0     /* **(JW 30DEC2009) Look backwards from IndexDate? 1=Reverse */
                  ) ;
 
@@ -1913,7 +1913,7 @@ proc datasets nolist ;
    %put ;
 
 
-  
+   libname __enroll "&_EnrollLib" access = readonly ;
 
    proc sql noprint ;
 
@@ -2104,6 +2104,9 @@ proc datasets nolist ;
 	/*This limits the maximum number of different diseases a person can have*/
 	%LET MaxDisease=20;
 
+	libname dem "&_DemographicLib.";
+	libname enr "&_EnrollLib.";
+	libname rx "&_RxLib.";
 	libname risk "&_RxRiskLib.";
 
 	/*Get the Cases file ready*/
@@ -2118,7 +2121,7 @@ proc datasets nolist ;
 				- (day(&IndexDt.) < day(d.Birth_Date))) / 12) as age
 	from &infile. as i
 		LEFT JOIN
-		&_vdw_demographic as d
+		 dem.&_DemographicData. as d
 	on i.MRN = d.MRN
 	;
 
@@ -2129,7 +2132,7 @@ proc datasets nolist ;
 			, ifn(upcase(e.Ins_Medicaid)="Y", 1, 0, 0) as Medicaid
 	from GrabDem as g
 		INNER JOIN
-		 &_vdw_enroll as e
+		 enr.&_EnrollData. as e
 	on g.MRN = e.MRN
 	where &IndexDt. between e.Enr_Start and e.Enr_End
 	;
@@ -2142,7 +2145,7 @@ proc datasets nolist ;
 			, r.NDC
 	from &infile as i
 			LEFT JOIN
-		 &_vdw_rx as r
+		 rx.&_RxData. as r
     on    i.MRN = r.MRN
     where r.RxDate BETWEEN (&IndexDt.-366) AND (&IndexDt.-1) ;
 
@@ -2667,18 +2670,17 @@ proc datasets nolist ;
    run ;
 %mend PrettyCase ;
 
-%macro GetCensusForPeople(InSet  , OutSet  ) ;
- /*Removed the year parameter so that vdw_census will always point
-at the standard vars reference. DLK 08-19-2010 */
+%macro GetCensusForPeople(InSet = , OutSet = , CensusYear = 2000) ;
+   libname __census "&_CensusLib." access = readonly ;
    proc sql ;
       create table &OutSet (drop = _mrn) as
       select *
       from  &InSet as i LEFT JOIN
-            &_vdw_census (rename = (mrn = _mrn)) as c
+            __census.&_CensusData.&CensusYear (rename = (mrn = _mrn)) as c
       on    i.mrn = c._mrn
       ;
    quit ;
-   
+   libname __census clear ;
 %mend GetCensusForPeople ;
 
 %macro CleanRx(OutLib, Clean=N, Dirty=N, Report=Y);
@@ -2746,8 +2748,8 @@ at the standard vars reference. DLK 08-19-2010 */
     %end;
 
     /*Clean the data*/
- 
-    proc sort data=&_vdw_rx out=ToClean;
+    libname vdwrx "&_RxLib." access=readonly;
+    proc sort data=vdwrx.&_RxData out=ToClean;
       by mrn rxdate ndc;
     run;
 
@@ -2828,7 +2830,7 @@ at the standard vars reference. DLK 08-19-2010 */
                       %else Dirty noprint;;
         table DirtyReason / out=DirtyReport;
       run;
-      proc contents data=&_vdw_rx out=RxContents noprint; run;
+      proc contents data=vdwrx.&_RxData. out=RxContents noprint; run;
       data WrongLength (keep=vname YourLength SpecLength);
         set RxContents;
         length vname $32. YourLength 8 SpecLength 8;
@@ -2884,7 +2886,7 @@ at the standard vars reference. DLK 08-19-2010 */
             , Outset  /* The name of the output dataset containing the vitals */
             ) ;
    *Author: Tyler Ross, ross.t@ghc.org , 206-287-2927;
-  
+   libname __vitals "&_VitalLib" access = readonly ;
 
    /*Catch and Throw*/
    %if &People = &Outset %then %do ;
@@ -2908,7 +2910,7 @@ at the standard vars reference. DLK 08-19-2010 */
          select v.*
          from &People as p
            INNER JOIN
-              &_vdw_vitalsigns as v
+              __vitals.&_VitalData as v
          on p.mrn = v.mrn
          where v.Measure_Date BETWEEN "&StartDt"d AND "&EndDt"d
        ;
@@ -2991,7 +2993,7 @@ at the standard vars reference. DLK 08-19-2010 */
 	   "250.4 "-"250.63" = "DIABC"
 **************************************/
 
-
+libname util "&_UtilizationLib." access = readonly ;
 
 * TODO: Break this out into a separate macro that just defines the format, which we can share with the charlson macro--keep it DRY. ;
 proc format;
@@ -3059,7 +3061,7 @@ run;
 proc sql noprint;
   create table &outfile as
     select distinct mrn
-    from &_vdw_dx
+    from util.&_DxData
     where dx in(select diabetes_dx from diabetes_charlson)
       AND adate between "&startdate"d AND "&EndDate"d
 %if       %upcase(&EncType.) = I %then AND EncType = "IP";
@@ -3326,7 +3328,7 @@ quit;
                 AND max(Systolic)  > &Systolic_Min.;
 %end;
 
-
+libname vs "&_VitalLib" access=readonly;
 
 proc sql;
  create table &outfile. as
@@ -3335,7 +3337,7 @@ proc sql;
  label = "Person's highest diastolic reading between &StartDate. and &EndDate."
         , max(Systolic)  as Max_Systolic
  label = "Person's highest systolic reading between &StartDate. and &EndDate."
-   from &_vdw_vitalsigns (where=(Measure_Date between "&StartDate"d
+   from vs.&_VitalData. (where=(Measure_Date between "&StartDate"d
                                                  AND "&EndDate"d  ))
    group by mrn
    having &Conditional.
@@ -3493,8 +3495,8 @@ run;
     %end;
 
     /*Clean the data*/
-  
-    proc sort data=&_vdw_enroll out=ToClean;
+    libname __enroll "&_EnrollLib.";
+    proc sort data=__enroll.&_EnrollData out=ToClean;
       by mrn enr_start;
     run;
 
@@ -3581,7 +3583,7 @@ run;
                       %else Dirty noprint;;
         table DirtyReason / out=DirtyReport;
       run;
-      proc contents data=&_vdw_enroll out=EnrollContents noprint;
+      proc contents data=__enroll.&_EnrollData. out=EnrollContents noprint;
       run;
 
       data WrongLength (keep=vname YourLength SpecLength);
@@ -3709,12 +3711,12 @@ run;
     %end;
 
     /*Clean the data*/
-    
+    libname __vitals "&_VitalLib." access=readonly;
 
     *IMPUTE BMI FROM SCRATCH;
     %LET verybig = 10000000000000000;
     data NumberOff;
-      set &_vdw_vitalsigns;
+      set __vitals.&_VitalData.;
       length id 8;
       id=_n_;
     run;
@@ -3961,7 +3963,7 @@ run;
                       %else Dirty noprint;;
         table DirtyReason / out=DirtyReport;
       run;
-      proc contents data=&_vdw_vitalsigns out=VitalContents noprint;
+      proc contents data=__vitals.&_VitalData. out=VitalContents noprint;
       run;
 
       data WrongLength (keep=vname YourLength SpecLength);
@@ -4031,7 +4033,7 @@ run;
     %end;
   %end;
   %if &Limits=Y %then %do;
-   
+    libname demog "&_DemographicLib." access=readonly;
     %if &Clean=Y %then %let cleaner=&Outlib..clean;
       %else %let cleaner=clean;
     proc sql;
@@ -4039,7 +4041,7 @@ run;
         select a.*
              , %CalcAge(b.Birth_Date, a.Measure_Date) as _age
         from &cleaner. as a
-          INNER JOIN &_vdw_demographic as b
+          INNER JOIN demog.&_DemographicData as b
           on a.mrn=b.mrn
         where
          (    (calculated _age = 0               AND a.HT between 3 and 41)
@@ -4201,11 +4203,11 @@ run;
       %put PROBLEM: Doing nothing. ;
    %end ;
    %else %do ;
-    
+      libname __u "&_UtilizationLib" access = readonly ;
       proc sql ;
       create table &OutSet as
       			  select d.*
-      			from  &_vdw_px as d
+      			from  __u.&_pxdata as d
       			INNER JOIN &People as p
       			on    d.MRN = p.MRN
       			where d.ADate BETWEEN "&StartDt"d AND "&EndDt"d AND
@@ -4213,7 +4215,7 @@ run;
       ;
       quit ;
    %end ;
-  
+   libname __u clear ;
 %mend GetPxForPeopleAndPx ;
 
 %macro RemoveDset(dset = ) ;
@@ -4264,7 +4266,8 @@ run;
 
 
 
-  
+   libname __d "&_DemographicLib"   access = readonly ;
+   libname __v "&_VitalLib"         access = readonly ;
 
    proc sql ;
       * Gather the demog data for our input dset. ;
@@ -4273,7 +4276,7 @@ run;
             , case d.gender when 'M' then 1 when 'F' then 2 else . end as sex label = '1 = Male; 2 = Female'
             , d.birth_date
       from  &InSet as i LEFT JOIN
-           &_vdw_demographic as d
+            __d.&_DemographicData as d
       on    i.mrn = d.mrn
       ;
 
@@ -4292,7 +4295,7 @@ run;
             , . as recumbnt   label = 'Recumbent flag (not implemented in VDW)'
             , . as headcir    label = 'Head circumference (not implemented in VDW)'
       from  __demog as d INNER JOIN
-            &_vdw_vitalsigns as v
+            __v.&_VitalData as v
       on    d.mrn = v.mrn
       where calculated age_at_measure between 2 and 17 AND
             ht IS NOT NULL AND
@@ -4364,6 +4367,9 @@ run;
 
    run ;
 
+   libname __d clear ;
+   libname __v clear ;
+
 %mend GetKidBMIPercentiles ;
 
 %macro GetLabForPeopleAndLab(
@@ -4385,7 +4391,7 @@ run;
     %put PROBLEM: Doing nothing. ;
     %end ;
   %else %do ;
- 
+    libname __lab "&_LabLib" access = readonly ;
 
     proc sql ;
       create table __ids as
@@ -4394,20 +4400,20 @@ run;
       ;
       create table &OutSet as
     			select l.*
-  			from &_vdw_lab as l
+  			from  __lab.&_LabData as l
   			INNER JOIN __ids as p
   			on    l.MRN = p.MRN
   			where l.Lab_dt BETWEEN "&StartDt"d AND "&EndDt"d AND
   						l.Test_Type in (select &LabLst..test_type from &LabLst) ;
     quit ;
-   
+    libname __Lab clear ;
   %end;
 %mend GetLabForPeopleAndLab ;
 
 %macro make_inclusion_table(cohort = ) ;
-
+  libname __d "&_DemographicLib" access = readonly ;
   %local demog ;
-  %let demog = &_vdw_demographic ;
+  %let demog = __d.&_DemographicData ;
 
   proc format ;
     value $Hispani
@@ -4515,7 +4521,7 @@ run;
     where put(hispanic, $hispani.) = '1 Hispanic or Latino' ;
   quit ;
 
-
+  libname __d clear ;
 
 %mend make_inclusion_table ;
 
