@@ -39,7 +39,7 @@
       Gets the pharmacy fills for a specified set of people (identified by MRNs)
       which ocurred between the dates specified in StartDt and EndDt.
    */
-  
+
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -56,7 +56,7 @@
          where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
- 
+
 %mend GetRxForPeople ;
 /*********************************************************;
 * Testing GetRxForPeople (tested Ok 20041230 gh);
@@ -91,7 +91,7 @@ run;
      %put PROBLEM: Doing nothing. ;
    %end ;
    %else %do ;
-     
+
       proc sql ;
          create table &OutSet as
          select r.*
@@ -100,7 +100,7 @@ run;
          on    r.NDC = p.NDC
          where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
-  
+
    %end ;
 %mend GetRxForDrugs ;
 
@@ -124,7 +124,7 @@ run;
     %put PROBLEM: Doing nothing. ;
    %end ;
    %else %do ;
-      
+
       proc sql ;
   	    create table &OutSet as
 	  			select r.*
@@ -134,7 +134,7 @@ run;
    				where r.RxDate BETWEEN "&StartDt"d AND "&EndDt"d AND
          				r.NDC in (select _x.NDC from &DrugLst as _x) ;
       quit ;
-     
+
    %end ;
 %mend GetRxForPeopleAndDrugs ;
 
@@ -146,7 +146,7 @@ run;
          , EndDt   /* The date on which you want to stop collecting fills. */
          , Outset  /* The name of the output dataset containing the fills. */
          ) ;
-  
+
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -201,7 +201,7 @@ run;
       group by d.generic, d.NDC ;
    quit ;
 
-   
+
 %mend CountFills ;
 
 %macro BreastCancerDefinition01(StartDt = 01Jan1997
@@ -217,7 +217,7 @@ run;
                             20000823whmesprogramming_case_criteria.doc.
    */
 
-  
+
 
    proc sql number ;
       create table _AllBreastTumors as
@@ -283,7 +283,7 @@ run;
       group by mrn, dxdate ;
    quit ;
 
-  
+
 
 %mend BreastCancerDefinition01 ;
 
@@ -458,7 +458,7 @@ run;
    %put ;
    %put ;
 
-   
+
 
    proc sql ;
       * Table of unique MRNs and the dates setting out the period of interest (earliest & latest). ;
@@ -702,7 +702,7 @@ run;
       Gets the procedures for a specified set of people (identified by MRNs)
       which ocurred between the dates specified in StartDt and EndDt.
    */
-   
+
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -719,7 +719,7 @@ run;
          where r.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-  
+
 %mend GetPxForPeople ;
 
 %macro GetUtilizationForPeople(
@@ -734,7 +734,7 @@ run;
       Gets the utilization records for a specified set of people (identified
       by MRNs) hich ocurred between the dates specified in StartDt and EndDt.
    */
- 
+
 
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
@@ -751,7 +751,7 @@ run;
          where r.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-   
+
 %mend GetUtilizationForPeople ;
 
 /*********************************************************;
@@ -779,7 +779,7 @@ run;
       Gets the diagnoses for a specified set of people (identified by MRNs)
       which ocurred between the dates specified in StartDt and EndDt.
    */
-   
+
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
     %put PROBLEM: Both parameters are set to "&People". ;
@@ -795,7 +795,7 @@ run;
          where r.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-  
+
 %mend GetDxForPeople ;
 /*********************************************************;
 * Testing GetDxForPeople (tested ok 20041230 gh);
@@ -824,7 +824,7 @@ run;
      Gets the records for a specified set of diagnoses (identified by ICD9 code)
      which ocurred between the dates specified in StartDt and EndDt.
    */
- 
+
    %if &DxLst = &Outset %then %do ;
     %put PROBLEM: The Diagnosis List dataset must be different from the;
     %put PROBLEM:   OutSet dataset;
@@ -841,7 +841,7 @@ run;
          where Dbig.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-   
+
 %mend GetDxForDx ;
 /*********************************************************;
 * Testing GetDxForDx (tested 20041230 gh);
@@ -874,7 +874,7 @@ run;
      Gets the records for a specified set of diagnoses (identified by ICD9 code)
      which ocurred between the dates specified in StartDt and EndDt.
    */
- 
+
    %if &PxLst = &Outset %then %do ;
     %put PROBLEM: The Px List dataset must be different from the OutSet dataset;
     %put PROBLEM: Both parameters are set to "&PxLst". ;
@@ -892,7 +892,7 @@ run;
          where Pbig.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
-  
+
 %mend GetPxForPx ;
 *********************************************************;
 * Testing GetPxForPx (tested 20041230 gh);
@@ -1187,7 +1187,7 @@ proc sql &sqlopts ;
 
   create table  _DxSubset as
   select sample.mrn, &IndexDateVarName, adate, put(dx, $icd9cf.) as CodedDx
-  from &vdw_dx as d INNER JOIN _ppl as sample
+  from &_vdw_dx as d INNER JOIN _ppl as sample
   ON    d.mrn = sample.mrn
   where adate between sample.&IndexDateVarName-1
                   and sample.&IndexDateVarName-365
@@ -1614,7 +1614,7 @@ proc datasets nolist ;
       %if %length(&debuglib) = 0 %then drop table &debuglib._first_gaps ; ;
    quit ;
 
-   
+
 %mend OldGetFollowUpTime ;
 
 %macro LastWord(WordList) ;
@@ -1913,7 +1913,7 @@ proc datasets nolist ;
    %put ;
 
 
-  
+
 
    proc sql noprint ;
 
@@ -2678,7 +2678,7 @@ at the standard vars reference. DLK 08-19-2010 */
       on    i.mrn = c._mrn
       ;
    quit ;
-   
+
 %mend GetCensusForPeople ;
 
 %macro CleanRx(OutLib, Clean=N, Dirty=N, Report=Y);
@@ -2746,7 +2746,7 @@ at the standard vars reference. DLK 08-19-2010 */
     %end;
 
     /*Clean the data*/
- 
+
     proc sort data=&_vdw_rx out=ToClean;
       by mrn rxdate ndc;
     run;
@@ -2884,7 +2884,7 @@ at the standard vars reference. DLK 08-19-2010 */
             , Outset  /* The name of the output dataset containing the vitals */
             ) ;
    *Author: Tyler Ross, ross.t@ghc.org , 206-287-2927;
-  
+
 
    /*Catch and Throw*/
    %if &People = &Outset %then %do ;
@@ -3493,7 +3493,7 @@ run;
     %end;
 
     /*Clean the data*/
-  
+
     proc sort data=&_vdw_enroll out=ToClean;
       by mrn enr_start;
     run;
@@ -3709,7 +3709,7 @@ run;
     %end;
 
     /*Clean the data*/
-    
+
 
     *IMPUTE BMI FROM SCRATCH;
     %LET verybig = 10000000000000000;
@@ -4031,7 +4031,7 @@ run;
     %end;
   %end;
   %if &Limits=Y %then %do;
-   
+
     %if &Clean=Y %then %let cleaner=&Outlib..clean;
       %else %let cleaner=clean;
     proc sql;
@@ -4201,7 +4201,7 @@ run;
       %put PROBLEM: Doing nothing. ;
    %end ;
    %else %do ;
-    
+
       proc sql ;
       create table &OutSet as
       			  select d.*
@@ -4213,7 +4213,7 @@ run;
       ;
       quit ;
    %end ;
-  
+
 %mend GetPxForPeopleAndPx ;
 
 %macro RemoveDset(dset = ) ;
@@ -4264,7 +4264,7 @@ run;
 
 
 
-  
+
 
    proc sql ;
       * Gather the demog data for our input dset. ;
@@ -4385,7 +4385,7 @@ run;
     %put PROBLEM: Doing nothing. ;
     %end ;
   %else %do ;
- 
+
 
     proc sql ;
       create table __ids as
@@ -4400,7 +4400,7 @@ run;
   			where l.Lab_dt BETWEEN "&StartDt"d AND "&EndDt"d AND
   						l.Test_Type in (select &LabLst..test_type from &LabLst) ;
     quit ;
-   
+
   %end;
 %mend GetLabForPeopleAndLab ;
 
