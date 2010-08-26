@@ -33,9 +33,9 @@
   %let _DemographicData         = demog ;
   %let _RxData                  = rx ;
   %let _EverNdcData             = EverNDC_1998_2007 ;
-  %let _UtilizationData         = utilization ;
-  %let _DxData                  = dx ;
-  %let _PxData                  = px ;
+  %let _UtilizationData         = utilization_view ;
+  %let _DxData                  = dx_view ;
+  %let _PxData                  = px_view ;
   %let _DeathData               = death ;
   %let _CODData                 = cod ;
   %let _ProviderSpecialtyData   = specfile ;
@@ -52,7 +52,7 @@
   ** You are also free to define any number of different libnames, if your VDW dsets are stored in different locations. ;
   ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
   libname __vdw "&_TumorLib"          access = readonly ;
-  libname __scr "&_TumorLib\scratch"  access = readonly ;
+  libname __scr "\\ctrhs-sas\Warehouse\Management\OfflineData\CRN_VDW\scratch"  access = readonly ;
 
   %let _vdw_tumor               = __vdw.&_TumorData ;
   %let _vdw_enroll              = __vdw.&_EnrollData ;
@@ -98,12 +98,12 @@
   %let _vdw_enroll_m1               = __vdw.enroll3_vw ;
   %let _vdw_vitalsigns_m1           = __scr.vitalsigns_v3 ;
 
-  %let _vdw_utilization_m2          = ;
-  %let _vdw_dx_m2                   = ;
-  %let _vdw_px_m2                   = ;
+  %let _vdw_utilization_m2          = __vdw.utilization ;
+  %let _vdw_dx_m2                   = __vdw.dx ;
+  %let _vdw_px_m2                   = __vdw.px ;
   %let _vdw_vitalsigns_m2           = ;
 
-  %let _vdw_demographic_m3          = ;
+  %let _vdw_demographic_m3          = __scr.demog_test ;
 
   %let _vdw_lab_m4                  = ;
   %let _vdw_lab_character_m4        = ;
