@@ -937,10 +937,12 @@ run;
                , StartIDsAt = 0
                ) ;
 
-   proc sql ;
+   proc sql nowarn ;
       create table _UIDs as
       select distinct &OldIDVar
-      from &InSet ;
+      from &InSet
+      order by uniform(675555)
+      ;
    quit ;
 
    %if %length(%trim(&sqlobs)) > &NewIDLen %then %do ;
