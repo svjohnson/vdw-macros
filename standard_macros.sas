@@ -1691,7 +1691,7 @@ proc datasets nolist ;
       from dictionary.columns
       where memtype ne 'VIEW' AND
             upcase(compress(libname || '.' || memname)) = %upcase("&Dset") AND
-            upcase(name) not in (%upcase("&RecStart"), %upcase("&RecEnd")) ;
+            upcase(name) not in (%upcase("&RecStart"), %upcase("&RecEnd"), %upcase("&PersonID")) ;
    quit ;
 
 %mend GetVarList ;
@@ -4269,7 +4269,7 @@ run;
 
 
    proc sql ;
-      * Gather the demog data for our input dset. ;
+      ** Gather the demog data for our input dset. ;
       create table __demog as
       select i.mrn
             , case d.gender when 'M' then 1 when 'F' then 2 else . end as sex label = '1 = Male; 2 = Female'
@@ -4304,7 +4304,7 @@ run;
       ;
    quit ;
 
-   * ROY--CHANGE THIS BACK TO PULLING FROM THE FTP SERVER!!! ;
+   ** ROY--CHANGE THIS BACK TO PULLING FROM THE FTP SERVER!!! ;
   filename kid_bmi   FTP     "gc-calculate-BIV.sas"
                      HOST  = "vdw.hmoresearchnetwork.org"
                      CD    = "/vdwcode"
@@ -4312,7 +4312,7 @@ run;
                      USER  = "VDWReader" ;
 
 
-   * filename kid_bmi "\\groups\data\CTRHS\Crn\S D R C\VDW\VitalSigns\gc-calculate-BIV.sas" ;
+   ** filename kid_bmi "\\groups\data\CTRHS\Crn\S D R C\VDW\VitalSigns\gc-calculate-BIV.sas" ;
 
    data _indata ;
       set _indata ;

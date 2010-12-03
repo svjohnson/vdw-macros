@@ -4,54 +4,48 @@
 * (206) 287-2078
 * pardee.r@ghc.org
 *
-* StdVars.sas
+* StdVars5p.sas
 *
 * A site-modified program that specifies a set of standard macro variables
 * for things that vary by site (e.g., libname definitions) and yet should be
 * relatively static.  The intent here is to minimize the amount of site-programmer
 * editing required for new programs that use the VDW.
 *
+* THIS FILE POINTS AT THE 5-percent subsample version of these files!!!  It is intended to be useful
+* for basic, fast syntax & logic testing.
+*
 *********************************************/
 
 
 ** OLD VARIABLES--THESE ARE DEPRECATED--new code should use the single var names below. ;
   ** libname locations specs ;
-  %let _TumorLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _EnrollLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _DemographicLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _RxLib                   = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _UtilizationLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+  %let _TumorLib                = \\ctrhs-sas\warehouse\Sasdata\CRN_VDW\5percent_subset ;
+  %let _EnrollLib               = &_TumorLib ;
+  %let _DemographicLib          = &_TumorLib ;
+  %let _RxLib                   = &_TumorLib ;
+  %let _UtilizationLib          = &_TumorLib ;
   %let _RxRiskLib               = \\ctrhs-sas\warehouse\sasdata\rxrisk  ;
-  %let _VitalLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _CensusLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _LabLib                  = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _Deathlib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
+  %let _VitalLib                = &_TumorLib ;
+  %let _CensusLib               = &_TumorLib ;
+  %let _LabLib                  = &_TumorLib ;
+  %let _Deathlib                = &_TumorLib ;
 
   ** dataset name specs ;
   %let _TumorData               = tumor ;
-  %let _EnrollData              = enroll2_v2 ;
+  %let _EnrollData              = enroll2_vw ;
   %let _DemographicData         = demog_view ;
   %let _RxData                  = rx ;
   %let _EverNdcData             = EverNDC_1998_2007 ;
-
   %let _UtilizationData         = utilization_v2 ;
   %let _DxData                  = dx_v2 ;
   %let _PxData                  = px_v2 ;
-
-/*
-  %let _UtilizationData         = utilization_view ;
-  %let _DxData                  = dx_view ;
-  %let _PxData                  = px_view ;
-*/
-
   %let _DeathData               = death ;
   %let _CODData                 = cod ;
-  %let _ProviderSpecialtyData   = specfile_view ;
+  %let _ProviderSpecialtyData   = specfile ;
   %let _VitalData               = vitalsigns_view ;
   %let _CensusData              = census2000 ;
   %let _LabData                 = lab_results ;
-  %let _LabDataNotes            = lab_results_notes ;
-
+  %let _LabDataCharacter        = lab_results_character ;
 
 
 ** NEW VARIABLES ;
@@ -74,7 +68,7 @@
   %let _vdw_vitalsigns          = __vdw.&_VitalData ;
   %let _vdw_census              = __vdw.&_CensusData ;
   %let _vdw_lab                 = __vdw.&_LabData ;
-  %let _vdw_lab_notes           = __vdw.&_LabDataNotes ;
+  %let _vdw_lab_character       = __vdw.&_LabDataCharacter ;
   %let _vdw_death               = __vdw.&_DeathData ;
   %let _vdw_cause_of_death      = __vdw.&_CODData ;
 
@@ -114,8 +108,8 @@
   %let _vdw_demographic_m3          = __vdw.demog ;
 
   %let _vdw_lab_m4                  = ;
-  %let _vdw_lab_notes_m4       		  = ;
+  %let _vdw_lab_character_m4        = ;
 
-  %let _vdw_provider_specialty_m5   = __vdw.specfile;
+  %let _vdw_provider_specialty_m5   = ;
   %let _vdw_enroll_m6               = ;
 
