@@ -60,7 +60,6 @@
   ** You are also free to define any number of different libnames, if your VDW dsets are stored in different locations. ;
   ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
   libname __vdw "&_TumorLib"          access = readonly ;
-  libname __scr "\\ctrhs-sas\Warehouse\Management\OfflineData\CRN_VDW\scratch"  access = readonly ;
 
   %let _vdw_tumor               = __vdw.&_TumorData ;
   %let _vdw_enroll              = __vdw.&_EnrollData ;
@@ -116,6 +115,6 @@
   %let _vdw_lab_m4                  = ;
   %let _vdw_lab_notes_m4       		  = ;
 
-  %let _vdw_provider_specialty_m5   = __vdw.specfile;
-  %let _vdw_enroll_m6               = ;
+  %let _vdw_provider_specialty_m5   = __vdw.specfile ;
+  %let _vdw_enroll_m6               = __vdw.enroll2 ;
 
