@@ -1792,12 +1792,12 @@ proc datasets nolist ;
                      , Debug   = 0  /* 0/1 flag indicating whether you want the PUT statements to run (PRODUCES A LOT OF OUTPUT!). */
                      ) ;
 
-   %* Takes an input mbhist dataset and collapses contiguous time periods where the variables ;
-   %* other than the ones defining period start/stop dates dont change. ;
+   %** Takes an input mbhist dataset and collapses contiguous time periods where the variables ;
+   %** other than the ones defining period start/stop dates dont change. ;
 
-   %* Adapted from Mark Terjesons code posted to sas-l: http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0003d&L=sas-l&D=0&P=18578 ;
+   %** Adapted from Mark Terjesons code posted to sas-l: http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0003d&L=sas-l&D=0&P=18578 ;
 
-   %* This defines VarList ;
+   %** This defines VarList ;
    %GetVarList( Dset = &Lib..&Dset
               , RecStart = &RecStart
               , RecEnd = &RecEnd
@@ -1843,7 +1843,8 @@ proc datasets nolist ;
          */
          ** if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
          ** RP20100504: fixing a bug when using a tolerance of zero days. ;
-         if (PeriodStart <= _&RecStart <= (PeriodEnd + max(&DaysTol, 1))) then do ;
+         ** RP20101210: fixing a bug that fails to collapse gaps of exactly &daystol length. ;
+         if (PeriodStart <= _&RecStart <= (PeriodEnd +(&DaysTol + 1)) then do ;
             ** Extend the period end out to whichever is longer--the period or the record. ;
             PeriodEnd = max(_&RecEnd, PeriodEnd) ;
             %if &Debug = 1 %then %do ;
