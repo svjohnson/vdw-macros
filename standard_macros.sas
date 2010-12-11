@@ -1843,7 +1843,8 @@ proc datasets nolist ;
          */
          ** if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
          ** RP20100504: fixing a bug when using a tolerance of zero days. ;
-         if (PeriodStart <= _&RecStart <= (PeriodEnd + max(&DaysTol, 1))) then do ;
+         ** if (PeriodStart <= _&RecStart <= (PeriodEnd + max(&DaysTol, 1))) then do ;
+         if (PeriodStart <= _&RecStart <= (PeriodEnd + &DaysTol + 1)) then do ;
             ** Extend the period end out to whichever is longer--the period or the record. ;
             PeriodEnd = max(_&RecEnd, PeriodEnd) ;
             %if &Debug = 1 %then %do ;
