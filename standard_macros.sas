@@ -1834,30 +1834,29 @@ proc datasets nolist ;
             put "First &LastVar:          " _N_ = PeriodStart =  _&RecStart =  PeriodEnd =  _&RecEnd = ;
          %end ;
       end ;
-      * else do ;
-         /*
-            Checking "contiguousity":
-            If this records start date falls w/in (or butts up against) the
-            current period (plus tolerance), then extend the current period out to this
-            records end date.
-         */
-         ** if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
-         ** RP20100504: fixing a bug when using a tolerance of zero days. ;
-         ** if (PeriodStart <= _&RecStart <= (PeriodEnd + max(&DaysTol, 1))) then do ;
-         if (PeriodStart <= _&RecStart <= (PeriodEnd + &DaysTol + 1)) then do ;
-            ** Extend the period end out to whichever is longer--the period or the record. ;
-            PeriodEnd = max(_&RecEnd, PeriodEnd) ;
-            %if &Debug = 1 %then %do ;
-               put "Extending period end:   " _N_ = PeriodStart =  _&RecStart =  PeriodEnd =  _&RecEnd = ;
-            %end ;
-         end ;
-         else do ;
-            * We are in a new period--output the last rec & reinitialize. ;
-            output ;
-            PeriodStart = _&RecStart ;
-            PeriodEnd   = _&RecEnd ;
-         end ;
-      * end ;
+       /*
+          Checking "contiguousity":
+          If this records start date falls w/in (or butts up against) the
+          current period (plus tolerance), then extend the current period out to this
+          records end date.
+       */
+       ** if (PeriodStart <= _&RecStart <= PeriodEnd + 1) then do ;
+       ** RP20100504: fixing a bug when using a tolerance of zero days. ;
+       if (PeriodStart <= _&RecStart <= (PeriodEnd + max(&DaysTol, 1))) then do ;
+       ** RP20101210: bug--this macro should collapse periods of exactly &daystol days. ;
+       ** if (PeriodStart <= _&RecStart <= (PeriodEnd + &DaysTol + 1)) then do ;
+          ** Extend the period end out to whichever is longer--the period or the record. ;
+          PeriodEnd = max(_&RecEnd, PeriodEnd) ;
+          %if &Debug = 1 %then %do ;
+             put "Extending period end:   " _N_ = PeriodStart =  _&RecStart =  PeriodEnd =  _&RecEnd = ;
+          %end ;
+       end ;
+       else do ;
+          * We are in a new period--output the last rec & reinitialize. ;
+          output ;
+          PeriodStart = _&RecStart ;
+          PeriodEnd   = _&RecEnd ;
+       end ;
       /*
          Likewise, if this is our last value of the last var on our BY list, we are about to start a new period.
          Spit out the record--the new period vars get initialized above in the "if first.&LastVar..."
