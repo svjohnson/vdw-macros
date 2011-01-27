@@ -112,8 +112,8 @@
 
   %let _vdw_demographic_m3          = __vdw.demog ;
 
-  %let _vdw_lab_m4                  = ;
-  %let _vdw_lab_notes_m4       		  = ;
+  %let _vdw_lab_m4                  = __vdw.lab_results ;
+  %let _vdw_lab_notes_m4       		  = __vdw.lab_notes ;
 
   %let _vdw_provider_specialty_m5   = __vdw.specfile ;
   %let _vdw_enroll_m6               = __vdw.enroll2 ;
