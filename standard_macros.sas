@@ -4414,7 +4414,8 @@ run;
     value $Hispani
       'Y' = '1 Hispanic or Latino'
       'N' = '2 Not Hispanic or Latino'
-      ' '
+      'U'
+      , ' '
       , ''
       , Missing = '3 Unknown (Individuals not reporting ethnicity)'
     ;
@@ -4429,6 +4430,13 @@ run;
     unsure of the Native Hawaiian or Other Pac Islander category.
     */
     value $Race
+      'IN' = '1 American Indian/Alaska Native'
+      'AS' = '2 Asian'
+      'HP' = '3 Native Hawaiian or Other Pacific Islander'
+      'BA' = '4 Black or African American'
+      'WH' = '5 White'
+      'MU' = '6 More than one race'
+
       '01' = '5 White'
       '02' = '4 Black or African American'
       '03' = '1 American Indian/Alaska Native'
@@ -4456,11 +4464,13 @@ run;
       , '32'
       , '97' = '3 Native Hawaiian or Other Pacific Islander'
         '-1' = '6 More than one race'
+
+
       Other = '7 Unknown or Not Reported'
     ;
   quit ;
 
-  * TODO: the macro should check for the presence of gender, race1 and hispanic, and only pull them if necessary. ;
+  ** TODO: the macro should check for the presence of gender, race1 and hispanic, and only pull them if necessary. ;
   proc sql ;
     create table _reportable as
     select d.mrn, d.race1 as race label = "Racial Category"
@@ -4477,6 +4487,13 @@ run;
     insert into genders(gender) values ('U') ;
 
     create table races(race char(2)) ;
+    insert into races(race) values ('IN') ;
+    insert into races(race) values ('AS') ;
+    insert into races(race) values ('HP') ;
+    insert into races(race) values ('BA') ;
+    insert into races(race) values ('WH') ;
+    insert into races(race) values ('MU') ;
+
     insert into races(race) values ('01') ;
     insert into races(race) values ('02') ;
     insert into races(race) values ('03') ;
@@ -4488,6 +4505,7 @@ run;
     create table ethnicities(hispanic char(1)) ;
     insert into ethnicities(hispanic) values('Y') ;
     insert into ethnicities(hispanic) values('N') ;
+    insert into ethnicities(hispanic) values('U') ;
     insert into ethnicities(hispanic) values(' ') ;
 
     create table class_levels as
@@ -4659,9 +4677,12 @@ PROC DATASETS NOLIST; DELETE one outht; QUIT;
     ;
   quit ;
 
+
+  ** Vars in v3 of vitals: ;
+  ** enc_id, enctype, mrn, measure_date, ht_raw, wt_raw, ht, wt, bmi_raw, tobacco, tobacco_type, diastolic, systolic, diastolic_raw, systolic_raw, bp_type, position, measure_time, head_cir_raw, respir_raw, temp_raw, pulse_raw  ;
   proc sql ;
     create table __in_vitals as
-    select v.*
+    select p.*, enc_id, enctype, measure_date, measure_time, ht, wt, bmi_raw, head_cir_raw
     from  &_vdw_vitalsigns as v INNER JOIN
           &people as p
     on    v.mrn = p.mrn

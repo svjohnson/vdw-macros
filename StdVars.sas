@@ -16,66 +16,32 @@
 
 ** OLD VARIABLES--THESE ARE DEPRECATED--new code should use the single var names below. ;
   ** libname locations specs ;
-  %let _TumorLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _EnrollLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _DemographicLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _RxLib                   = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _UtilizationLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
   %let _RxRiskLib               = \\ctrhs-sas\warehouse\sasdata\rxrisk  ;
-  %let _VitalLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _CensusLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _LabLib                  = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _Deathlib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-
-  ** dataset name specs ;
-  %let _TumorData               = tumor ;
-  %let _EnrollData              = enroll2_v2 ;
-  %let _DemographicData         = demog_view ;
-  %let _RxData                  = rx ;
-  %let _EverNdcData             = EverNDC_1998_2007 ;
-
-  %let _UtilizationData         = utilization_v2 ;
-  %let _DxData                  = dx_v2 ;
-  %let _PxData                  = px_v2 ;
-
-/*
-  %let _UtilizationData         = utilization_view ;
-  %let _DxData                  = dx_view ;
-  %let _PxData                  = px_view ;
-*/
-
-  %let _DeathData               = death ;
-  %let _CODData                 = cod ;
-  %let _ProviderSpecialtyData   = specfile_view ;
-  %let _VitalData               = vitalsigns_view ;
-  %let _CensusData              = census2000 ;
-  %let _LabData                 = lab_results ;
-  %let _LabDataNotes            = lab_results_notes ;
-
 
 
 ** NEW VARIABLES ;
 
   ** Note that this could easily be a sas/access specification, if you wanted to store your VDW data in say, a server database. ;
   ** You are also free to define any number of different libnames, if your VDW dsets are stored in different locations. ;
-  ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
-  libname __vdw "&_TumorLib"          access = readonly ;
 
-  %let _vdw_tumor               = __vdw.&_TumorData ;
-  %let _vdw_enroll              = __vdw.&_EnrollData ;
-  %let _vdw_demographic         = __vdw.&_DemographicData ;
-  %let _vdw_rx                  = __vdw.&_RxData ;
-  %let _vdw_everndc             = __vdw.&_EverNdcData ;
-  %let _vdw_utilization         = __vdw.&_UtilizationData ;
-  %let _vdw_dx                  = __vdw.&_DxData ;
-  %let _vdw_px                  = __vdw.&_PxData ;
-  %let _vdw_provider_specialty  = __vdw.&_ProviderSpecialtyData ;
-  %let _vdw_vitalsigns          = __vdw.&_VitalData ;
-  %let _vdw_census              = __vdw.&_CensusData ;
-  %let _vdw_lab                 = __vdw.&_LabData ;
-  %let _vdw_lab_notes           = __vdw.&_LabDataNotes ;
-  %let _vdw_death               = __vdw.&_DeathData ;
-  %let _vdw_cause_of_death      = __vdw.&_CODData ;
+  ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
+  libname __vdw "\\ctrhs-sas\warehouse\sasdata\crn_vdw"          access = readonly ;
+
+  %let _vdw_tumor               = __vdw.tumor                   ;
+  %let _vdw_enroll              = __vdw.enroll2_v2              ;
+  %let _vdw_demographic         = __vdw.demog_view              ;
+  %let _vdw_rx                  = __vdw.rx                      ;
+  %let _vdw_everndc             = __vdw.everndc                 ;
+  %let _vdw_utilization         = __vdw.utilization_v2          ;
+  %let _vdw_dx                  = __vdw.dx_v2                   ;
+  %let _vdw_px                  = __vdw.px_v2                   ;
+  %let _vdw_provider_specialty  = __vdw.specfile_view           ;
+  %let _vdw_vitalsigns          = __vdw.vitalsigns              ;
+  %let _vdw_census              = __vdw.census2000              ;
+  %let _vdw_lab                 = __vdw.lab_results             ;
+  %let _vdw_lab_notes           = __vdw.lab_results_notes       ;
+  %let _vdw_death               = __vdw.death                   ;
+  %let _vdw_cause_of_death      = __vdw.cod                     ;
 
 
 ** NEW REFERENCE TO THE STANDARD MACROS FILE ;
@@ -102,6 +68,7 @@
   ** So e.g., the data named in _vdw_enroll_m1 should have a var called enrollment_basis on it. ;
   ** These vars are temporary--will only exist during the v2 -> v3 transition.  ;
   ** See https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/version-3/implementation-plan for details. ;
+
   %let _vdw_enroll_m1               = __vdw.enroll3_vw ;
   %let _vdw_vitalsigns_m1           = __vdw.vitalsigns ;
 
