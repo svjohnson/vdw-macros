@@ -18,7 +18,6 @@
   ** libname locations specs ;
   %let _RxRiskLib               = \\ctrhs-sas\warehouse\sasdata\rxrisk  ;
 
-
 ** NEW VARIABLES ;
 
   ** Note that this could easily be a sas/access specification, if you wanted to store your VDW data in say, a server database. ;
