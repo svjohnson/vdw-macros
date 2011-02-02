@@ -32,7 +32,9 @@
   %let _EnrollData              = enroll2_v2 ;
   %let _DemographicData         = demog_view ;
   %let _RxData                  = rx ;
-  %let _EverNdcData             = EverNDC_1998_2007 ;
+** Changing to __vdw.everndc -- Feb 2, 2011 (noah weston);
+/*  %let _EverNdcData             = EverNDC_1998_2007 ;*/
+  %let _EverNdcData             = EverNDC ;
 
   %let _UtilizationData         = utilization_v2 ;
   %let _DxData                  = dx_v2 ;
