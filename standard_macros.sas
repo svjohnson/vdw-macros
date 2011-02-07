@@ -4680,9 +4680,10 @@ PROC DATASETS NOLIST; DELETE one outht; QUIT;
 
   ** Vars in v3 of vitals: ;
   ** enc_id, enctype, mrn, measure_date, ht_raw, wt_raw, ht, wt, bmi_raw, tobacco, tobacco_type, diastolic, systolic, diastolic_raw, systolic_raw, bp_type, position, measure_time, head_cir_raw, respir_raw, temp_raw, pulse_raw  ;
-  proc sql ;
+
+proc sql ;
     create table __in_vitals as
-    select p.*, enc_id, enctype, measure_date, measure_time, ht, wt, bmi_raw, head_cir_raw
+    select p.*, measure_date, ht, wt
     from  &_vdw_vitalsigns as v INNER JOIN
           &people as p
     on    v.mrn = p.mrn
