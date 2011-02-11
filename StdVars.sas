@@ -1,7 +1,7 @@
 /*********************************************
 * Roy Pardee
-* Center For Health Studies
-* (206) 287-2078
+* Group Health Research Institute
+* (360) 447-8773
 * pardee.r@ghc.org
 *
 * StdVars.sas
