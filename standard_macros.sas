@@ -1876,6 +1876,10 @@ proc datasets nolist ;
       * if PeriodStart le PeriodEnd ;
       drop _&RecStart _&RecEnd ;
    run ;
+   %** This is obscure, but seems like good hygeine.  Tyler called cp twice, the second time with a dset that had nothing but mrn, start and stop. ;
+   %** Looks like the second call did not overwrite the value in varlist, and he got errors about named vars not being present. ;
+   %** So now we null out the var to keep that from happening. ;
+   %let VarList = ;
 %mend CollapsePeriods ;
 
 
@@ -4681,7 +4685,7 @@ PROC DATASETS NOLIST; DELETE one outht; QUIT;
   ** Vars in v3 of vitals: ;
   ** enc_id, enctype, mrn, measure_date, ht_raw, wt_raw, ht, wt, bmi_raw, tobacco, tobacco_type, diastolic, systolic, diastolic_raw, systolic_raw, bp_type, position, measure_time, head_cir_raw, respir_raw, temp_raw, pulse_raw  ;
 
-proc sql ;
+  proc sql ;
     create table __in_vitals as
     select p.*, measure_date, ht, wt
     from  &_vdw_vitalsigns as v INNER JOIN
