@@ -941,7 +941,6 @@ run;
       create table _UIDs as
       select distinct &OldIDVar
       from &InSet
-      order by uniform(675555)
       ;
    quit ;
 
@@ -954,9 +953,19 @@ run;
    %end ;
    %else %do ;
 
+      data _UIDs ;
+        set _UIDs ;
+        randy = uniform(675555) ;
+      run ;
+
+      proc sort data = _UIDs ;
+        by randy ;
+      run ;
+
       data &XWalkSet(keep = &NewIDVar &OldIDVar) ;
          set _UIDs ;
          &NewIDVar = put((_N_ + &StartIDsAt), z&NewIDLen..0) ;
+         drop randy ;
       run ;
 
       proc sql ;
