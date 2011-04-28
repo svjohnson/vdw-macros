@@ -28,7 +28,14 @@ cards;
   8      M         1387     1991  laurel
   9      F         1981     1992  kodos
  10      M         1399     1992  chai
+ 10      M         1399     1992  chai
+ 10      M         1399     1992  chai
  proc print;
+
+proc sql ;
+  select count(distinct mrn) into :should_be  from allgender ;
+quit ;
+
 
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas" ;
 
@@ -42,3 +49,9 @@ cards;
 
 proc print data = allgender ;
 run ;
+
+proc sql ;
+  select count(distinct blah) into :is        from something ;
+quit ;
+
+%put No. IDs should be:  &should_be.  It is &is. ;
