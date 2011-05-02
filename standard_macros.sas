@@ -4822,3 +4822,21 @@ proc freq data=&dsout;
 run;
 
 %mend bp_flag;
+
+%macro vdw_formats(outcat = work.formats) ;
+  ** Reads a ctlin dset down off the FTP server and into a format library, storing the results in cat (by default, the work.formats catalog) ;
+  filename vdw_fmt   FTP     "fmt.por"
+                     HOST  = "vdw.hmoresearchnetwork.org"
+                     CD    = "/vdwcode"
+                     PASS  = "%2hilario36"
+                     USER  = "VDWReader"
+                     DEBUG
+                     rcmd  = 'binary'
+                     ;
+
+  libname  vdw_fmt xport ;
+
+  proc format lib = &outcat cntlin = vdw_fmt.formatz ;
+  run ;
+
+%mend vdw_formats ;
