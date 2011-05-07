@@ -1,13 +1,13 @@
-									  /****************************************************************************************************/
+/****************************************************************************************************/
 %macro vdwcountsandrates1(medcodes,   /* -Any or all of 'PX DX NDC' - no quotes, depending on codes to run in FileIN 					  */
-						start_date,   /* -Earliest day to pull codes, otherwise Date of beginning of study 								  */
-						  end_date,   /* -Latest date by which to pull codes 															  */
-						   fileIN=,   /* -File with the Codes of Interest, in the form 'libname.filename' 							      */
-						   cohort=,   /* -If a cohort file (a file with sample MRNs of interest over which to restrict codes is available,*/
-						   			  /*  this will be the cohort-filename in the form 'libname.cohortfilename'						      */
-						  outpath=);  /* -This is the unquoted path to where the Codes of Interest reside. eg \\groups\data\Directory.    */
-									  /* The output file will also be placed here.														  */
-							          /****************************************************************************************************/
+						start_date,               /* -Earliest day to pull codes, otherwise Date of beginning of study 								  */
+						  end_date,               /* -Latest date by which to pull codes 															  */
+						   fileIN=,               /* -File with the Codes of Interest, in the form 'libname.filename' 							      */
+						   cohort=,               /* -If a cohort file (a file with sample MRNs of interest over which to restrict codes is available,*/
+						   			                  /*  this will be the cohort-filename in the form 'libname.cohortfilename'						      */
+						  outpath=);              /* -This is the unquoted path to where the Codes of Interest reside. eg \\groups\data\Directory.    */
+									                    /*  The output file will also be placed here.														  */
+/****************************************************************************************************/
 /******************************************************************************************************************************************/
 /*	This macro collects counts and rates of supplied codes at a given site over a specified time period. 								  */
 /*	Over this time period, and for each category in the study, counts are collected for 												  */
@@ -24,7 +24,7 @@
 /* %vdwcountsandrates1(px,'01jan09'd,'31dec09'd, fileIN=path.outds, COHORT=lib2.cohorttest, 											  */
 /*		outpath=\\groups\data\CTRHS\Crn\S D R C\VDW\Data\Counts and Rates\Data) 														  */
 /******************************************************************************************************************************************/
-options  mprint nocenter msglevel = i NOOVP dsoptions="note2err" ;
+
 libname path "&outpath.";
 
 /*The lack of symmetry in the table names requires a small twist*/
@@ -65,13 +65,13 @@ quit;
 %local i cat;
   %do i=1 %to %sysfunc(countw(&medcodes));
 		%let cat = %scan(%bquote(&medcodes),&i,' ');
-   		proc sql; select count(*) into :numb from combined_&cat.; quit;
-  			%if &numb=0 %then %do;
-		%put **********************************************************;
-		%put No %upcase(&cat) Codes in &FileIn.. Skipping.;
-		%put **********************************************************;
-			%end;
-  		%if &numb=0 %then %goto skip;
+ 		proc sql; select count(*) into :numb from combined_&cat.; quit;
+		%if &numb=0 %then %do;
+  		%put **********************************************************;
+  		%put No %upcase(&cat) Codes in &FileIn.. Skipping.;
+  		%put **********************************************************;
+      %goto skip;
+		%end;
 		/*else, start processing the medcode*/
 		%put NOTE: Commencing to Run &cat. codes.;
 
@@ -82,7 +82,7 @@ quit;
 
 		/*Create tables- All People, Modify code if code is/is not available*/
 		%if %upcase(&cohort.) ne %then %let addcohort = %str(AND mrn in (select distinct mrn from &cohort.));
-		%else %if %upcase(&cohort.) eq %then %let addcohort=;
+		%else %let addcohort=;
 
 		proc sql;
 		/*Count all people with PX/DX/NDC of Interest*/
@@ -104,7 +104,6 @@ quit;
  			(select distinct mrn from &_vdw_enroll where &start_date. between enr_start and enr_end)
 		group by &cat., description;
 
-		proc sql;
 		/*Create table with distinct totals*/
 			create table combined&cat. as
 			select distinct a.description, a.&cat., Category, a.&cat.count label="%upcase(&cat.) Count",
@@ -113,9 +112,11 @@ quit;
 			left join enrolledpple as b
 			on a.&cat.=b.&cat.;
 
-		/*There may be many categories in the study - account for each here*/
-		select distinct category into :category separated by "/" from combined_&cat;
-		select count(distinct category) as catgct into :catgct from combined_&cat;
+  		/*There may be many categories in the study - account for each here*/
+  		select distinct category into :category separated by "/" from combined_&cat;
+  		select count(distinct category) as catgct into :catgct from combined_&cat;
+    quit ;
+
 
 		%do j=1 %to &catgct.;
 			%let catg = %scan(&category., &j., '/');
