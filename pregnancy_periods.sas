@@ -39,6 +39,15 @@
 
   libname preg_ftp clear ;
 
+  proc format ;
+    ** Translates v2 style codetype values to v3 px_codetypes. ;
+    value $pct
+      'C' = 'C4'
+      'H' = 'H4'
+      'I' = '09'
+    ;
+  quit ;
+
   %** Pull the events. ;
   proc sql ;
     create table dx as
@@ -57,7 +66,7 @@
     on    p.mrn = c.mrn  INNER JOIN
           preg_px as pp
     on    p.px = pp.px AND
-          p.codetype = pp.codetype
+          p.px_codetype = put(pp.codetype, $pct.)
     where p.adate between "&start_date"d and "&end_date"d
     ;
 
