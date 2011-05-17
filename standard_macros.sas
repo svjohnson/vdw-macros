@@ -4408,8 +4408,8 @@ run;
       ;
       create table &OutSet as
     			select l.*
-  			from &_vdw_lab as l
-  			INNER JOIN __ids as p
+  			from &_vdw_lab as l INNER JOIN
+  			      __ids as p
   			on    l.MRN = p.MRN
   			where l.Lab_dt BETWEEN "&StartDt"d AND "&EndDt"d AND
   						l.Test_Type in (select &LabLst..test_type from &LabLst) ;
