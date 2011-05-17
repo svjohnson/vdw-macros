@@ -37,14 +37,14 @@ JJURCC3EV2
 ;
 run ;
 
-libname _all_ clear ;
+** libname _all_ clear ;
 libname t '\\ctrhs-sas\SASUser\pardre1' ;
 libname pvg '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance' ;
 %**pregnancy_periods(inset = pvg.cohort
-                  , out_periods = s.pvg_preg_periods
-                  , out_events = s.pvg_preg_events) ;
+                  , out_periods = t.pvg_preg_periods
+                  , out_events  = t.pvg_preg_events) ;
 
-%make_preg_periods(inevents = t.pvg_preg_events
+%**make_preg_periods(inevents = t.pvg_preg_events
                 , out_periods = t.pvg_preg_periods
                 , max_pregnancy_length = 270) ;
 
@@ -58,4 +58,9 @@ libname pvg '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance' ;
 
 proc freq data = t.pvg_preg_periods order = freq ;
   tables outcome_category / missing ;
+run ;
+
+proc freq data = t.pvg_preg_periods order = freq ;
+  tables first_sign_code / missing ;
+  where outcome_category = 'unknown' ;
 run ;
