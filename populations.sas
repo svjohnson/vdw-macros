@@ -50,15 +50,34 @@ libname out "&out_folder" ;
 
 
   /*
-    This is perhaps a bit too clever.  The goal is to have this run without error even
-    at sites that dont have a lab or vitals dataset.  At those sites I am assuming that
-    they will have the requisite macro vars defined, but they will be empty (or not refer
-    to a dset).  If that is so, the query on dictionary.tables will just return the
-    names of the VDW dsets they *do* have, and the rest should run just on that.
+    This is perhaps a bit too clever, but I could not resist.  The goal is to have this run without error even
+    at sites that dont have a lab, tumor or vitals dataset. In order for the query on
+    dictionary.tables to work, I need to make sure all the stdvars are defined.
 
     If so, the process for adding a new dset should be pretty easy--just add it to the tabs
     var here, and elaborate the macro array stuff.
   */
+
+  %if %symexist(_vdw_lab) %then %do ;
+    %** nothing. ;
+  %end ;
+  %else %do ;
+    %let _vdw_lab = ;
+  %end ;
+  %if %symexist(_vdw_vitalsigns) %then %do ;
+    %** nothing. ;
+  %end ;
+  %else %do ;
+    %let _vdw_vitalsigns = ;
+  %end ;
+  %if %symexist(_vdw_tumor) %then %do ;
+    %** nothing. ;
+  %end ;
+  %else %do ;
+    %let _vdw_tumor = ;
+  %end ;
+
+
   %local tabs ;
   %let tabs = %lowcase("&_vdw_rx")
             , %lowcase("&_vdw_utilization")
@@ -151,6 +170,7 @@ libname out "&out_folder" ;
             , "&period_end"d    as period_end   format = mmddyy10.
             , *
     from vdw_populations
+    where n gt 5 ;  /* Leave out combinations where there are le 5 people. */
     ;
   quit ;
 %mend make_stats_dset  ;
