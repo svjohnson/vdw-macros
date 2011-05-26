@@ -111,6 +111,8 @@
 ** Legacy Version 2-compatible file variables. ;
   %let _vdw_vitalsigns_v2           = __vdw.vitalsigns_view ;  /* REMOVE ON 12-AUG-2011 */
   %let _vdw_demographic_v2          = __vdw.demog_view ;       /* REMOVE ON 12-AUG-2011 */
+  %let _vdw_lab_v2                  = __vdw.lab_results_view  ;        /* REMOVE ON 17-NOV-2011 */
+  %let _vdw_lab_notes_v2            = __vdw.lab_results_notes_view  ;  /* REMOVE ON 17-NOV-2011 */
 
 
 ** Version 3 Milestone file variables. ;
@@ -121,17 +123,10 @@
   ** See https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/version-3/implementation-plan for details. ;
 
   %let _vdw_enroll_m1               = __vdw.enroll3_vw ;
-  %**let _vdw_vitalsigns_m1           = __vdw.vitalsigns ;
 
   %let _vdw_utilization_m2          = __vdw.utilization ;
   %let _vdw_dx_m2                   = __vdw.dx ;
   %let _vdw_px_m2                   = __vdw.px ;
-  %**let _vdw_vitalsigns_m2           = __vdw.vitalsigns ;
-
-  %**let _vdw_demographic_m3          = __vdw.demog ;
-
-  %let _vdw_lab_m4                  = __vdw.lab_results ;
-  %let _vdw_lab_notes_m4       		  = __vdw.lab_notes ;
 
   %let _vdw_provider_specialty_m5   = __vdw.specfile ;
   %let _vdw_enroll_m6               = __vdw.enroll2 ;

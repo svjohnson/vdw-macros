@@ -9,7 +9,7 @@
 * Tests the vdw_formats macro.
 *********************************************/
 
-%**include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
+%include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
 options
   linesize = 150
@@ -17,12 +17,13 @@ options
   msglevel = i
   NOOVP
   formchar = '|-++++++++++=|-/|<>*'
-  sastrace = ',,,d'
-  sastraceloc = saslog nostsuffix
   dsoptions="note2err" NOSQLREMERGE
 ;
 
-%include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\vdw_formats.sas" ;
+** Please replace w/a reference to your local StdVars. ;
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+
+%include vdw_macs ;
 
 data gnu ;
   input
