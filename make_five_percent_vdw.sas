@@ -33,7 +33,6 @@ libname five '\\ctrhs-sas\Warehouse\Sasdata\CRN_VDW\5percent_subset' ;
             , %lowcase("&_vdw_dx")
             , %lowcase("&_vdw_px")
             , %lowcase("&_vdw_lab")
-            , %lowcase("&_vdw_lab_notes")
             , %lowcase("&_vdw_vitalsigns")
             , %lowcase("&_vdw_tumor")
             , %lowcase("&_vdw_enroll")
