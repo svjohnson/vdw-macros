@@ -44,7 +44,7 @@ libname five '\\ctrhs-sas\Warehouse\Sasdata\CRN_VDW\5percent_subset' ;
 
   proc sql noprint ;
     select lowcase(compress(trim(libname || '.' || memname))) as nom, 'five.' || lowcase(memname)
-    into :ds1-:ds9, :out1-:out9
+    into :ds1-:ds99, :out1-:out99
     from dictionary.tables
     where  lowcase(compress(trim(libname || '.' || memname))) in (&tabs)
     ;
