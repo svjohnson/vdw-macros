@@ -42,7 +42,7 @@ libname five '\\ctrhs-sas\Warehouse\Sasdata\CRN_VDW\5percent_subset' ;
             , %lowcase("&_vdw_cause_of_death")
   ;
 
-  proc sql noprint ;
+  proc sql number ;
     select lowcase(compress(trim(libname || '.' || memname))) as nom, 'five.' || lowcase(memname)
     into :ds1-:ds9, :out1-:out9
     from dictionary.tables
@@ -65,7 +65,7 @@ libname five '\\ctrhs-sas\Warehouse\Sasdata\CRN_VDW\5percent_subset' ;
 %mend move_it ;
 
 options mprint ;
-options obs = 1000 ;
+** options obs = 1000 ;
 
 %move_it ;
 
