@@ -52,7 +52,7 @@
   %let _vdw_vitalsigns          = __vdw.vitalsigns              ;
   %let _vdw_census              = __vdw.census2000              ;
   %let _vdw_lab                 = __vdw.lab_results             ;
-  %** We dont actually have a 5p lab notes--lets see if anybody notices. ;-) ;
+  %** We dont actually have a 5p lab notes--lets see if anybody notices. :-) ;
   %**let _vdw_lab_notes           = __vdw.lab_results_notes       ;
   %let _vdw_death               = __vdw.death                   ;
   %let _vdw_cause_of_death      = __vdw.cod                     ;
