@@ -3442,7 +3442,7 @@ proc freq data=testing;
 run;
 */
 
-%macro CleanEnroll(OutLib, Clean=N, Dirty=N, Report=Y);
+%macro CleanEnroll(OutLib, Clean=N, Dirty=N, Report=Y, EnrollDset = &_vdw_enroll);
 /***************************************************************************
 * Parameters:
 *   OutLib  = The library name you've already declared where you want output
@@ -3506,6 +3506,17 @@ run;
       %let CleanReturn = output &Outlib..clean;
     %end;
 
+
+    %** helper macro ;
+    %local flag_vals ;
+    %let flag_vals = 'Y', 'N', 'U' ;
+    %macro checkflag(var) ;
+      else if &var NOT IN(&flag_vals) then do;
+        DirtyReason = "Invalid value for &var";
+        &DirtyReturn;
+      end;
+    %mend checkflag ;
+
     /*Clean the data*/
 
     proc sort data=&_vdw_enroll out=ToClean;
@@ -3539,30 +3550,25 @@ run;
         DirtyReason = "Enroll period overlaps with other obs";
         &DirtyReturn;
       end;
-      else if INS_MEDICARE NOT IN("Y", "") then do;
-        DirtyReason = "Invalid value for INS_MEDICARE";
-        &DirtyReturn;
-      end;
-      else if INS_MEDICAID NOT IN("Y", "") then do;
-        DirtyReason = "Invalid value for INS_MEDICAID";
-        &DirtyReturn;
-      end;
-      else if INS_Commercial NOT IN("Y", "") then do;
-        DirtyReason = "Invalid value for INS_COMMERCIAL";
-        &DirtyReturn;
-      end;
-      else if INS_PRIVATEPAY NOT IN("Y", "") then do;
-        DirtyReason = "Invalid value for INS_PRIVATEPAY";
-        &DirtyReturn;
-      end;
-      else if INS_OTHER NOT IN("Y", "") then do;
-        DirtyReason = "Invalid value for INS_OTHER";
-        &DirtyReturn;
-      end;
-      else if DRUGCOV NOT IN("Y", "N", "") then do;
-        DirtyReason = "Invalid value for DRUGCOV";
-        &DirtyReturn;
-      end;
+
+      %checkflag(var = ins_medicare)
+      %checkflag(var = ins_medicare_a)
+      %checkflag(var = ins_medicare_b)
+      %checkflag(var = ins_medicare_c)
+      %checkflag(var = ins_medicare_d)
+      %checkflag(var = ins_medicaid)
+      %checkflag(var = ins_commercial)
+      %checkflag(var = ins_privatepay)
+      %checkflag(var = ins_other)
+
+      %checkflag(var = plan_hmo)
+      %checkflag(var = plan_ppo)
+      %checkflag(var = plan_pos)
+      %checkflag(var = plan_indemnity)
+
+      %checkflag(var = outside_utilization)
+
+      %checkflag(var = drugcov)
       else do;
         &CleanReturn;
       end;
@@ -3603,7 +3609,7 @@ run;
         length vname $32. YourLength 8 SpecLength 8;
         vname = upcase(compress(name));
         if vname='MRN' then do;
-          call symput('TotalRecords', compress(nobs));
+          call symput('TotalRecords', put(nobs, best.));
           return;
         end;
         else if vname="INS_MEDICARE" AND length^=1 then do;
