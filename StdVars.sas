@@ -13,6 +13,9 @@
 *
 *********************************************/
 
+** This keeps SAS from dumping raw records into the log. ;
+options errors = 0 ;
+
 ** OLD VARIABLES--THESE ARE DEPRECATED--new code should use the single var names below. ;
   ** libname locations specs ;
 
