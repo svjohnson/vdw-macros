@@ -16,49 +16,11 @@
 ** This keeps SAS from dumping raw records into the log. ;
 options errors = 0 ;
 
-** OLD VARIABLES--THESE ARE DEPRECATED--new code should use the single var names below. ;
   ** libname locations specs ;
 
   ** This is the one lib var that makes sense to keep around--there are 4 different reference dsets ;
   ** that the rxrisk macro looks for--does not make sense to make 4 different _vdw vars for them. ;
   %let _RxRiskLib               = \\ctrhs-sas\warehouse\sasdata\rxrisk  ;
-
-/*
-
-  Commenting these out as a prelude to removing them entirely.
-
-  %let _TumorLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _EnrollLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _DemographicLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _RxLib                   = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _UtilizationLib          = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _VitalLib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _CensusLib               = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _LabLib                  = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-  %let _Deathlib                = \\ctrhs-sas\warehouse\sasdata\crn_vdw ;
-
-  ** dataset name specs ;
-  %let _TumorData               = tumor ;
-  %let _EnrollData              = enroll2_v2 ;
-  %let _DemographicData         = demog_view ;
-  %let _VitalData               = vitalsigns_view ;
-  %let _CensusData              = census2000 ;
-
-  %let _RxData                  = rx ;
-  %let _EverNdcData             = EverNDC_1998_2007 ;
-
-  %let _UtilizationData         = utilization_v2 ;
-  %let _DxData                  = dx_v2 ;
-  %let _PxData                  = px_v2 ;
-  %let _ProviderSpecialtyData   = specfile_view ;
-
-  %let _LabData                 = lab_results ;
-  %let _LabDataNotes            = lab_results_notes ;
-
-  %let _DeathData               = death ;
-  %let _CODData                 = cod ;
-
-*/
 
 ** 'Standard' VDW DATASET VARIABLES ;
 
@@ -116,6 +78,7 @@ options errors = 0 ;
   %let _vdw_demographic_v2          = __vdw.demog_view ;       /* REMOVE ON 12-AUG-2011 */
   %let _vdw_lab_v2                  = __vdw.lab_results_view  ;        /* REMOVE ON 17-NOV-2011 */
   %let _vdw_lab_notes_v2            = __vdw.lab_results_notes_view  ;  /* REMOVE ON 17-NOV-2011 */
+  %let _vdw_enroll_v2               = __vdw.enroll2_v2              ; /* REMOVE ON 10-DEC-2011 */
 
 
 ** Version 3 Milestone file variables. ;
@@ -125,12 +88,9 @@ options errors = 0 ;
   ** These vars are temporary--will only exist during the v2 -> v3 transition.  ;
   ** See https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/version-3/implementation-plan for details. ;
 
-  %let _vdw_enroll_m1               = __vdw.enroll3_vw ;
-
   %let _vdw_utilization_m2          = __vdw.utilization ;
   %let _vdw_dx_m2                   = __vdw.dx ;
   %let _vdw_px_m2                   = __vdw.px ;
 
   %let _vdw_provider_specialty_m5   = __vdw.specfile ;
-  %let _vdw_enroll_m6               = __vdw.enroll2 ;
 
