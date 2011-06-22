@@ -22,17 +22,16 @@ options
 
 ** Please replace w/a reference to your local StdVars. ;
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
-
 %include vdw_macs ;
 
 data gnu ;
   input
-    @1    px         $char6.
+    @1    drg
   ;
 datalines ;
-31199
-19329
-10010
+4
+5
+6
 run ;
 
 proc print ;
@@ -43,5 +42,5 @@ options mprint ;
 run ;
 
 proc print data = gnu ;
-  format px $cptn. ;
+  format drg drga. ;
 run ;
