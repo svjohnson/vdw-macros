@@ -1663,17 +1663,17 @@ proc datasets nolist ;
 
   %** This used to use a query to dictionary.columns to grab this info--huge. pain. in. the. ass. ;
   %** Dont use d.c--SAS is not a good citizen when you have libnames defined against RDBMSs. ;
-  proc contents noprint data = &dset out = gnu ;
+  proc contents noprint data = &dset out = __varlist ;
   run ;
 
   proc sql noprint ;
     ** describe table dictionary.columns ;
     select name
     into :VarList separated by ' '
-    from gnu
+    from __varlist
     where upcase(name) not in (%upcase("&RecStart"), %upcase("&RecEnd"), %upcase("&PersonID")) ;
 
-    drop table gnu ;
+    drop table __varlist ;
   quit ;
 
 %mend GetVarList ;
