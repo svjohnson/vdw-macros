@@ -23,7 +23,24 @@ options
   dsoptions="note2err" NOSQLREMERGE
 ;
 
+libname _all_ clear ;
+libname u '\\ctrhs-sas\SASUser\pardre1\vdw\ute_troubleshooting' ;
+
 %include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\GetVarList.sas" ;
 
-%GetVarList(sashelp.class) ;
+%let out_folder = c:\Documents and Settings\pardre1\My Documents\vdw\macros\tests\ ;
+
+ods html path = "&out_folder" (URL=NONE)
+         body = "TestGetVarList.html"
+         (title = "TestGetVarList output")
+          ;
+
+%GetVarList(u.drg_hosps, recstart = ADMTDATE, recend = dschdate) ;
+
+run ;
+
+ods _all_ close ;
+
+%put var list is &varlist ;
+
 run ;

@@ -9,17 +9,22 @@
 * <<purpose>>
 *********************************************/
 
-/* This is managed in the login script so that it doesnt
-   actually try to login when the machine is not connected
-   to the network */
-%include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
+%include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
-options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' dsoptions="note2err" ;
+options
+  linesize = 150
+  nocenter
+  msglevel = i
+  NOOVP
+  formchar = '|-++++++++++=|-/|<>*'
+  sastrace = ',,,d'
+  sastraceloc = saslog nostsuffix
+  dsoptions="note2err" NOSQLREMERGE
+;
 
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
 
 /*
-*/
 filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
                    HOST  = "centerforhealthstudies.org"
                    CD    = "/CRNSAS"
@@ -32,6 +37,9 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
 
 
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\SimpleContinuous.sas" ;
+*/
+
+%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
 
 %macro GetTestSample(N = 2000, Letter = Q, OutSet = TestPeople) ;
    proc sql outobs = &n nowarn ;
@@ -43,9 +51,9 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
    quit ;
 %mend GetTestSample ;
 
-%GetTestSample(Letter = V) ;
+%**GetTestSample(Letter = V) ;
 
-* was 282 when daystol was 30 ;
+** was 282 when daystol was 30 ;
 
 %SimpleContinuous(People    = TestPeople           /* A dataset of MRNs whose enrollment we are considering. */
                   , StartDt = 01jan2006            /* A date literal identifying the start of the period of interest. */
