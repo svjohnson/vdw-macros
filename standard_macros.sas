@@ -4801,9 +4801,8 @@ run;
 
 %mend bp_flag;
 
-%macro vdw_formats(outcat = work.formats) ;
-  ** Reads a ctlin dset down off the FTP server and into a format library, storing the results in cat (by default, the work.formats catalog) ;
-  filename vdw_fmt   FTP     "fmt.por"
+%macro vdw_formats(lib = work) ;
+  filename vdw_fmt   FTP     "formats.xpt"
                      HOST  = "vdw.hmoresearchnetwork.org"
                      CD    = "/vdwcode"
                      PASS  = "%2hilario36"
@@ -4814,7 +4813,7 @@ run;
 
   libname  vdw_fmt xport ;
 
-  proc format lib = &outcat cntlin = vdw_fmt.formatz ;
+  proc format lib = &lib cntlin = vdw_fmt.formats ;
   run ;
 
 %mend vdw_formats ;

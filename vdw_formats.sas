@@ -11,7 +11,7 @@
 *********************************************/
 
 %macro vdw_formats(lib = work) ;
-  filename vdw_fmt   FTP     "fmt.por"
+  filename vdw_fmt   FTP     "formats.xpt"
                      HOST  = "vdw.hmoresearchnetwork.org"
                      CD    = "/vdwcode"
                      PASS  = "%2hilario36"
@@ -22,7 +22,7 @@
 
   libname  vdw_fmt xport ;
 
-  proc format lib = &lib cntlin = vdw_fmt.formatz ;
+  proc format lib = &lib cntlin = vdw_fmt.formats ;
   run ;
 
 %mend vdw_formats ;

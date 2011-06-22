@@ -39,7 +39,7 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\SimpleContinuous.sas" ;
 */
 
-%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas" ;
 
 %macro GetTestSample(N = 2000, Letter = Q, OutSet = TestPeople) ;
    proc sql outobs = &n nowarn ;
@@ -51,7 +51,7 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
    quit ;
 %mend GetTestSample ;
 
-%**GetTestSample(Letter = V) ;
+%GetTestSample(Letter = V) ;
 
 ** was 282 when daystol was 30 ;
 
