@@ -11,6 +11,12 @@
 * relatively static.  The intent here is to minimize the amount of site-programmer
 * editing required for new programs that use the VDW.
 *
+* NOT EVERYTHING IN THIS FILE IS PART OF THE VDW SPECS!  In particular--the __vdw
+* libname chosen below is not part of the spec.  Users should not assume that a
+* lib named __vdw will be defined at all sites.
+*
+* See: https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/the-vdw-standard-variables-file-stdvars.sas
+* For further details.
 *********************************************/
 
 ** This keeps SAS from dumping raw records into the log. ;
@@ -35,8 +41,10 @@ options errors = 0 ;
 
   ** Note that this could easily be a sas/access specification, if you wanted to store your VDW data in say, a server database. ;
   ** You are also free to define any number of different libnames, if your VDW dsets are stored in different locations. ;
+  ** Note also that this is not a "standard" libname--there are no standard libnames.  Please see the above-referenced URL ;
+  ** for details. ;
   ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
-  libname __vdw "\\ctrhs-sas\warehouse\sasdata\crn_vdw"          access = readonly ;
+  libname __vdw "\\ctrhs-sas\warehouse\sasdata\crn_vdw" access = readonly ;
 
   %let _vdw_tumor               = __vdw.tumor                   ;
   %let _vdw_enroll              = __vdw.enroll2_v2              ;
