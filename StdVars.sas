@@ -47,7 +47,7 @@ options errors = 0 ;
   libname __vdw "\\ctrhs-sas\warehouse\sasdata\crn_vdw" access = readonly ;
 
   %let _vdw_tumor               = __vdw.tumor                   ;
-  %let _vdw_enroll              = __vdw.enroll2_v2              ;
+  %let _vdw_enroll              = __vdw.enroll2                 ;
   %let _vdw_demographic         = __vdw.demog                   ;
   %let _vdw_rx                  = __vdw.rx                      ;
   %let _vdw_everndc             = __vdw.everndc                 ;
