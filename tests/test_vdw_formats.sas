@@ -9,19 +9,21 @@
 * Tests the vdw_formats macro.
 *********************************************/
 
-%include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
+%**include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
 options
-  linesize = 150
+  formchar  = '|-++++++++++=|-/|<>*'
+  linesize  = 150
+  msglevel  = i
+  dsoptions = note2err
   nocenter
-  msglevel = i
-  NOOVP
-  formchar = '|-++++++++++=|-/|<>*'
-  dsoptions="note2err" NOSQLREMERGE
+  noovp
+  nosqlremerge
 ;
 
 ** Please replace w/a reference to your local StdVars. ;
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+
 %include vdw_macs ;
 
 data gnu ;
@@ -35,11 +37,10 @@ datalines ;
 run ;
 
 proc print ;
-
 run ;
+
 options mprint ;
 %vdw_formats ;
-run ;
 
 proc print data = gnu ;
   format drg drga. ;
