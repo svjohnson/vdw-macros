@@ -72,6 +72,19 @@
   */
 
   %let _SiteCode = 666 ;
-  %let _SiteAbbr = GHC_5p;
+  %let _SiteAbbr = GH5p;
   %let _SiteName = FIVE PERCENT Group Health ;
+
+** Version 3 Milestone file variables. ;
+
+  ** These vars should point to datasets/views that meet the specs for the indicated milestone. ;
+  ** So e.g., the data named in _vdw_enroll_m1 should have a var called enrollment_basis on it. ;
+  ** These vars are temporary--will only exist during the v2 -> v3 transition.  ;
+  ** See https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/version-3/implementation-plan for details. ;
+
+  %let _vdw_utilization_m2          = __vdw.utilization ;
+  %let _vdw_dx_m2                   = __vdw.dx ;
+  %let _vdw_px_m2                   = __vdw.px ;
+
+  %let _vdw_provider_specialty_m5   = __vdw.specfile ;
 
