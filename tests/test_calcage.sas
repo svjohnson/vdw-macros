@@ -29,7 +29,7 @@ options
 data dates ;
   do i = 0 to 100 by 10 ;
     birth_date = intnx('year', "&sysdate9"d, -i, 'sameday') ;
-    age = %calcage(refdate = "&sysdate9"d) ;
+    age = %calcage(birth_date, "&sysdate9"d) ;
     if mod(i, 2) = 0 then PapResDt = '25dec1966'd ;
     PapCollDt = '01jan1977'd ;
     output ;
@@ -41,7 +41,7 @@ proc print ;
 run ;
 
 proc sql ;
-  select %calcage(refdate = "&sysdate9"d) as age
+  select %calcage(bdtvar = birth_date, refdate = "&sysdate9"d) as age
   from dates
   ;
 

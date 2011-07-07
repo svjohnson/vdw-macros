@@ -20,7 +20,7 @@
 *********************************************/
 
 ** Utility macro for fairly precisely calculating age. ;
-%macro CalcAge(BDtVar = birth_date, RefDate = &sysdate9) ;
+%macro CalcAge(BDtVar, RefDate) ;
 
   floor ((intck('month',&BDTVar,&RefDate) - (day(&RefDate) < day(&BDTVar))) / 12)
 
