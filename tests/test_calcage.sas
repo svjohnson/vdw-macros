@@ -30,6 +30,8 @@ data dates ;
   do i = 0 to 100 by 10 ;
     birth_date = intnx('year', "&sysdate9"d, -i, 'sameday') ;
     age = %calcage(refdate = "&sysdate9"d) ;
+    if mod(i, 2) = 0 then PapResDt = '25dec1966'd ;
+    PapCollDt = '01jan1977'd ;
     output ;
   end ;
   format birth_date mmddyy10. ;
@@ -42,4 +44,18 @@ proc sql ;
   select %calcage(refdate = "&sysdate9"d) as age
   from dates
   ;
+
+  create table gnu as
+  select * from dates
+  where floor((intck('month', birth_date, coalesce(PapResDt, PapCollDt)) - (day(coalesce(PapResDt, PapCollDt)) < day(birth_date))) / 12) between 21 and 65
+  ;
+  create table gnu as
+  select * from dates
+  where %CalcAge(birth_date, coalesce(PapResDt, PapCollDt)) between 21 and 65
+  ;
 quit ;
+
+
+** Tyler reports error w/this call: ;
+
+** where %CalcAge(b.birth_date, coalesce(a.PapResDt, a.PapCollDt)) between 21 and 65 ;
