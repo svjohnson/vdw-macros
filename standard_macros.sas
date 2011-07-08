@@ -1164,6 +1164,7 @@ PROC FORMAT;
 run;
 
 * For debugging. ;
+%local sqlopts ;
 %let sqlopts = feedback sortmsg stimer ;
 %*let sqlopts = ;
 
@@ -1191,6 +1192,7 @@ proc sql &sqlopts ;
    from &inputds
    group by MRN ;
 
+  %local TotPeople ;
    %let TotPeople = &SQLOBS ;
 
   alter table _ppl add primary key (MRN) ;
@@ -1241,6 +1243,7 @@ run ;
 /***                                        ***/
 /**********************************************/
 
+%local var_list ;
 %let var_list = MI CHD PVD CVD DEM CPD RHD PUD MLIVD DIAB
                 DIABC PLEGIA REN MALIGN SLIVD MST AIDS ;
 
@@ -1474,6 +1477,7 @@ proc datasets nolist ;
    %put ;
 
 
+  %local debuglib ;
    %* Use this to save interim dsets for later inspection. ;
    %*let debuglib = owt. ;
    %let debuglib = ;
@@ -1628,7 +1632,9 @@ proc datasets nolist ;
 %mend OldGetFollowUpTime ;
 
 %macro LastWord(WordList) ;
-   %* This is a helper macro for CollapsePeriods--it just returns the last word (variable name) in a string (var list). ;
+   %** This is a helper macro for CollapsePeriods--it just returns the last word (variable name) in a string (var list). ;
+   %local i ;
+   %local ThisWord ;
    %let i = 0 ;
    %do %until(&ThisWord = ) ;
       %let i = %eval(&i + 1) ;
@@ -1786,6 +1792,8 @@ proc datasets nolist ;
    %put VarList is &VarList ;
 
    %put Length of varlist is %length(&varlist) ;
+
+  %local LastVar ;
 
    %if %length(&varlist) = 0 %then %do ;
       %let LastVar = &PersonID ;
@@ -2084,6 +2092,8 @@ proc datasets nolist ;
 *    Medical Care, 1999,37(9) pp 872-880.
 *
 *************************************************/
+  %local adultage ;
+  %local MaxDisease ;
 
 	%LET adultage=18;
 	/*This limits the maximum number of different diseases a person can have*/
@@ -2361,12 +2371,14 @@ proc datasets nolist ;
 	/* Now remove duplicate cost classifications at case id level
   	   for adults. Sorting separately to reduce cost of sort...
 	*/
+	%local byvars ;
 	%let byvars=mrn code;
 	proc sort data=work1 nodupkey; by &byvars; run;
 
 	/* Now remove duplicate cost classifications at case id level for children*/
 	proc sort data=work2 nodupkey; by &byvars; run;
 
+  %local keepvars ;
 	/* Now produce file with rxrisk outcome */
 	%let keepvars=MRN Model cost;
 	data work3(keep=MRN model cost);
@@ -2565,12 +2577,17 @@ proc datasets nolist ;
 %mend GetRxRiskForPeople;
 
 %macro PrettyVar(VarName) ;
+  %local __allups ;
+  %local __4thups ;
+  %local __delims ;
+  %local __upprefixes ;
+
    %let __allups = %str('Po', 'Ne', 'Nw', 'Se', 'Sw', 'N.e.', 'N.w.', 'S.e.'
                       , 'S.w.', 'C/o', 'P.o.', 'P.o', 'Ii', 'Iii', 'Iv', 'Mlk', 'Us') ;
    %let __4thUps = %str('Maccoll', 'Maccubbin', 'Macdonald', 'Macdougall'
                       , 'Macgregor', 'Macintyre', 'Mackenzie', 'Macmenigall'
                       , 'Macneil', 'Macneill') ;
-   %* These signify apartment numbers like #3A ;
+   %** These signify apartment numbers like #3A ;
    %let __upprefixes = %str('#', '1', '2', '3', '4'
                           , '5', '6', '7', '8', '9', '0') ;
 
@@ -2637,6 +2654,8 @@ proc datasets nolist ;
          %* This matches things like 21st, 5th, etc. ;
          __ordinal_regex = prxparse("/\d+(st|nd|rd|th)/i") ;
       end ;
+      %local i ;
+      %local ThisVar ;
       %let i = 0 ;
       %let ThisVar = ~ ;
       %do %until(%length(&ThisVar) = 0) ;
@@ -2697,6 +2716,9 @@ at the standard vars reference. DLK 08-19-2010 */
     %put ERROR: A REPORT. SET <<CLEAN>>, <<DIRTY>>, AND/OR <<REPORT>> TO "Y";
   %end;
   %else %do;
+    %local DataStatement ;
+    %local DirtyReturn ;
+    %local CleanReturn ;
     /*This mess is so that we save a little IO time depending on whether
       programmer wants the datasets saved.*/
     %if &Report ^= Y AND &Clean ^= Y %then %do;
@@ -2954,7 +2976,7 @@ at the standard vars reference. DLK 08-19-2010 */
 ***************************************************************************
 **************************************************************************/
 
-*Catch and Throw;
+**Catch and Throw;
 %let EncType = %upcase(&EncType.);
 %if (&EncType.^= A AND &EncType. ^= I AND &EncType. ^= B) %then %do;
   %put PROBLEM: The parameter 'Inpatient' must be among 'A', 'I', or 'B';
@@ -3294,6 +3316,7 @@ quit;
 %end;
 
 *Create conditional;
+%local conditional ;
 %if (&Strict_Equality. = 0 AND &Either. = 1) %then %do;
   %let Conditional= max(Diastolic) >= &Diastolic_Min.
                  OR max(Systolic)  >= &Systolic_Min.;
@@ -3446,6 +3469,9 @@ run;
   %else %do;
     /*This mess is so that we save a little IO time depending on whether
       programmer wants the datasets saved.*/
+    %local DataStatement ;
+    %local DirtyReturn ;
+    %local CleanReturn ;
     %if &Report ^= Y AND &Clean ^= Y %then %do;
       %let DataStatement = &OutLib..Dirty;
       %let DirtyReturn   = output &Outlib..dirty;
@@ -3668,6 +3694,11 @@ run;
   %else %do;
     /*This mess is so that we save a little IO time depending on whether
       programmer wants the datasets saved.*/
+
+    %local DataStatement ;
+    %local DirtyReturn   ;
+    %local CleanReturn   ;
+
     %if &Report ^= Y AND &Clean ^= Y %then %do;
       %let DataStatement = &OutLib..Dirty;
       %let DirtyReturn   = output &Outlib..dirty;
@@ -3702,7 +3733,8 @@ run;
     /*Clean the data*/
 
 
-    *IMPUTE BMI FROM SCRATCH;
+    **IMPUTE BMI FROM SCRATCH;
+    %local verybig ;
     %LET verybig = 10000000000000000;
     data NumberOff;
       set &_vdw_vitalsigns;
@@ -4022,7 +4054,7 @@ run;
     %end;
   %end;
   %if &Limits=Y %then %do;
-
+  %local cleaner ;
     %if &Clean=Y %then %let cleaner=&Outlib..clean;
       %else %let cleaner=clean;
     proc sql;
