@@ -5257,3 +5257,407 @@ run;
   quit ;
 
 %mend make_denoms ;
+/*Last modified 5/31/11/ by Lawrence Madziwa to edit this statement
+"Here is a sample of what you are sending to &_siteabbr."
+/*Last modified 07/01/11 by Lawrence Madziwa to include the following:
+-removed positional parameters. They are now all keyword.
+-formatted the macro1 to subset the px/dx/rx files as well get the necessary obs using only required columns.
+-collapsed the processing of the output for px and dx to be on description, rather than the dx/px codes themselves.*/
+/****************************************************************************************************/
+*%macro vdwcountsandrates1(medcodes=,   /* -Any or all of 'PX DX NDC' - no quotes, depending on codes to run in FileIN					  */
+						start_date=,   /* -Earliest day to pull codes, otherwise Date of beginning of study								  */
+						  end_date=,   /* -Latest date by which to pull codes															  */
+						    fileIN=,   /* -File with the Codes of Interest, in the form 'libname.filename' 						      */
+						    cohort=,   /* -If a cohort file (a file with sample MRNs of interest over which to restrict codes is available,*/
+						   			  /*  this will be the cohort-filename in the form 'libname.cohortfilename'						      */
+						  outpath=);  /* -This is the unquoted path to where the Codes of Interest reside. eg \\groups\data\Directory.    */
+									  /* The output file will also be placed here.														  */
+							          /****************************************************************************************************/
+/****************************************************************************************************/
+%macro vdwcountsandrates1(medcodes=,start_date=,end_date=,fileIN=,cohort=,outpath=);
+/****************************************************************************************************/
+/****************************************************************************************************/
+/*	This macro collects counts and rates of supplied codes at a given site over a specified time period. 								  */
+/*	Over this time period, and for each category in the study, counts are collected for 												  */
+/*	(i) the total number of times a certain medcode (px, dx, ndc) was encountered														  */
+/* (ii) the total number of people who were assigned this code																			  */
+/*(iii) the total number of enrolled people who were assigned this code.																  */
+/* (iv) A rate of incidence per 10,000 people is calculated over the enrolled people. 													  */
+/*  																																	  */
+/* An example of calling the macro in general (when there is no cohort file)is as follows (leave the cohort= argument blank): 			  */
+/* %vdwcountsandrates1(px,'01jan09'd,'31dec09'd, fileIN=lib1.outds, COHORT=, 															  */
+/*		outpath=\\groups\data\CTRHS\Crn\S D R C\VDW\Radiology\sasdata\InputData\Finalized Input Counts and Rates);						  */
+/*																																		  */
+/* When a cohort file exists, here is another way to call the macro: 																	  */
+/* %vdwcountsandrates1(px,'01jan09'd,'31dec09'd, fileIN=path.outds, COHORT=lib2.cohorttest, 											  */
+/*		outpath=\\groups\data\CTRHS\Crn\S D R C\VDW\Data\Counts and Rates\Data) 														  */
+/******************************************************************************************************************************************/
+libname path "&outpath.";
+
+%local ndcdate ;
+%local pxdate ;
+%local dxdate ;
+
+/*The lack of symmetry in the table names requires a small twist*/
+%let _vdw_px=&_vdw_px; %let _vdw_dx=&_vdw_dx; %let _vdw_ndc=&_vdw_rx;
+%let ndcdate=rxdate;   %let pxdate=adate;     %let dxdate=adate;
+
+/*Determine which medical codes are available in the supplied data*/
+data combined_px combined_dx combined_ndc;
+	set &fileIN.;
+	if substr(upcase(medcode),1,2)="PX" then do;
+		CodeType=substr(upcase(medcode),4,1);
+		output combined_px;
+	end;
+	else if substr(upcase(medcode),1,2)="DX" then output combined_dx;
+	else if substr(upcase(medcode),1,3)="NDC" then output combined_ndc;
+run;
+
+%if %upcase(&cohort.) eq %then %do;
+/*We'll later use this step to calc rates - rates are count/enrPple *10k
+Here and below, handling is required for the cohort yes or no instance*/
+proc sql;
+	select count(distinct mrn) as EnrPple into :EnrPple
+	from &_vdw_enroll.
+	where &start_date between enr_start and enr_end;
+quit;
+%end;
+
+%else %if %upcase(&cohort.) ne %then %do;
+/*We'll later use this next step to calc rates - rates are count/enrPple *10k*/
+proc sql;
+	select count(distinct mrn) as EnrPple into :EnrPple
+	from &cohort. where mrn in (select mrn from &_vdw_enroll
+	where &start_date between enr_start and enr_end);
+quit;
+%end;
+
+/*Run for all specified medical code categories: 'px dx ndc' or a combo of the 3 - if they're not in &fileIn, skip to next*/
+%local i cat;
+  %do i=1 %to %sysfunc(countw(&medcodes));
+		%let cat = %scan(%bquote(&medcodes),&i,' ');
+   		proc sql; select count(*) into :numb from combined_&cat.; quit;
+  			%if &numb=0 %then %do;
+		%put **********************************************************;
+		%put No %upcase(&cat) Codes in &FileIn.. Skipping.;
+		%put **********************************************************;
+			%end;
+  		%if &numb=0 %then %goto skip;
+		/*else, start processing the medcode*/
+		%put NOTE: Commencing to Run &cat. codes.;
+
+
+		/*Create tables- All People, Modify code if cohort is/is not available*/
+		%if %upcase(&cohort.) ne %then %let addcohort = %str(AND mrn in (select mrn from &cohort.));
+		%else %if %upcase(&cohort.) eq %then %let addcohort=;
+
+		proc sql;
+		/*Count all people with PX/DX/NDC of Interest*/
+			create table allPple as
+			select description, &cat., Category, count(&cat.) as &cat.count, count(distinct mrn) as allPeople
+			from combined_&cat. as a
+			left join &&&_vdw_&cat. as b
+			on a.code = b.&cat.
+			where &&&cat.date between &start_date. and &end_date. &addcohort.
+			group by &cat., description, category;
+
+		/*Create tables- All Enrolled People, modify code for cohort yes or no*/
+		create table enrolledpple as
+			select &cat.,description, count(distinct mrn) as allEnrolledPeople
+
+			from
+			(select mrn, &cat., description
+			from combined_&cat. as a left join &&&_vdw_&cat. as b on a.code =b.&cat.
+			where &&&cat.date between &start_date. and &end_date. &addcohort.)
+
+			where mrn in
+ 			(select mrn from &_vdw_enroll where &start_date. between enr_start and enr_end)
+		group by &cat., description;
+
+		proc sql;
+		/*Create table with distinct totals*/
+			create table combined&cat. as
+			select distinct a.description, a.&cat., Category, a.&cat.count label="%upcase(&cat.) Count",
+			allPeople label="All People", allEnrolledPeople label="All Enrolled People"
+			from allpple as a
+			left join enrolledpple as b
+			on a.&cat.=b.&cat.;
+
+		/*There may be many categories in the study - account for each here*/
+		select distinct category into :category separated by "/" from combined_&cat;
+		select count(distinct category) as catgct into :catgct from combined_&cat;
+
+		%do j=1 %to &catgct.;
+			%let catg = %scan(&category., &j., '/');
+
+			proc sql;
+				select count(distinct mrn) as EnrPple&cat. into :EnrPple&cat.
+
+				from
+	 			(select distinct mrn, &cat.
+ 	  			from combined_&cat. as a left join &&&_vdw_&cat. as b on a.code =b.&cat.
+	  			where compress(category)=%sysfunc(compress("&catg.")) and
+				&&&cat.date between &start_date. and &end_date.)
+
+ 				where mrn in
+  	 			(select mrn from &_vdw_enroll where &start_date between enr_start and enr_end &addcohort.);
+
+			insert into combined&cat.
+				(description, &cat., Category, &cat.count, allPeople, allEnrolledPeople)
+				values("~TOTAL FOR %upcase(&catg.) %upcase(&cat.) CODES**","~Total","&catg.",.,.,&&EnrPple&cat.);
+		%end;
+
+		/*Create tables- Include the rates - one on all enrolled people*/
+		create table combined2&cat. as
+			select distinct description, a.&cat., Category, a.&cat.count label="%upcase(&cat.) Count",
+			allPeople label="All People",
+			allEnrolledPeople label="All Enrolled People",
+			int((allEnrolledPeople/&EnrPple.)*10000) as RateAllEnr label="Rate/10K Over All Enrolled People"
+			from combined&cat. as a order by &cat. ;
+		/*the final stage- creating the end table*/
+		create table catg&cat. as
+			select distinct description, Category, Code as &cat. label="Medical Code"
+			from combined_&cat. order by &cat. ;
+
+		data final&cat.;
+			merge catg&cat. (in=a) combined2&cat. (in=b);
+			by &cat. ;
+			if a or b;
+		run;
+
+		/*Clean up a little, add Site Code*/
+		data final&cat.;
+			set final&cat.;
+			if  1 <= allPeople <=6 then allPeople=.a;
+			if  1 <= allEnrolledPeople<=6 then allEnrolledPeople=.a;
+			if  1 <= allEnrolledPeople <=6 then rateallenr=.a;
+			if  1 <= pxcount <=6 then pxcount = .a;
+			Sitecode="&_sitecode.";
+		run;
+
+		proc sort data=final&cat. out=path.final&cat._&_sitecode.&sysdate. /*nodupkey*/; by &cat.; run;
+
+    proc format;
+    	value LessSix
+    	.a = '<6'
+    	other=[9.0];
+    run;
+
+		proc print data=path.final&cat._&_sitecode.&sysdate. (obs=200);  /* fix this for final */
+			title "Here is a sample of what you are sending out";
+			format _numeric_ LessSix. ;
+		run;
+  %skip:
+  %end;
+%mend vdwcountsandrates1;
+
+/*Last modified 5/31/11 by Lawrence Madziwa to add optional title
+Also corrected misspelling in macro variable (%'uppcase') that made it fail to resolve
+/*Last modified 6/07/11 by Lawrence Madziwa to add logic to change last row in each tabulation. Tweaked _g
+/*Last modified 7/05/11 by Lawrence Madziwa to make parameters all keyword
+Also to roll up dx and px on description, not on dx/px codes
+*************************************************************************************************************/
+
+/****************************************************************************************************************************************/
+/* This macro, %VDWCountsAndRates2, tabulates results from %VDWCountsAndRates1.															*/
+/* It takes three arguments: (i) The list of medcodes to tabulate (Any combo of 'PX DX NDC' separated by space, no quotes)              */
+/* 						    (ii) The path location of the results from the first macro. The tabulated tables will be placed there too.  */
+/*                         (iii) An optional title to allow better documentation                                                        */
+/****************************************************************************************************************************************/
+
+ /*This is for repetitive titles and footnotes;*/
+%macro titlefoots;
+title "Some Codes Related to %upcase(&catg.)";
+	title2 "Counts of All %upcase(&cat.) over period of interest by site within HMORN.";
+	title3 "&titl3.";
+	footnote1 "Preliminary: The above exhibit shows the incidence of selected codes at sites. The list is not exhaustive," ;
+	footnote2 " and may need augumenting. The motive is to assess data quality across sites over selected codes." ;
+	footnote3 "**Only Calculated on Enrolled so far";
+	footnote4 "Prepared on &sysdate.";
+%mend titlefoots;
+/********************************************************************************************************************************/
+/* This macro tabulates results from sites 4 ways: (i) procedure counts, (ii) all people who ever had a procedure, 		    	*/
+/* (iii) all Enrolled People who ever had a procedure, then (iv) rates of incidence over those enrolled. 3 output files 		*/
+/* (PX, DX, NDC) containing each of the four will be output.;													                */
+/* This macro puts results from sites together for further analysis or comparison; 							  					*/
+/********************************************************************************************************************************/
+%macro VDWCountsAndRates2(medcodes=, /*Any combo of 'PX DX NDC' - no quotes - that you need tabulated					 */
+						      path=, /*path to data files from sites, which SHOULD be stored in a directory by themselves*/
+						     titl3=  /*Optional additional title*/);
+libname path "&path";
+
+/* Make a dummy dataset of site names so that each site ends up in the final table */
+data SiteNames;
+	length sitecode $4;
+	sitecode='01 '; output;	 sitecode='02 '; output;  sitecode='03 '; output;  sitecode='04 '; output;
+	sitecode='05 '; output;  sitecode='06 '; output;  sitecode='07 '; output;  sitecode='08 '; output;
+	sitecode='09 '; output;  sitecode='10 '; output;  sitecode='11 '; output;  sitecode='12 '; output;
+	sitecode='13 '; output;  sitecode='14 '; output;  sitecode='15 '; output;  sitecode='16 '; output;
+	sitecode='17 '; output;
+;
+/*
+	sitecode='01a';
+	sitecode='01b';
+*/
+run;
+/*Create a site name format;*/
+proc format;
+	value $sitef
+	'01 ' = "GHC"  '02 ' = "KPNW"  '03 ' = "KPNC"  '04 ' = "KPSC"
+	'05 ' = "KPHI" '06 ' = "KPCO"  '07 ' = "HPRF"	 '08 ' = "HPHC"
+	'09 ' = "MPCI" '10 ' = "HFHS"  '11 ' = "KPGA"  '12 ' = "LHS"
+	'13 ' = "MCRF" '14 ' = "GHS"   '15 ' = "SWH"   '16 ' = "MHS"
+	'17 ' = "KPMA"
+	'01a'='GHC-IGP'
+	'01b'='GHC-Network'
+	;
+proc format;
+    	value LessSix
+    	.a = '<6'
+    	other=[comma5.0];
+run;
+
+  proc sql noprint;
+	create table thenames as
+    select memname from dictionary.tables
+    where libname = "PATH";
+    select  memname
+    into :n1 separated by " " from thenames;
+  quit;
+
+** [RP] are these options statements necessary? ;
+options user=path;
+data work.alldata;
+	length sitecode $4 ;
+	set &n1;
+run;
+
+%put &n1= ;
+
+options user = work;
+
+/* Count number of obs in each file to determine whether to run it*/
+  proc sql;
+	select count(distinct category) into :numcat from work.alldata;
+	select distinct category into :catgn separated by "/" from work.alldata;
+  quit;
+
+%do j=1 %to &numcat.;
+  %let catg = %scan(&catgn.,&j.,'/');
+
+   ods tagsets.ExcelXP file="&path.\&sysdate. &catg. file.xls" style=analysis
+	options
+    (embedded_titles="yes"	Embedded_footnotes="yes" 	Autofit_Height = "YES"
+	default_column_width="50,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10");
+
+    %local i cat;  %let i = 1;
+    %let cat = %scan(%bquote(&medcodes),&i);
+
+    %do %while(%bquote(&cat) ne);
+		data _null_;
+			dset=open('alldata');
+			call symput('chk',left(trim(put(varnum(dset,"px"),2.))));
+		run;
+
+		%if &chk=0 %then %goto skip;
+
+     	data &cat.;
+			set alldata;
+			if category="&catg.";
+			if &cat. ne "" then output &cat.;
+	 	run;
+
+/* Create the format;*/
+		data _g;
+  			set &cat.;
+  			retain fmtname "$fmt&cat.";
+  			start = &cat.;
+  			Label = description;
+  			keep Fmtname Start Label;
+		run;
+
+		proc sort data=_g nodupkey; by start; run;
+		proc format cntlin=_g ;
+
+/* Prepare for tabulation*/
+    	data dataclass;
+     		set &cat. sitenames ;
+	 		keep category  sitecode Description &cat;  *added description for non-ndc;
+	 		if category='' then category="%upcase(&catg.)";
+    	run;
+
+/* Start tabulation*/
+   		ods tagsets.ExcelXP options (Sheet_name="(%upcase(&cat.)) All %upcase(&cat)s");
+
+		data dataclass; set dataclass;
+		if &cat.='~Total' then description="~All %upcase(&cat) - Number of All &cat.**";
+		data &cat; set &cat;
+		if &cat.='~Total' then description="~All %upcase(&cat) - Number of All &cat.**";
+
+   		proc tabulate data = &cat. missing format=LessSix. classdata=dataclass;
+			where upcase(Category)="%upcase(&catg.)";
+			freq &cat.count;  format sitecode $sitef.;
+			keylabel N="";
+			class Description category sitecode;
+			table Description, sitecode /box="All %upcase(&cat.)s" misstext='.'; *added description for non-ndc;
+		%titlefoots;
+   		run;
+
+   		ods tagsets.ExcelXP options (Sheet_name="(%upcase(&cat.)) People with %upcase(&cat.)s");
+
+		data dataclass; set dataclass;
+		if &cat.='~Total' then description="~All People - Number of All People with any &cat.**";
+		data &cat; set &cat;
+		if &cat.='~Total' then description="~All People - Number of All People with any &cat.**";
+
+   		proc tabulate data = &cat. missing format=LessSix. classdata=dataclass;
+			where upcase(Category)="%upcase(&catg.)";
+			freq allpeople;  format sitecode $sitef.;
+			keylabel N="";
+			class &cat. Description category sitecode;
+			table Description, sitecode /box="All People" misstext='.'; *added description for non-ndc;
+	   	%titlefoots;
+   		run;
+
+   		ods tagsets.ExcelXP options (Sheet_name="(%upcase(&cat.)) Enrolled With %upcase(&cat.)s");
+
+		data dataclass; set dataclass;
+		if &cat='~Total' then description="~Enrolled - Number of enrolled people with any &cat.**";
+		data &cat; set &cat;
+		if &cat='~Total' then description="~Enrolled - Number of enrolled people with any &cat.**";
+		run;
+
+   		proc tabulate data = &cat. missing format=LessSix. classdata=dataclass;
+			where upcase(Category)="%upcase(&catg.)";
+			freq allEnrolledPeople;  format sitecode $sitef.;
+			keylabel N="";
+			class Description category sitecode; *class &cat. category sitecode;
+			table Description, sitecode /box="Enrolled People" misstext='.';
+		%titlefoots;
+   		run;
+
+
+   		ods tagsets.ExcelXP options (Sheet_name="(%upcase(&cat.)) Rates - All Enrollees");
+
+		data dataclass; set dataclass;
+		if &cat.='~Total' then description="~Rates - Rate of enrolled people with any &cat.**";run;
+		data &cat; set &cat;
+		if &cat.='~Total' then description="~Rates - Rate of enrolled people with any &cat.**";run;
+
+   		proc tabulate data = &cat. missing format=LessSix. classdata=dataclass;
+			where upcase(Category)="%upcase(&catg.)";
+			freq rateallenr;  format sitecode $sitef.;
+			keylabel N="Rate/10k";
+			class Description category sitecode;
+			table Description, sitecode /box="Enrolled Rates" misstext='.'; *added description for non-ndc;
+	   	%titlefoots;
+   		run;
+   		title;
+		   %skip:;
+   		%let i = %eval(&i + 1);
+   		%let cat = %scan(%bquote(&medcodes),&i);
+   	%end; /*MEDCODES END*/
+   ods tagsets.ExcelXP close;
+%end;   /*CATG END*/
+
+%mend VDWCountsAndRates2;
