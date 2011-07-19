@@ -415,9 +415,9 @@ run;
                      , OutSet                    /* The name of the output dataset of only the continuously enrolled people. */
                      , IndexDate                 /* Either the name of a date variable in InSet, or, a complete date literal (e.g., "01Jan2005"d) */
                      , PreIndexEnrolledMonths    /* The # of months of enrollment required prior to the index date. */
-                     , PreIndexGapTolerance      /* The length of enrollment gaps you consider to be ignorable for pre-index date enrollment. */
+                     , PreIndexGapTolerance      /* The length of enrollment gaps in months you consider to be ignorable for pre-index date enrollment. */
                      , PostIndexEnrolledMonths   /* The # of months of enrollment required post index date. */
-                     , PostIndexGapTolerance     /* The length of enrollment gaps you consider to be ignorable for post-index date enrollment.*/
+                     , PostIndexGapTolerance     /* The length of enrollment gaps in months you consider to be ignorable for post-index date enrollment.*/
                      , DebugOut = work           /* Libname to save interim dsets to for debugging--leave set to work to discard these. */
                      , EnrollDset = &_vdw_enroll /* For testing. */
                      ) ;
