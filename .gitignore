@@ -1,3 +1,7 @@
+*.txt
+*.html
+*.bak
+*.run
 *.log
 *.lst
 *.run
