@@ -1,3 +1,10 @@
+*.txt
+*.html
+*.bak
+*.run
 *.log
 *.lst
 *.run
+*.*~
+StdVars*.sas
+!StdVars.sas
