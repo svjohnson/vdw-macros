@@ -5263,6 +5263,7 @@ run;
 -removed positional parameters. They are now all keyword.
 -formatted the macro1 to subset the px/dx/rx files as well get the necessary obs using only required columns.
 -collapsed the processing of the output for px and dx to be on description, rather than the dx/px codes themselves.*/
+/* Last modified 07/25/2011 by Gene Hart to add some informative text (Outname) to the output filename
 /****************************************************************************************************/
 *%macro vdwcountsandrates1(medcodes=,   /* -Any or all of 'PX DX NDC' - no quotes, depending on codes to run in FileIN					  */
 						start_date=,   /* -Earliest day to pull codes, otherwise Date of beginning of study								  */
@@ -5270,11 +5271,12 @@ run;
 						    fileIN=,   /* -File with the Codes of Interest, in the form 'libname.filename' 						      */
 						    cohort=,   /* -If a cohort file (a file with sample MRNs of interest over which to restrict codes is available,*/
 						   			  /*  this will be the cohort-filename in the form 'libname.cohortfilename'						      */
-						  outpath=);  /* -This is the unquoted path to where the Codes of Interest reside. eg \\groups\data\Directory.    */
+						  outpath=,  /* -This is the unquoted path to where the Codes of Interest reside. eg \\groups\data\Directory.    */
 									  /* The output file will also be placed here.														  */
+						  outname=); /* A short text string that will appear in the output filename */
 							          /****************************************************************************************************/
 /****************************************************************************************************/
-%macro vdwcountsandrates1(medcodes=,start_date=,end_date=,fileIN=,cohort=,outpath=);
+%macro vdwcountsandrates1(medcodes=,start_date=,end_date=,fileIN=,cohort=,outpath=,outname=);
 /****************************************************************************************************/
 /****************************************************************************************************/
 /*	This macro collects counts and rates of supplied codes at a given site over a specified time period. 								  */
@@ -5292,11 +5294,8 @@ run;
 /* %vdwcountsandrates1(px,'01jan09'd,'31dec09'd, fileIN=path.outds, COHORT=lib2.cohorttest, 											  */
 /*		outpath=\\groups\data\CTRHS\Crn\S D R C\VDW\Data\Counts and Rates\Data) 														  */
 /******************************************************************************************************************************************/
+options  mprint nocenter msglevel = i NOOVP dsoptions="note2err" ;
 libname path "&outpath.";
-
-%local ndcdate ;
-%local pxdate ;
-%local dxdate ;
 
 /*The lack of symmetry in the table names requires a small twist*/
 %let _vdw_px=&_vdw_px; %let _vdw_dx=&_vdw_dx; %let _vdw_ndc=&_vdw_rx;
@@ -5435,7 +5434,7 @@ quit;
 			Sitecode="&_sitecode.";
 		run;
 
-		proc sort data=final&cat. out=path.final&cat._&_sitecode.&sysdate. /*nodupkey*/; by &cat.; run;
+		proc sort data=final&cat. out=path.final_&OutName._&cat._&_sitecode._&sysdate. /*nodupkey*/; by &cat.; run;
 
     proc format;
     	value LessSix
@@ -5443,7 +5442,7 @@ quit;
     	other=[9.0];
     run;
 
-		proc print data=path.final&cat._&_sitecode.&sysdate. (obs=200);  /* fix this for final */
+		proc print data=path.final_&OutName._&cat._&_sitecode._&sysdate. (obs=200);  /* fix this for final */
 			title "Here is a sample of what you are sending out";
 			format _numeric_ LessSix. ;
 		run;
