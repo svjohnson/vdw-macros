@@ -1687,9 +1687,10 @@ proc datasets nolist ;
                      , DSet         /* Name of the dset you want collapsed. */
                      , RecStart     /* Name of the var that contains the period start dates. */
                      , RecEnd       /* Name of the var that contains the period end dates. */
-                     , PersonID  = MRN   /* Name of the var that contains a unique person identifier. */
-                     , DaysTol = 1  /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
-                     , Debug   = 0  /* 0/1 flag indicating whether you want the PUT statements to run (PRODUCES A LOT OF OUTPUT!). */
+                     , PersonID   = MRN /* Name of the var that contains a unique person identifier. */
+                     , OutSet     = &lib..&dset /* In case you dont want this to overwrite your input dataset, specify another. */
+                     , DaysTol    = 1   /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
+                     , Debug      = 0   /* 0/1 flag indicating whether you want the PUT statements to run (PRODUCES A LOT OF OUTPUT!). */
                      ) ;
 
    %** Takes an input mbhist dataset and collapses contiguous time periods where the variables ;
@@ -1697,8 +1698,12 @@ proc datasets nolist ;
 
    %** Adapted from Mark Terjesons code posted to sas-l: http://www.listserv.uga.edu/cgi-bin/wa?A2=ind0003d&L=sas-l&D=0&P=18578 ;
 
+  %** preparing to go to a single inset param. ;
+  %local inset ;
+  %let inset = &Lib..&Dset ;
+
    %** This defines VarList ;
-   %GetVarList( Dset = &Lib..&Dset
+   %GetVarList( Dset = &inset
               , RecStart = &RecStart
               , RecEnd = &RecEnd
               , PersonID = &PersonID) ;
@@ -1716,20 +1721,20 @@ proc datasets nolist ;
       %let LastVar = %LastWord(&VarList) ;
    %end ;
 
-   proc sort nodupkey data = &Lib..&Dset ;
+   proc sort nodupkey data = &inset ;
       by &PersonID &RecStart &VarList &RecEnd ;
    run ;
 
-   data &Lib..&Dset ;
+   data &outset ;
       retain PeriodStart PeriodEnd ;
       format PeriodStart PeriodEnd mmddyy10. ;
-      set &Lib..&Dset(rename = (&RecStart = _&RecStart
+      set &inset(rename = (&RecStart = _&RecStart
                                 &RecEnd   = _&RecEnd)) ;
 
       by &PersonID &VarList NOTSORTED ;
 
       if first.&LastVar then do ;
-         * Start of a new period--initialize. ;
+         ** Start of a new period--initialize. ;
          PeriodStart = _&RecStart ;
          PeriodEnd   = _&RecEnd ;
          %if &Debug = 1 %then %do ;
@@ -1770,18 +1775,19 @@ proc datasets nolist ;
          output ;
       end ;
    run ;
-   * Now we have the actual start/stop dates in PeriodStart & PeriodEnd--rename those to ;
-   * the original record start/stop variable names, and strip out any wacky recs where start comes after end ;
-   data &Lib..&Dset ;
-      set &Lib..&Dset(rename = (PeriodStart = &RecStart
+  ** Now we have the actual start/stop dates in PeriodStart & PeriodEnd--rename those to ;
+  ** the original record start/stop variable names, and strip out any wacky recs where start comes after end ;
+  data &outset ;
+    length &RecStart &RecEnd 4 ;
+    set &outset(rename = (PeriodStart = &RecStart
                           PeriodEnd   = &RecEnd)) ;
-      * if PeriodStart le PeriodEnd ;
-      drop _&RecStart _&RecEnd ;
-   run ;
-   %** This is obscure, but seems like good hygeine.  Tyler called cp twice, the second time with a dset that had nothing but mrn, start and stop. ;
-   %** Looks like the second call did not overwrite the value in varlist, and he got errors about named vars not being present. ;
-   %** So now we null out the var to keep that from happening. ;
-   %let VarList = ;
+    ** if PeriodStart le PeriodEnd ;
+    drop _&RecStart _&RecEnd ;
+  run ;
+  %** This is obscure, but seems like good hygeine.  Tyler called cp twice, the second time with a dset that had nothing but mrn, start and stop. ;
+  %** Looks like the second call did not overwrite the value in varlist, and he got errors about named vars not being present. ;
+  %** So now we null out the var to keep that from happening. ;
+  %let VarList = ;
 %mend CollapsePeriods ;
 
 

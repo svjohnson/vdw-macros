@@ -13,10 +13,10 @@
                      , DSet         /* Name of the dset you want collapsed. */
                      , RecStart     /* Name of the var that contains the period start dates. */
                      , RecEnd       /* Name of the var that contains the period end dates. */
-                     , PersonID  = MRN   /* Name of the var that contains a unique person identifier. */
-                     , OutSet = &lib..&dset /* In case you dont want this to overwrite your input dataset, specify another. */
-                     , DaysTol = 1  /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
-                     , Debug   = 0  /* 0/1 flag indicating whether you want the PUT statements to run (PRODUCES A LOT OF OUTPUT!). */
+                     , PersonID   = MRN /* Name of the var that contains a unique person identifier. */
+                     , OutSet     = &lib..&dset /* In case you dont want this to overwrite your input dataset, specify another. */
+                     , DaysTol    = 1   /* The number of days gap to tolerate in evaluating whether one period is contiguous w/another. */
+                     , Debug      = 0   /* 0/1 flag indicating whether you want the PUT statements to run (PRODUCES A LOT OF OUTPUT!). */
                      ) ;
 
    %** Takes an input mbhist dataset and collapses contiguous time periods where the variables ;
