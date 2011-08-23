@@ -30,7 +30,8 @@ title "Some Codes Related to %upcase(&catg.)";
 /********************************************************************************************************************************/
 %macro VDWCountsAndRates2(medcodes=, /*Any combo of 'PX DX NDC' - no quotes - that you need tabulated					 */
 						      path=, /*path to data files from sites, which SHOULD be stored in a directory by themselves*/
-						     titl3=  /*Optional additional title*/);
+						     titl3=,  /*Optional additional title*/
+						     InName= /*Text imbedded in filename */ );
 libname path "&path";
 options mprint; 
 /* Make a dummy dataset of site names so that each site ends up in the final table */
@@ -67,7 +68,9 @@ run;
   proc sql noprint;
 	create table thenames as
     select memname from dictionary.tables
-    where libname = "PATH";
+    where libname = "PATH" and 
+          index(upper(memname),upper("_&InName._"))
+    ;
     select  memname 
     into :n1 separated by " " from thenames;
   quit;
@@ -91,7 +94,7 @@ options user = work;
 %do j=1 %to &numcat.;
   %let catg = %scan(&catgn.,&j.,'/');
 
-   ods tagsets.ExcelXP file="&path.\&sysdate. &catg. file.xls" style=analysis
+   ods tagsets.ExcelXP file="&path.\&sysdate. &catg. file &InName .xls" style=analysis
 	options
     (embedded_titles="yes"	Embedded_footnotes="yes" 	Autofit_Height = "YES"
 	default_column_width="50,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10");
@@ -207,15 +210,4 @@ options user = work;
 %end;   /*CATG END*/
  
 %mend VDWCountsAndRates2;
-
-%macro skipit;
-*example call;
-%VDWCountsAndRates2(medcodes=PX,
-					    path=\\groups\DATA\CTRHS\Crn\S D R C\VDW\Programs\CountsAndRates\OutputDatasets\Pap\test\test01julydeleteafter,/*path to data files from sites, which SHOULD be stored in a directory by themselves*/
-					   titl3=Test Title Delete after); /*Optional additional title*/
-%mend skipit;
-
-
-
-
 

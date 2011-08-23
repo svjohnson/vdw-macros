@@ -5171,25 +5171,6 @@ run;
   quit ;
 
 %mend make_denoms ;
-/*Last modified 5/31/11/ by Lawrence Madziwa to edit this statement
-"Here is a sample of what you are sending to &_siteabbr."
-/*Last modified 07/01/11 by Lawrence Madziwa to include the following:
--removed positional parameters. They are now all keyword.
--formatted the macro1 to subset the px/dx/rx files as well get the necessary obs using only required columns.
--collapsed the processing of the output for px and dx to be on description, rather than the dx/px codes themselves.*/
-/* Last modified 07/25/2011 by Gene Hart to add some informative text (Outname) to the output filename
-/****************************************************************************************************/
-*%macro vdwcountsandrates1(medcodes=,   /* -Any or all of 'PX DX NDC' - no quotes, depending on codes to run in FileIN					  */
-						start_date=,   /* -Earliest day to pull codes, otherwise Date of beginning of study								  */
-						  end_date=,   /* -Latest date by which to pull codes															  */
-						    fileIN=,   /* -File with the Codes of Interest, in the form 'libname.filename' 						      */
-						    cohort=,   /* -If a cohort file (a file with sample MRNs of interest over which to restrict codes is available,*/
-						   			  /*  this will be the cohort-filename in the form 'libname.cohortfilename'						      */
-						  outpath=,  /* -This is the unquoted path to where the Codes of Interest reside. eg \\groups\data\Directory.    */
-									  /* The output file will also be placed here.														  */
-						  outname=); /* A short text string that will appear in the output filename */
-							          /****************************************************************************************************/
-/****************************************************************************************************/
 %macro vdwcountsandrates1(medcodes=,start_date=,end_date=,fileIN=,cohort=,outpath=,outname=);
 /****************************************************************************************************/
 /****************************************************************************************************/
@@ -5342,9 +5323,11 @@ quit;
 		data final&cat.;
 			set final&cat.;
 			if  1 <= allPeople <=6 then allPeople=.a;
-			if  1 <= allEnrolledPeople<=6 then allEnrolledPeople=.a;
-			if  1 <= allEnrolledPeople <=6 then rateallenr=.a;
 			if  1 <= pxcount <=6 then pxcount = .a;
+			if  1 <= allEnrolledPeople<=6 then do;
+               allEnrolledPeople=.a;
+               rateallenr=.a;
+      End;
 			Sitecode="&_sitecode.";
 		run;
 
@@ -5364,21 +5347,6 @@ quit;
   %end;
 %mend vdwcountsandrates1;
 
-/*Last modified 5/31/11 by Lawrence Madziwa to add optional title
-Also corrected misspelling in macro variable (%'uppcase') that made it fail to resolve
-/*Last modified 6/07/11 by Lawrence Madziwa to add logic to change last row in each tabulation. Tweaked _g
-/*Last modified 7/05/11 by Lawrence Madziwa to make parameters all keyword
-Also to roll up dx and px on description, not on dx/px codes
-*************************************************************************************************************/
-
-/****************************************************************************************************************************************/
-/* This macro, %VDWCountsAndRates2, tabulates results from %VDWCountsAndRates1.															*/
-/* It takes three arguments: (i) The list of medcodes to tabulate (Any combo of 'PX DX NDC' separated by space, no quotes)              */
-/* 						    (ii) The path location of the results from the first macro. The tabulated tables will be placed there too.  */
-/*                         (iii) An optional title to allow better documentation                                                        */
-/****************************************************************************************************************************************/
-
- /*This is for repetitive titles and footnotes;*/
 %macro titlefoots;
 title "Some Codes Related to %upcase(&catg.)";
 	title2 "Counts of All %upcase(&cat.) over period of interest by site within HMORN.";
@@ -5396,9 +5364,10 @@ title "Some Codes Related to %upcase(&catg.)";
 /********************************************************************************************************************************/
 %macro VDWCountsAndRates2(medcodes=, /*Any combo of 'PX DX NDC' - no quotes - that you need tabulated					 */
 						      path=, /*path to data files from sites, which SHOULD be stored in a directory by themselves*/
-						     titl3=  /*Optional additional title*/);
+						     titl3=,  /*Optional additional title*/
+						     InName= /*Text imbedded in filename */ );
 libname path "&path";
-
+options mprint;
 /* Make a dummy dataset of site names so that each site ends up in the final table */
 data SiteNames;
 	length sitecode $4;
@@ -5433,12 +5402,13 @@ run;
   proc sql noprint;
 	create table thenames as
     select memname from dictionary.tables
-    where libname = "PATH";
+    where libname = "PATH" and
+          index(upper(memname),upper("_&InName._"))
+    ;
     select  memname
     into :n1 separated by " " from thenames;
   quit;
 
-** [RP] are these options statements necessary? ;
 options user=path;
 data work.alldata;
 	length sitecode $4 ;
@@ -5458,7 +5428,7 @@ options user = work;
 %do j=1 %to &numcat.;
   %let catg = %scan(&catgn.,&j.,'/');
 
-   ods tagsets.ExcelXP file="&path.\&sysdate. &catg. file.xls" style=analysis
+   ods tagsets.ExcelXP file="&path.\&sysdate. &catg. file &InName .xls" style=analysis
 	options
     (embedded_titles="yes"	Embedded_footnotes="yes" 	Autofit_Height = "YES"
 	default_column_width="50,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10");
@@ -5574,3 +5544,4 @@ options user = work;
 %end;   /*CATG END*/
 
 %mend VDWCountsAndRates2;
+
