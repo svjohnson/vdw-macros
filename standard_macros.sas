@@ -3377,8 +3377,15 @@ run;
 *   (206) 287-2927
 *   ross.t@ghc.org
 *
+* Modified by:
+*   David Tabano
+*   Institute for Health Research, Kaiser Permanente Colorado
+*   (303)614-1348
+*   david.c.tabano@kp.org
+*
 * History:
 *   Created October 13, 2006
+*   Modified August 23, 2011
 **************************************************************************/
 
   /*Catch Errors*/
@@ -3425,9 +3432,7 @@ run;
 
 
     %** helper macro ;
-    %local flag_vals ;
-    %let flag_vals = 'Y', 'N', 'U' ;
-    %macro checkflag(var) ;
+    %macro checkflag(var, flag_vals = %str('Y', 'N', 'U')) ;
       else if &var NOT IN(&flag_vals) then do;
         DirtyReason = "Invalid value for &var";
         &DirtyReturn;
@@ -3441,7 +3446,7 @@ run;
     run;
 
     data &DataStatement;
-      set ToClean;
+      set &_vdw_enroll end = last ;
       by mrn enr_start;
       length DirtyReason $40 LastEnd 4 DaysEnrolled 8;
 
@@ -3476,7 +3481,12 @@ run;
       %checkflag(var = ins_medicaid)
       %checkflag(var = ins_commercial)
       %checkflag(var = ins_privatepay)
+      %checkflag(var = ins_selffunded)
+      %checkflag(var = ins_statesubsidized)
+      %checkflag(var = ins_highdeductible)
       %checkflag(var = ins_other)
+
+      %checkflag(var = enrollment_basis, flag_vals = %str('G', 'I', 'B'))
 
       %checkflag(var = plan_hmo)
       %checkflag(var = plan_ppo)
@@ -3491,6 +3501,11 @@ run;
       end;
       LastEnd = enr_end;
       retain LastEnd;
+      ** Putting this here b/c proc contents spits out a missing for obs when run against a view. ;
+      if last then do ;
+        call symput('TotalRecords', put(_n_, best.)) ;
+      end ;
+      format LastEnd mmddyy10. ;
     run;
 
     %if &Report = Y %then %do;
@@ -3524,53 +3539,56 @@ run;
       data WrongLength (keep=vname YourLength SpecLength);
         set EnrollContents;
         length vname $32. YourLength 8 SpecLength 8;
-        vname = upcase(compress(name));
-        if vname='MRN' then do;
-          call symput('TotalRecords', put(nobs, best.));
-          return;
-        end;
-        else if vname="INS_MEDICARE" AND length^=1 then do;
-          YourLength=length;
-          SpecLength=1;
-          output;
-        end;
-        else if vname="INS_MEDICAid" AND length^=1 then do;
-          YourLength=length;
-          SpecLength=1;
-          output;
-        end;
-        else if vname="INS_COMMERCIAL" AND length^=1 then do;
-          YourLength=length;
-          SpecLength=1;
-          output;
-        end;
-        else if vname="INS_PRIVATEPAY" AND length^=1 then do;
-          YourLength=length;
-          SpecLength=1;
-          output;
-        end;
-        else if vname="INS_OTHER" AND length^=1 then do;
-          YourLength=length;
-          SpecLength=1;
-          output;
-        end;
-        else if vname="DRUGCOV" AND length^=1 then do;
-          YourLength=length;
-          SpecLength=1;
-          output;
-        end;
-        else return;
-      run;
 
-      *This should not error nor print if WrongLength is empty;
+        vname = upcase(compress(name));
+
+        select (vname) ;
+          when ('MRN') do ;
+            ** Doing this is the dsetp above b/c the below does not work if _vdw_enroll points to a view. ;
+            ** call symput('TotalRecords', put(nobs, best.));
+            return;
+          end ;
+          when ('INS_MEDICARE'
+                , 'INS_MEDICAID'
+                , 'INS_COMMERCIAL'
+                , 'INS_PRIVATEPAY'
+                , 'INS_OTHER'
+                , 'DRUGCOV'
+                , "INS_STATESUBSIDIZED"
+                , "INS_SELFFUNDED"
+                , "INS_HIGHDEDUCTIBLE"
+                , "INS_MEDICARE_A"
+                , "INS_MEDICARE_B"
+                , "INS_MEDICARE_C"
+                , "INS_MEDICARE_D"
+                , "PLAN_HMO"
+                , "PLAN_POS"
+                , "PLAN_PPO"
+                , "PLAN_INDEMNITY"
+                , "OUTSIDE_UTILIZATION"
+                , "ENROLLMENT_BASIS"
+                ) do ;
+            YourLength = length ;
+            SpecLength = 1 ;
+          end ;
+          ** Dropping the PCC PCP length checks b/c the spec allows those to vary. ;
+          otherwise do ;
+            ** put "Got " vname= "--doing nothing." ;
+          end ;
+        end ;
+        if YourLength ne SpecLength then output ;
+      run ;
+
+      **This should not error nor print if WrongLength is empty;
       proc print data=WrongLength;
         title "Table of Variables Having the Wrong Length";
       run;
       title "Frequency of Observations Not up to Specs by Reason";
       proc sql;
+
         select DirtyReason
              , COUNT as Frequency
-             , COUNT/&TotalRecords. *100 as PercentOfAllEnroll
+             , (COUNT / &TotalRecords ) * 100 as PercentOfAllEnroll
              , Percent as PercentOfDirtyEnroll
           from DirtyReport
         ;
@@ -3578,7 +3596,6 @@ run;
     %end;
   %end;
 %mend CleanEnroll;
-
 %macro CleanVitals(OutLib, Clean=N, Dirty=N, Report=Y, Limits=N);
 /***************************************************************************
 * Parameters:

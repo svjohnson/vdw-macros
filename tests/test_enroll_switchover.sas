@@ -98,7 +98,7 @@ options mprint ;
 
 ** options obs = 1000 ;
 
-%include mac(standard_macros.sas) ;
+%include mac(cleanenroll.sas) ;
 
 libname ce '\\ctrhs-sas\SASUser\pardre1\vdw\macro_testing' ;
 
