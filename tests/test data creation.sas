@@ -11,7 +11,8 @@
 
   /*Please specify the location where the MYLIB has to be created*/
 
-  %let lib_loc = \\ctrhs-sas\SASUser\pardre1\vdw\macro_testing ;
+  %**let lib_loc = \\ctrhs-sas\SASUser\pardre1\vdw\macro_testing ;
+  %let lib_loc = c:\deleteme\phi_macro_testing ;
 
 %mend edit_section;
 
