@@ -24,6 +24,12 @@ options
 
 %include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas" ;
 
+** Please replace this w/the proper path to your stdvars file. ;
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+
+** The macro requires one of the standard macros. ;
+%include vdw_macs ;
+
 ** libname t 'c:\deleteme\phi_macro_testing' ;
 ** libname t '\\ctrhs-sas\SASUser\pardre1\vdw\macro_testing' ;
 ** libname t '\\ctrhs-sas\SASUser\pardre1\vdw\voc_ute\general_qa\to_send' ;

@@ -4776,7 +4776,7 @@ run;
                      PASS  = "%2hilario36"
                      USER  = "VDWReader"
                      DEBUG
-                     rcmd  = 'binary'
+                     /* rcmd  = 'binary' this makes the macro barf w/an access violation at Essentia--it is not necessary. */
                      ;
 
   libname  vdw_fmt xport ;
