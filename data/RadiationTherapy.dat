@@ -1,0 +1,196 @@
+344|PX-Rev|Therapeutic |REACT Study: Mark Hornbrook, Jenny Staub|REACT Study: Mark Hornbrook, Jenny Staub
+342|PX-Rev|Therapeutic Nuclear Medicine|REACT Study: Mark Hornbrook, Jenny Staub
+333|PX-Rev|Radiation Therapy|REACT Study: Mark Hornbrook, Jenny Staub
+92.30|PX-ICD9|Stereotactic radiosurgery, not otherwise specified; |REACT Study: Mark Hornbrook, Jenny Staub
+92.20|PX-ICD9|Infusion of liquid brachytherapy radiation; I-125 radioisotope, Intracavitary brachytherapy, Includes: removal of radioisotope|REACT Study: Mark Hornbrook, Jenny Staub
+92.41|PX-ICD9|Intra-operative electron radiation therapy|REACT Study: Mark Hornbrook, Jenny Staub
+92.39|PX-ICD9|Stereotactic radiosurgery, not elsewhere classified|REACT Study: Mark Hornbrook, Jenny Staub
+92.33|PX-ICD9|Particulate radiosurgery; Particle beam radiation (cyclotron); proton accelerator|REACT Study: Mark Hornbrook, Jenny Staub
+92.32|PX-ICD9|Multi-source photon radiosurgery; Colbalt 60 radiation; Gamma irradiation|REACT Study: Mark Hornbrook, Jenny Staub
+92.31|PX-ICD9|Single source photon radiosurgery; High energy x-rays, Linear accelerator (LINAC)|REACT Study: Mark Hornbrook, Jenny Staub
+92.29|PX-ICD9|Other radiotherapeutic  procedure|REACT Study: Mark Hornbrook, Jenny Staub
+92.28|PX-ICD9|Injection or instillation of radioisotopes|REACT Study: Mark Hornbrook, Jenny Staub
+92.27|PX-ICD9|Implantation or insertion of radioactive elements; intravascular brachytherapy|REACT Study: Mark Hornbrook, Jenny Staub
+92.26|PX-ICD9|Teleradiotherapy of other particulate raditaion; Neutrons, Protons NOS|REACT Study: Mark Hornbrook, Jenny Staub
+92.25|PX-ICD9|Teleradiotherapy using electrons; Beta particles|REACT Study: Mark Hornbrook, Jenny Staub
+92.24|PX-ICD9|Teleradiotherapy using photons; Megavoltage NOS, Supervoltage NOS, Betatron, linear accelerator|REACT Study: Mark Hornbrook, Jenny Staub
+92.23|PX-ICD9|Radioisotopic teleradiotherapy; Teleradiotherapy using: cobalt-60, iodine-125, radioactive cesium|REACT Study: Mark Hornbrook, Jenny Staub
+92.22|PX-ICD9|Orthovoltage radiation; Deep radiation [200-300 KVP]|REACT Study: Mark Hornbrook, Jenny Staub
+92.21|PX-ICD9|Superficial radiation; contact radiation [up to 150 KVP]|REACT Study: Mark Hornbrook, Jenny Staub
+S8049|PX-HCPCS|INTRAOPERATIVE RADIATION THERAPY (SINGLE ADMINISTRATION)|REACT Study: Mark Hornbrook, Jenny Staub
+S2270|PX-HCPCS|INSERTION OF VAGINAL CYLINDER FOR APPLICATION OF RADIATION SOURCE OR CLINICAL BRACHYTHERAPY (REPORT SEPARATELY IN ADDITION TO RADIATION SOURCE DELIVERY)|REACT Study: Mark Hornbrook, Jenny Staub
+Q3001|PX-HCPCS|Radioelements for brachytherapy, any type, each|REACT Study: Mark Hornbrook, Jenny Staub
+G0340|PX-HCPCS|IMAGE-GUIDED ROBOTIC LINEAR ACCELERATOR-BASED STEROTACTIC RADIOSURGERY, DELIVERY INCLUDING COLLIMATOR CHANGES AND CUSTOM PLUGGING, FRACTIONATED TREATMENT, ALL LESIONS, PER SESSION, SECOND THROUGH FIFT|REACT Study: Mark Hornbrook, Jenny Staub
+G0339|PX-HCPCS|IMAGE-GUIDED ROBOTIC LINEAR ACCELERATOR-BASED STEREOTACTIC RADIOSURGERY, COMPLETE COURSE OF THERAPY IN ONE SESSION OR FIRST SESSION OF FRACTIONATED TREATMENT|REACT Study: Mark Hornbrook, Jenny Staub
+G0338|PX-HCPCS|Linear accelerator based stereotactic radiosurgery, plan|REACT Study: Mark Hornbrook, Jenny Staub
+G0251|PX-HCPCS|Linear accelerator based stereotactic radiosurgery, delivery|REACT Study: Mark Hornbrook, Jenny Staub
+G0243|PX-HCPCS|Multi-source photon stereotactic radiosurgery delivery|REACT Study: Mark Hornbrook, Jenny Staub
+G0242|PX-HCPCS|Multi-source photon stereotactic radiosurgery plan|REACT Study: Mark Hornbrook, Jenny Staub
+G0174|PX-HCPCS|IMRT delivery|REACT Study: Mark Hornbrook, Jenny Staub
+G0173|PX-HCPCS|Linear accelerator based stereotactic radiosurgery, complete course of therapy in one session|REACT Study: Mark Hornbrook, Jenny Staub
+C9728|PX-HCPCS|PLACEMENT OF INTERSTITIAL DEVICE(S) FOR RADIATION THERAPY/SURGERY GUIDANCE (EG, FIDUCIAL MARKERS, DOSIMETER), FOR OTHER THAN THE FOLLOWING SITES (ANY APPROACH): |REACT Study: Mark Hornbrook, Jenny Staub
+C9726|PX-HCPCS|PLACEMENT AND REMOVAL (IF PERFORMED) OF APPLICATOR INTO BREAST FOR RADIATION THERAPY|REACT Study: Mark Hornbrook, Jenny Staub
+C2699|PX-HCPCS|Brachytherapy source, non-stranded, not otherwise specified, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2698|PX-HCPCS|Brachytherapy source, stranded, not otherwise specified, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2643|PX-HCPCS|Brachytherapy source, non-stranded, cesium-131, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2642|PX-HCPCS|Brachytherapy source, stranded, cesium-131, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2641|PX-HCPCS|Brachytherapy source, non-stranded, palladium-103, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2640|PX-HCPCS|Brachytherapy source, stranded, palladium-103, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2639|PX-HCPCS|Brachytherapy source, non-stranded, iodine-125, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2638|PX-HCPCS|Brachytherapy source, stranded, iodine-125, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2637|PX-HCPCS|Brachytherapy source, non-stranded, ytterbium-169, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2636|PX-HCPCS|Brachytherapy linear source, non-stranded, paladium-103, per 1 mm|REACT Study: Mark Hornbrook, Jenny Staub
+C2635|PX-HCPCS|Brachytherapy source, non-stranded, high activity, paladium-103, greater th...|REACT Study: Mark Hornbrook, Jenny Staub
+C2634|PX-HCPCS|Brachytherapy source, non-stranded, high activity, iodine-125, greater than...|REACT Study: Mark Hornbrook, Jenny Staub
+C2633|PX-HCPCS|Brachytherapy source, cesium-131, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C2616|PX-HCPCS|Brachytherapy source, non-stranded, yttrium-90, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C1728|PX-HCPCS|Catheter, brachytherapy seed administration|REACT Study: Mark Hornbrook, Jenny Staub
+C1720|PX-HCPCS|Brachytherapy source, palladium 103, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C1719|PX-HCPCS|Brachytherapy source, non-stranded, non-high dose rate iridium-192, per sou...|REACT Study: Mark Hornbrook, Jenny Staub
+C1718|PX-HCPCS|Brachytherapy source, iodine 125, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C1717|PX-HCPCS|Brachytherapy source, non-stranded, high dose rate iridium-192, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C1716|PX-HCPCS|Brachytherapy source, non-stranded, gold-198, per source|REACT Study: Mark Hornbrook, Jenny Staub
+C1715|PX-HCPCS|Brachytherapy needle|REACT Study: Mark Hornbrook, Jenny Staub
+A4650|PX-HCPCS|IMPLANT RADIATION DOSIMETER|REACT Study: Mark Hornbrook, Jenny Staub
+79900|PX-CPT4|Radiopharmaceuticals for Therapeutic Nuclear Medicine|REACT Study: Mark Hornbrook, Jenny Staub for Therapeutic Nuclear Medicine|REACT Study: Mark Hornbrook, Jenny Staub
+77787|PX-CPT4|HDR BRACHYTX OVER 12 CHA|REACT Study: Mark Hornbrook, Jenny Staub
+77786|PX-CPT4|HDR BRACHYTX, 2-12 CHANN|REACT Study: Mark Hornbrook, Jenny Staub
+77785|PX-CPT4|HDR BRACHYTX, 1 CHANNEL|REACT Study: Mark Hornbrook, Jenny Staub
+77620|PX-CPT4|Hyperthermia generated by intracavitary probe(s)|REACT Study: Mark Hornbrook, Jenny Staub
+77469|PX-CPT4|RADIOLOGY|REACT Study: Mark Hornbrook, Jenny Staub
+77465|PX-CPT4|RADIATION THERAPY|REACT Study: Mark Hornbrook, Jenny Staub
+77460|PX-CPT4|RADIOLOGY SERVICE|REACT Study: Mark Hornbrook, Jenny Staub
+77447|PX-CPT4|RADIATION THERAPY COMPLEX|REACT Study: Mark Hornbrook, Jenny Staub
+77446|PX-CPT4|RADIATION THERAPY SIMPLE|REACT Study: Mark Hornbrook, Jenny Staub
+77433|PX-CPT4|RADIATION THERAPY COMPLEX|REACT Study: Mark Hornbrook, Jenny Staub
+77400|PX-CPT4|RADIATION THERAPY SIMPLE|REACT Study: Mark Hornbrook, Jenny Staub
+77381|PX-CPT4|PROTON BEAM TREATMENT|REACT Study: Mark Hornbrook, Jenny Staub
+77380|PX-CPT4|PROTON BEAM DELIVERY|REACT Study: Mark Hornbrook, Jenny Staub
+77370|PX-CPT4|Computed tomography guidance for placement of radiation therapy fields|REACT Study: Mark Hornbrook, Jenny Staub
+58346|PX-CPT4|Insertion of Heyman capsule for clinical brachytherapy|REACT Study: Mark Hornbrook, Jenny Staub
+57156|PX-CPT4|Insertion of vaginal radiation afterloading apparatus for clinical brachytherapy|REACT Study: Mark Hornbrook, Jenny Staub
+57155|PX-CPT4|Insertion of uterine tandem/vaginal ovoids for clinical brachytherapy|REACT Study: Mark Hornbrook, Jenny Staub
+55859|PX-CPT4|Transperineal placement of needles or catheters into prostate for interstitial radioelement application, with or without cystoscopy |REACT Study: Mark Hornbrook, Jenny Staub
+52250|PX-CPT4|Cystourethroscopy with insertion of radioactive substance|REACT Study: Mark Hornbrook, Jenny Staub
+51020|PX-CPT4|Cystotomy or cystostomy with fulguration and/or insertion of radioactive material|REACT Study: Mark Hornbrook, Jenny Staub
+49412|PX-CPT4|Placement of interstitial devices for radiation therapy guidance, open|REACT Study: Mark Hornbrook, Jenny Staub
+41019|PX-CPT4|Placement of needles, catheters, or other devices into hear/neck for subsequent interstitial radioelement application|REACT Study: Mark Hornbrook, Jenny Staub
+31463|PX-CPT4|Bronchoscopy with placement of catheters for intracavitary radioelement application|REACT Study: Mark Hornbrook, Jenny Staub
+20555|PX-CPT4|Placement of needles or catheters into muscle/soft tissue for subsequent interstitial radioelement application|REACT Study: Mark Hornbrook, Jenny Staub
+19297|PX-CPT4|Placement of radiotherapy afterloading expandable catheter (single or multichannel) into the breast for interstitial radioelement application concurrent with partial mastectomy,|REACT Study: Mark Hornbrook, Jenny Staub
+19296|PX-CPT4|Placement of radiotherapy afterloading expandable catheter (single or multichannel) into the breast for interstitial radioelement application following partial mastectomy,|REACT Study: Mark Hornbrook, Jenny Staub
+0197T|PX-CPT4|Intra-fraction localization and tracking of target or patient motion during delivery of radiation therapy (eg, 3D positional tracking, gating, 3D surface tracking), each fraction of treatment|REACT Study: Mark Hornbrook, Jenny Staub
+0182T|PX-CPT4|High dose rate electronic brachytherapy, per fraction|REACT Study: Mark Hornbrook, Jenny Staub
+0083T|PX-CPT4|Stereotactic body radiation therapy, treatment management, per day|REACT Study: Mark Hornbrook, Jenny Staub
+0082T|PX-CPT4|Stereotactic body radiation therapy, treatment delivery, one or more treatment areas, per day|REACT Study: Mark Hornbrook, Jenny Staub
+0073T|PX-CPT4|Compensator-based beam modulation treatment delivery of inverse planned treatment using 3 or more high resolution (milled or cast) compensator convergent beam modulated fields|REACT Study: Mark Hornbrook, Jenny Staub
+79999|PX-CPT4|Radiopharmaceutical therapy, unlisted|REACT Study: Mark Hornbrook, Jenny Staub
+79445|PX-CPT4|Radiopharmaceutical therapy, intra-arterial|REACT Study: Mark Hornbrook, Jenny Staub
+79440|PX-CPT4|Radiopharmaceutical therapy, intra-articular|REACT Study: Mark Hornbrook, Jenny Staub
+79403|PX-CPT4|Radiopharmaceutical therapy, radiolabeled monoclonal, intravenous|REACT Study: Mark Hornbrook, Jenny Staub
+79300|PX-CPT4|Radiopharmaceutical therapy, interstitial colloid|REACT Study: Mark Hornbrook, Jenny Staub
+79200|PX-CPT4|Radiopharmaceutical therapy, intracavitary|REACT Study: Mark Hornbrook, Jenny Staub
+79101|PX-CPT4|Radiopharmaceutical therapy, intravenous|REACT Study: Mark Hornbrook, Jenny Staub
+79005|PX-CPT4|Radiopharmaceutical therapy, oral|REACT Study: Mark Hornbrook, Jenny Staub
+77799|PX-CPT4|Unlisted procedure, clinical brachytherapy|REACT Study: Mark Hornbrook, Jenny Staub
+77790|PX-CPT4|Supervision, handling, loading of radiation source|REACT Study: Mark Hornbrook, Jenny Staub
+77789|PX-CPT4|Surface application of radiation source|REACT Study: Mark Hornbrook, Jenny Staub
+77784|PX-CPT4|Remote afterloading high intensity brachytherapy; over 12 source positions or catheters|REACT Study: Mark Hornbrook, Jenny Staub
+77783|PX-CPT4|Remote afterloading high intensity brachytherapy; 9-12 source positions or catheters|REACT Study: Mark Hornbrook, Jenny Staub
+77782|PX-CPT4|Remote afterloading high intensity brachytherapy; 5-8 source positions or catheters|REACT Study: Mark Hornbrook, Jenny Staub
+77781|PX-CPT4|Remote afterloading high intensity brachytherapy; 1-4 source positions or catheters|REACT Study: Mark Hornbrook, Jenny Staub
+77778|PX-CPT4|Interstitial radiation source application, complex|REACT Study: Mark Hornbrook, Jenny Staub
+77777|PX-CPT4|Interstitial radiation source application, intermediate|REACT Study: Mark Hornbrook, Jenny Staub
+77776|PX-CPT4|Interstitial radiation source application, simple|REACT Study: Mark Hornbrook, Jenny Staub
+77763|PX-CPT4|Intracavitary radiation source application; complex|REACT Study: Mark Hornbrook, Jenny Staub
+77762|PX-CPT4|Intracavitary radiation source application; intermediate|REACT Study: Mark Hornbrook, Jenny Staub
+77761|PX-CPT4|Intracavitary radiation source application; simple|REACT Study: Mark Hornbrook, Jenny Staub
+77750|PX-CPT4|Infusion or instillation of radioelement solution (includes 2 months follow-up care|REACT Study: Mark Hornbrook, Jenny Staub
+77615|PX-CPT4|Hyperthermia generated by interstitial probe(s); more than 5 interstitial applicators|REACT Study: Mark Hornbrook, Jenny Staub
+77610|PX-CPT4|Hyperthermia generated by interstitial probe(s); 5 or fewer interstitial applicators|REACT Study: Mark Hornbrook, Jenny Staub
+77605|PX-CPT4|Hyperthermia, externally generated; deep (ie. heating to depths greater than 4 cm)|REACT Study: Mark Hornbrook, Jenny Staub
+77600|PX-CPT4|Hyperthermia, externally generated; superficial (ie. Heating to a depth of 4 cm or less)|REACT Study: Mark Hornbrook, Jenny Staub
+77525|PX-CPT4|Proton treatment delivery; complex|REACT Study: Mark Hornbrook, Jenny Staub
+77523|PX-CPT4|Proton treatment delivery; intermediate|REACT Study: Mark Hornbrook, Jenny Staub
+77522|PX-CPT4|Proton treatment delivery; simple, with compensation|REACT Study: Mark Hornbrook, Jenny Staub
+77520|PX-CPT4|Proton treatment delivery; simple, without compensation|REACT Study: Mark Hornbrook, Jenny Staub
+77499|PX-CPT4|Unlisted procedure, therapeutic radiolgy treatment management|REACT Study: Mark Hornbrook, Jenny Staub
+77470|PX-CPT4|Special treatment procedure (eg. Total body irradiation, hemibody radiation , ,per oral, endocavitary or intraoperative cone irradiation|REACT Study: Mark Hornbrook, Jenny Staub
+77435|PX-CPT4|Stereotactic body radiation therapy, treatment management, per treatment course, to 1 or more lesions, including image guidance, entire course not to exceed 5 fractions|REACT Study: Mark Hornbrook, Jenny Staub
+77432|PX-CPT4|Radiation treatment management: Stereotactic radiation treatment management of cerebral lesion(s) (complete course of treatment consisting of one session)|REACT Study: Mark Hornbrook, Jenny Staub
+77431|PX-CPT4|Radiation therapy management with complete course of therapy consisting of one or two fractions only|REACT Study: Mark Hornbrook, Jenny Staub
+77430|PX-CPT4|Weekly radiation therapy management|REACT Study: Mark Hornbrook, Jenny Staub
+77427|PX-CPT4|Radiation treatment management five treatments|REACT Study: Mark Hornbrook, Jenny Staub
+77425|PX-CPT4|Weekly radiation therapy management|REACT Study: Mark Hornbrook, Jenny Staub
+77423|PX-CPT4|1 or more isocenter(s) with coplanar or non-coplanar geometry with blocking and/or wedge, and/or compensator(s)|REACT Study: Mark Hornbrook, Jenny Staub
+77422|PX-CPT4|High energy neutron radiation treatment delivery; single treatment area using a single port or parallel-opposed ports with no blocks or simple blocking|REACT Study: Mark Hornbrook, Jenny Staub
+77421|PX-CPT4|Stereoscopic x-ray guidance|REACT Study: Mark Hornbrook, Jenny Staub
+77420|PX-CPT4|Weekly radiation therapy management|REACT Study: Mark Hornbrook, Jenny Staub
+77419|PX-CPT4|Weekly radiation therapy management|REACT Study: Mark Hornbrook, Jenny Staub
+77418|PX-CPT4|Intensity Modulated Treatment Delivery, Single/Multiple Fields/Arcs, Spatially and Temporally Modulated Beams, Per Sess|REACT Study: Mark Hornbrook, Jenny Staub
+77417|PX-CPT4|Therapeutic Rad. Port Film(s)|REACT Study: Mark Hornbrook, Jenny Staub
+77416|PX-CPT4|20 MeV or greater|REACT Study: Mark Hornbrook, Jenny Staub
+77415|PX-CPT4|Therap X-Ray Tx Port Film Int/Verif|REACT Study: Mark Hornbrook, Jenny Staub
+77414|PX-CPT4|11-19 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77413|PX-CPT4|6-10 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77412|PX-CPT4|Radiation treatment delivery, three or more separate treatment areas, custom blocking, tangential ports, wedges, rotational beam, compensators, special particle beam (eg, electron or neutrons); up to 5 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77411|PX-CPT4|20 MeV or greater|REACT Study: Mark Hornbrook, Jenny Staub
+77410|PX-CPT4|Daily megavoltage treatment management; complex|REACT Study: Mark Hornbrook, Jenny Staub
+77409|PX-CPT4|11-19 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77408|PX-CPT4|6-10 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77407|PX-CPT4|Radiation treatment delivery, two separate treatment areas, three or more ports on a single treatment area, use of multiple blocks; up to 5 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77406|PX-CPT4|20 MeV or greater|REACT Study: Mark Hornbrook, Jenny Staub
+77405|PX-CPT4|Daily megavoltage treatment management; simple|REACT Study: Mark Hornbrook, Jenny Staub
+77404|PX-CPT4|Radiation treatment delivery, single treatment area, single port or parallel opposed ports, simple blocks or no blocks; 11-19 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77403|PX-CPT4|Radiation treatment delivery, single treatment area, single port or parallel opposed ports, simple blocks or no blocks; 6-10 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77402|PX-CPT4|Radiation treatment delivery, single treatment area, single port or parallel opposed ports, simple blocks or no blocks; up to 5 MeV|REACT Study: Mark Hornbrook, Jenny Staub
+77401|PX-CPT4|Radiation treatment delivery, superficial and/or ortho voltage|REACT Study: Mark Hornbrook, Jenny Staub
+77399|PX-CPT4|Unlisted procedure, medical radiation physics, dosimetry and treatment devices, special services|REACT Study: Mark Hornbrook, Jenny Staub
+77373|PX-CPT4|Stereotactic body radiation therapy, treatment delivery, per fraction to 1 or more lesions, including image guidance, entire course not to exceed 5 fraction|REACT Study: Mark Hornbrook, Jenny Staub
+77372|PX-CPT4|Radiation treatment delivery, stereotactic radiosurgery (SRS), complete course of treatment of cerebral lesion(s) consisting of 1 session; linear accelerator based|REACT Study: Mark Hornbrook, Jenny Staub
+77371|PX-CPT4|Radiation treatment delivery, stereotactic radiosurgery (SRS), complete course of treatment of cerebral lesion(s) consisting of 1 session; multi-source Cobalt 60 based|REACT Study: Mark Hornbrook, Jenny Staub
+77370|PX-CPT4|Special medical radiation physics consultation|REACT Study: Mark Hornbrook, Jenny Staub
+77338|PX-CPT4|Multi-leaf collimator (MLC) device(s) for intensity modulated radiation therapy (IMRT), design and construction per IMRT plan |REACT Study: Mark Hornbrook, Jenny Staub
+77336|PX-CPT4|Continuing medical physics consultation… per week of therapy|REACT Study: Mark Hornbrook, Jenny Staub
+77334|PX-CPT4|Treatment devices, complex|REACT Study: Mark Hornbrook, Jenny Staub
+77333|PX-CPT4|Treatment devies, intermediate|REACT Study: Mark Hornbrook, Jenny Staub
+77332|PX-CPT4|Treatmment devices, simple|REACT Study: Mark Hornbrook, Jenny Staub
+77331|PX-CPT4|Special dosimetry|REACT Study: Mark Hornbrook, Jenny Staub
+77328|PX-CPT4|Brachytherapy isodose plan, complex|REACT Study: Mark Hornbrook, Jenny Staub
+77327|PX-CPT4|Brachytherapy isodose plan, intermediate|REACT Study: Mark Hornbrook, Jenny Staub
+77326|PX-CPT4|Brachytherapy isodose plan, simple|REACT Study: Mark Hornbrook, Jenny Staub
+77321|PX-CPT4|Special teletherapy port plan, particles, hemibody, total body.|REACT Study: Mark Hornbrook, Jenny Staub
+77315|PX-CPT4|complex (mantle or inverted Y, tangential ports, the use of wedges, compensators, complex blocking, rotational beam or special beam consideration)|REACT Study: Mark Hornbrook, Jenny Staub
+77310|PX-CPT4|intermediate (three or more treatment pots directed to a single area of interest)|REACT Study: Mark Hornbrook, Jenny Staub
+77305|PX-CPT4|Teletherapy, isodose plan (whether hand or computer calculated); simple (one or tow parallel opposed unmodified ports directed to a single area of tinterest)|REACT Study: Mark Hornbrook, Jenny Staub
+77301|PX-CPT4|Intensity modulated radiotherapy plan, including dose-volume histograms for target and critical struture partial tolerance specifications: multi-source photon or linear accelerator based stereotactic radiosurgery plan optimization for highly conformal distributions, plan positional accuracey and dose verification, all lesions treated, per course of treatment|REACT Study: Mark Hornbrook, Jenny Staub
+77300|PX-CPT4|Basic radiation dosimetry calculation, central axis depth dose calculation, TDF, NSD, gap calcuation, off axis factor, tissue inhomogenieity factors, calculation of non-ionizing radiation surface and depth dose, as required during course of treatment, only when prescribed by the treating physician|REACT Study: Mark Hornbrook, Jenny Staub
+77299|PX-CPT4|Unlisted procedure, therapeutic radiology clinical treatment planning|REACT Study: Mark Hornbrook, Jenny Staub
+77295|PX-CPT4|Therapeutic radiology simulation-aided field setting; three-dimensional|REACT Study: Mark Hornbrook, Jenny Staub
+77290|PX-CPT4|Therapeutic radiology simulation-aided field setting; complex|REACT Study: Mark Hornbrook, Jenny Staub
+77285|PX-CPT4|Therapeutic radiology simulation-aided field setting; intermediate|REACT Study: Mark Hornbrook, Jenny Staub
+77280|PX-CPT4|Therapeutic radiology simulation-aided field setting; simple|REACT Study: Mark Hornbrook, Jenny Staub
+77263|PX-CPT4|Therapeutic radiology treatment planning; complex|REACT Study: Mark Hornbrook, Jenny Staub
+77262|PX-CPT4|Therapeutic radiology treatment planning; intermediate|REACT Study: Mark Hornbrook, Jenny Staub
+77261|PX-CPT4|Therapeutic radiology treatment planning; simple|REACT Study: Mark Hornbrook, Jenny Staub
+77014|PX-CPT4|Computed tomography guidance for placement of radiation therapy fields|REACT Study: Mark Hornbrook, Jenny Staub
+76965|PX-CPT4|Ultrasonic guidance for interstitial radioelement application|REACT Study: Mark Hornbrook, Jenny Staub
+76950|PX-CPT4|Ultrasonic guidance for placement of radiation therapy fields|REACT Study: Mark Hornbrook, Jenny Staub
+73670|PX-CPT4|Computerized tomography guidance for placement of radiation therapy fields|REACT Study: Mark Hornbrook, Jenny Staub
+63621|PX-CPT4|STEREOTACTIC RADIOSURGERY EA ADDL SPINAL LESION|REACT Study: Mark Hornbrook, Jenny Staub
+63620|PX-CPT4|STEREOTACTIC RADIOSURGERY 1 SPINAL LESION|REACT Study: Mark Hornbrook, Jenny Staub
+61800|PX-CPT4|Application of stereotactic headframe for stereotactic radiosurgery (List separately in addition to code for primary procedure)|REACT Study: Mark Hornbrook, Jenny Staub
+61799|PX-CPT4|Stereotactic radiosurgery (particle beam, gamma ray, or linear accelerator); each additional cranial lesion, complex (List separately in addition to code for primary procedure)|REACT Study: Mark Hornbrook, Jenny Staub
+61798|PX-CPT4|Stereotactic radiosurgery (particle beam, gamma ray, or linear accelerator); 1 complex cranial lesion|REACT Study: Mark Hornbrook, Jenny Staub
+61797|PX-CPT4|Stereotactic radiosurgery (particle beam, gamma ray, or linear accelerator); each additional cranial lesion, simple (List separately in addition to code for primary procedure)|REACT Study: Mark Hornbrook, Jenny Staub
+61796|PX-CPT4|Stereotactic radiosurgery (particle beam, gamma ray, or linear accelerator); 1 simple cranial lesion|REACT Study: Mark Hornbrook, Jenny Staub
+61795|PX-CPT4|Stereotactic computer-assisted volumetric (navigational) procedure, intracranial, extracranial, or spinal (List separately in addition to code for primary procedure)|REACT Study: Mark Hornbrook, Jenny Staub
+61793|PX-CPT4|Neurosurgery: Stereotactic radiosurgery (particle beam, gamma ray or linear accelerator), one or more sessions|REACT Study: Mark Hornbrook, Jenny Staub
+61770|PX-CPT4|Stereotactic localization, including burr hole(s), with insertion of catheter(s) or probe(s) for placement of radiation source |REACT Study: Mark Hornbrook, Jenny Staub
+55920|PX-CPT4|Placement of needles or catheters into pelvic organs for subsequent interstitial radioelement application|REACT Study: Mark Hornbrook, Jenny Staub
+55876|PX-CPT4|Placement of interstitial device(s) for radiation therapy guidance (eg, fiducial markers, dosimeter), percutaneous, prostate, single or multiple |REACT Study: Mark Hornbrook, Jenny Staub
+55875|PX-CPT4|Transperineal placement of needles or catheters into prostate for subsequent interstitial radioelement application|REACT Study: Mark Hornbrook, Jenny Staub
+55860|PX-CPT4|Exposure of prostate, any approach, for insertion of radioactive substance|REACT Study: Mark Hornbrook, Jenny Staub
+49411|PX-CPT4|Placement of interstitial device(s) for radiation therapy guidance (eg, fiducial markers, dosimeter), percutaneous, intra-abdominal, intra-pelvic (except prostate), and/or retroperitoneum, single or multiple|REACT Study: Mark Hornbrook, Jenny Staub
+32553|PX-CPT4|Placement of interstitial device(s) for radiation therapy guidance (eg, fiducial markers, dosimeter), percutaneous, intrathoracic, single or multiple|REACT Study: Mark Hornbrook, Jenny Staub
+19298|PX-CPT4|Placement of radiotherapy afterloading brachytherapy catheter (single or multichannel) into the breast for interstitial radioelement application following partial mastectomy,|REACT Study: Mark Hornbrook, Jenny Staub
