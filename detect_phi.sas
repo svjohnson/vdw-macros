@@ -15,6 +15,7 @@
 *********************************************/
 
 /*
+
   Things to check for:
     Var names:
       MRN
@@ -43,14 +44,19 @@
 
       Can we do some styling depending on whether a given dset is warning-worthy, to make particular bits of output jump out?
 
+  To-do:
+    date checks
+      sensitive age is 89, but make that a defaulted parameter
+    banner with warning
+
 */
 
-%macro check_dataset(dset =, obs_lim = max) ;
+%macro check_dataset(dset =, obs_lim = max, eldest_age = 89) ;
   %macro check_varname(regx, msg) ;
     create table possible_bad_vars as
     select name, label
     from these_vars
-    where prxmatch("/(&regx)/i", name)
+    where prxmatch(compress("/(&regx)/i"), name)
     ;
 
     %if &sqlobs > 0 %then %do ;
@@ -75,29 +81,82 @@
     %if &sqlobs > 0 %then %do ;
       %put Checking these vars for possible MRN contents: &mrn_array ;
       data __gnu ;
-        retain mrn_regex_handle ;
+        retain
+          mrn_regex_handle
+          badcount
+        ;
         set &dset (obs = &obs_lim keep = &mrn_array) ;
         if _n_ = 1 then do ;
           mrn_regex_handle = prxparse("/&mrn_regex/") ;
+          badcount = 0 ;
         end ;
         array p &mrn_array ;
         do i = 1 to dim(p) ;
           if prxmatch(mrn_regex_handle, p{i}) then do ;
             badvar = vname(p{i}) ;
             badvalue = p{i} ;
+            badcount = _n_ ;
             output ;
           end ;
-          keep badvar badvalue ;
+          keep badvar badvalue badcount ;
         end ;
       run ;
-      proc sql ;
+      proc sql noprint ;
+        select compress(put(max(badcount), best.))
+        into :badcount
+        from __gnu
+        ;
         insert into phi_warnings(dset, variable, warning)
-        select distinct "&dset", badvar, "Contents match the pattern given for an MRN value."
+        select distinct "&dset", badvar, "Could this var hold MRN values?  Contents of &badcount records match the pattern given for MRN values.  MRNs should never move across sites."
         from __gnu ;
         drop table __gnu ;
       quit ;
     %end ;
   %mend check_vars_for_mrn ;
+
+  %macro check_vars_for_oldsters(eldest_age = 89, obs_lim = max) ;
+    %local dtfmts ;
+    %let dtfmts = 'B8601DA','B8601DN','B8601DT','B8601DZ','B8601LZ','B8601TM','B8601TZ','DATE','DATEAMPM','DATETIME','DAY','DDMMYY',
+                  'DDMMYYB','DDMMYYC','DDMMYYD','DDMMYYN','DDMMYYP','DDMMYYS','DOWNAME','DTDATE','DTMONYY','DTWKDATX','DTYEAR',
+                  'DTYYQC','E8601DA','E8601DN','E8601DT','E8601DZ','E8601LZ','E8601TM','E8601TZ','HHMM','HOUR','JULDAY','JULIAN',
+                  'MMDDYY','MMDDYYB','MMDDYYC','MMDDYYD','MMDDYYN','MMDDYYP','MMDDYYS','MMSS','MMYY','MMYY','MONNAME','MONTH','MONYY',
+                  'PDJULG','PDJULI','QTR','QTRR','WEEKDATE','WEEKDATX','WEEKDAY','WEEKU','WEEKV','WEEKW','WORDDATE','WORDDATX',
+                  'YEAR','YYMM','YYMMC','YYMMD','YYMMN','YYMMP','YYMMS','YYMMDD','YYMMDDB','YYMMDDC','YYMMDDD','YYMMDDN','YYMMDDP',
+                  'YYMMDDS','YYMON','YYQ','YYQC','YYQD','YYQN','YYQP','YYQS','YYQR','YYQRC','YYQRD','YYQRN','YYQRP','YYQRS' ;
+
+    %local num ;
+    %let num = 1 ;
+
+    proc sql noprint ;
+      select name
+      into :dat_array separated by ' '
+      from these_vars
+      where type = &num and format in (&dtfmts)
+      ;
+    quit ;
+    %if &sqlobs > 0 %then %do ;
+      %put Checking these vars for possible DOB contents: &dat_array ;
+      data __gnu ;
+        set &dset (obs = &obs_lim keep = &dat_array) ;
+        array d &dat_array ;
+        do i = 1 to dim(d) ;
+          if n(d{i}) then maybe_age = %calcage(bdtvar = d{i}, refdate = "&sysdate9."d) ;
+          if maybe_age ge &eldest_age then do ;
+            badvar = vname(d{i}) ;
+            badvalue = d{i} ;
+            output ;
+          end ;
+          keep badvar badvalue maybe_age ;
+        end ;
+      run ;
+      proc sql outobs = 30 nowarn ;
+        insert into phi_warnings(dset, variable, warning)
+        select distinct "&dset", badvar, "If this is a birth date, at least one person is " || compress(put(maybe_age, best.)) || " years old, which means this record is PHI."
+        from __gnu ;
+        drop table __gnu ;
+      quit ;
+    %end ;
+  %mend check_vars_for_oldsters ;
 
   proc contents noprint data = &dset out = these_vars ;
   run ;
@@ -107,16 +166,20 @@
   proc sql noprint ;
     create table phi_warnings (dset char(50), variable char(255), label char(255), warning char(200)) ;
 
-    %check_varname(regx = mrn|hrn                                               , msg = %str(Name suggests this var may be an MRN, which is not supposed to move between VDW sites.)) ;
+    %check_varname(regx = mrn|hrn                                               , msg = %str(Name suggests this var may be an MRN, which should never move across sites.)) ;
     %check_varname(regx = birth_date|BirthDate|DOB|BDate                        , msg = %str(Name suggests this var may be a date of birth.)) ;
     %check_varname(regx = SSN|SocialSecurityNumber|social_security_number|socsec, msg = %str(Name suggests this var may be a social security number.)) ;
 
     %if %symexist(locally_forbidden_varnames) %then %do ;
       %check_varname(regx = &locally_forbidden_varnames, msg = %str(May be on the locally defined list of variables not allowed to be sent to other sites.)) ;
     %end ;
+
+
+
   quit ;
 
   %check_vars_for_mrn(obs_lim = &obs_lim) ;
+  %check_vars_for_oldsters(obs_lim = &obs_lim, eldest_age = &eldest_age) ;
 
   proc sql noprint ;
     select count(*) as num_warns into :num_warns from phi_warnings ;
@@ -126,11 +189,13 @@
     %end ;
     %else %do ;
       reset print ;
-      title1 "WARNINGS for dataset &dset:" ;
-      select * from phi_warnings
+      title3 "WARNINGS for dataset &dset:" ;
+      select variable, warning from phi_warnings
       order by variable, warning
       ;
-      title1 " " ;
+      quit ;
+
+      title3 " " ;
     %end ;
     title1 "Dataset &dset" ;
     proc contents data = &dset varnum ;
@@ -147,7 +212,43 @@
 
 %mend check_dataset ;
 
-%macro detect_phi(transfer_lib, obs_lim = max) ;
+%macro detect_phi(transfer_lib, obs_lim = max, eldest_age = 89) ;
+
+   %put ;
+   %put ;
+   %put ============================================================== ;
+   %put ;
+   %put Macro detect_phi: ;
+   %put ;
+   %put Checking all datasets found in %sysfunc(pathname(&transfer_lib)) for the following signs of PHI: ;
+   %put   - Variable names signifying sensitive items like 'MRN', 'birth_date', 'SSN' and so forth. ;
+   %put   - Variable names on the list defined in the standard macro variable locally_forbidden_varnames (here those names are: &locally_forbidden_varnames). ;
+   %put   - Contents of CHARACTER variables that match the pattern given in the standard macro variable mrn_regex (here that var is &mrn_regex) ;
+   %put     Please note that numeric variables ARE NOT CHECKED FOR MRN-LIKE CONTENT. ;
+   %put   - The contents of date variables (as divined by their formats) for values that, if they were DOBs, would indicate a person older than &eldest_age years. ;
+   %put ;
+   %put THIS IS BETA SOFTWARE-PLEASE SCRUTINIZE THE RESULTS AND REPORT PROBLEMS TO pardee.r@ghc.org. ;
+   %put ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put THIS MACRO IS NOT A SUBSTITUTE FOR HUMAN INSPECTION AND THOUGHT--PLEASE CAREFULLY INSPECT ALL VARIABLES--WHETHER OR NOT THEY TRIP A WARNING--TO MAKE SURE THE DATA COMPORTS WITH YOUR DATA SHARING AGREEMENT!!! ;
+   %put ;
+   %put ;
+   %put ============================================================== ;
+   %put ;
+   %put ;
+
+  title1 "PHI-Detection Report for the datasets in %sysfunc(pathname(&transfer_lib))." ;
+  title2 "please inspect all output carefully to make sure it comports with your data sharing agreement!!!" ;
+
   proc sql noprint ;
     ** describe table dictionary.tables ;
 
