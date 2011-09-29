@@ -119,4 +119,8 @@
   %end ;
 %bail:
 %mend police_counts ;
-
+/*
+libname s '\\ctrhs-sas\SASUser\pardre1\vdw\voc_ute\general_qa\to_send' ;
+options nofmterr ;
+%police_counts(transfer_lib = s) ;
+*/

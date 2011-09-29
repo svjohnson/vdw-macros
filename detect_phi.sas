@@ -52,6 +52,25 @@
 */
 
 %macro check_dataset(dset =, obs_lim = max, eldest_age = 89) ;
+  %local inset_name ;
+  %let inset_name = &dset ;
+
+  %if %lowcase(&obs_lim) = max %then %do ;
+    %** Nothing ;
+  %end ;
+  %else %do ;
+    proc surveyselect
+      data      = &dset
+      out       = __sub_dset
+      method    = srs
+      sampsize  = &obs_lim
+      seed      = 1234567
+      noprint
+    ;
+    run;
+    %let dset = __sub_dset ;
+  %end ;
+
   %macro check_varname(regx, msg) ;
     create table possible_bad_vars as
     select name, label
@@ -61,7 +80,7 @@
 
     %if &sqlobs > 0 %then %do ;
       insert into phi_warnings(dset, variable, label, warning)
-      select "&dset" as dset, name, label, "&msg"
+      select "&inset_name" as dset, name, label, "&msg"
       from possible_bad_vars
       ;
     %end ;
@@ -107,7 +126,7 @@
         from __gnu
         ;
         insert into phi_warnings(dset, variable, warning)
-        select distinct "&dset", badvar, "Could this var hold MRN values?  Contents of &badcount records match the pattern given for MRN values.  MRNs should never move across sites."
+        select distinct "&inset_name", badvar, "Could this var hold MRN values?  Contents of %trim(&badcount) records match the pattern given for MRN values.  MRNs should never move across sites."
         from __gnu ;
         drop table __gnu ;
       quit ;
@@ -131,13 +150,24 @@
       select name
       into :dat_array separated by ' '
       from these_vars
-      where type = &num and format in (&dtfmts)
+      where type = &num and format in (&dtfmts) or lowcase(name) like '%date%'
       ;
+  	  /* added by cb to shorten the process of looking at all dates */
+      %if &sqlobs > 0 %then %do ;
+        select 'min(' || trim(name) || ') as ' || name into :var_list separated by ','
+        from these_vars
+        where type = &num and format in (&dtfmts) or lowcase(name) like '%date%'
+        ;
+        create table __gnu as
+        select &var_list from &dset
+        ;
+	%end
+	/* end cb additions */
     quit ;
     %if &sqlobs > 0 %then %do ;
       %put Checking these vars for possible DOB contents: &dat_array ;
       data __gnu ;
-        set &dset (obs = &obs_lim keep = &dat_array) ;
+        set __gnu (obs = &obs_lim keep = &dat_array) ;
         array d &dat_array ;
         do i = 1 to dim(d) ;
           if n(d{i}) then maybe_age = %calcage(bdtvar = d{i}, refdate = "&sysdate9."d) ;
@@ -151,7 +181,7 @@
       run ;
       proc sql outobs = 30 nowarn ;
         insert into phi_warnings(dset, variable, warning)
-        select distinct "&dset", badvar, "If this is a birth date, at least one person is " || compress(put(maybe_age, best.)) || " years old, which means this record is PHI."
+        select distinct "&inset_name", badvar, "If this is a date, at least one value is " || compress(put(maybe_age, best.)) || " years ago.  If this date applies to a person, the record is probably PHI."
         from __gnu ;
         drop table __gnu ;
       quit ;
@@ -189,7 +219,7 @@
     %end ;
     %else %do ;
       reset print ;
-      title3 "WARNINGS for dataset &dset:" ;
+      title3 "WARNINGS for dataset &inset_name:" ;
       select variable, warning from phi_warnings
       order by variable, warning
       ;
@@ -197,13 +227,14 @@
 
       title3 " " ;
     %end ;
-    title1 "Dataset &dset" ;
+    title1 "Dataset &inset_name" ;
     proc contents data = &dset varnum ;
     run ;
 /*
     proc print data = &dset (obs = 20) ;
     run ;
 */
+    ** TODO: make the print print out recs that trip the value warnings. ;
     proc sql number ;
       select *
       from &dset (obs = 20)
@@ -212,6 +243,7 @@
 
   quit ;
 
+  %RemoveDset(dset = __sub_dset) ;
   %RemoveDset(dset = possible_bad_vars) ;
   %RemoveDset(dset = phi_warnings) ;
   %RemoveDset(dset = these_vars) ;
