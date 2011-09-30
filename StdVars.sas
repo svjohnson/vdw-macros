@@ -43,6 +43,7 @@ options errors = 0 ;
   ** You are also free to define any number of different libnames, if your VDW dsets are stored in different locations. ;
   ** Note also that this is not a "standard" libname--there are no standard libnames.  Please see the above-referenced URL ;
   ** for details. ;
+
   ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
   libname __vdw "\\ctrhs-sas\warehouse\sasdata\crn_vdw" access = readonly ;
 
@@ -51,10 +52,10 @@ options errors = 0 ;
   %let _vdw_demographic         = __vdw.demog                   ;
   %let _vdw_rx                  = __vdw.rx                      ;
   %let _vdw_everndc             = __vdw.everndc                 ;
-  %let _vdw_utilization         = __vdw.utilization_v2          ;
-  %let _vdw_dx                  = __vdw.dx_v2                   ;
-  %let _vdw_px                  = __vdw.px_v2                   ;
-  %let _vdw_provider_specialty  = __vdw.specfile_view           ;
+  %let _vdw_utilization         = __vdw.utilization             ;
+  %let _vdw_dx                  = __vdw.dx                      ;
+  %let _vdw_px                  = __vdw.px                      ;
+  %let _vdw_provider_specialty  = __vdw.specfile                ;
   %let _vdw_vitalsigns          = __vdw.vitalsigns              ;
   %let _vdw_census              = __vdw.census2000              ;
   %let _vdw_lab                 = __vdw.lab_results             ;
@@ -70,7 +71,6 @@ options errors = 0 ;
                      PASS  = "%2hilario36"
                      USER  = "VDWReader" ;
 
-
   /*
     Site code--pls use the codes/abbreviations listed on:
     https://appliedresearch.cancer.gov/crnportal/other-resources/orientation/participating-sites/overview
@@ -80,25 +80,31 @@ options errors = 0 ;
   %let _SiteAbbr = GHC;
   %let _SiteName = Group Health ;
 
+** Many sites/projects have something like blanket IRB approval for generating/sending frequency data, so long
+** as cells with "low" counts are masked. This variable should hold what is considered "low" at your site. ;
+** The most commonly used value is 5. ;
+
+  %let lowest_count = 0 ;
+
+** Variables used by the detect_phi macro. ;
+  %** A regular expression giving the pattern that your MRN values follow. Used to check character vars for possibly holding MRNs. ;
+  %** The pattern given below will match any 10 consecutive uppercase alpha or numeric characters. ;
+  %let mrn_regex = ([A-Z0-9]{10}) ;
+
+  %** OPTIONAL: A pipe-delimited list of variable names that should trigger a warning in the ouput of the macro detect_phi. ;
+  %** Not case-sensitive. ;
+  %** Do not include spaces between the pipes. ;
+  %**let locally_forbidden_varnames = consumno|chsid|ghriid|csr_id|pat_id|csr_num ;
 
 ** Legacy Version 2-compatible file variables. ;
-  %let _vdw_vitalsigns_v2           = __vdw.vitalsigns_view ;  /* REMOVE ON 12-AUG-2011 */
-  %let _vdw_demographic_v2          = __vdw.demog_view ;       /* REMOVE ON 12-AUG-2011 */
-  %let _vdw_lab_v2                  = __vdw.lab_results_view  ;        /* REMOVE ON 17-NOV-2011 */
-  %let _vdw_lab_notes_v2            = __vdw.lab_results_notes_view  ;  /* REMOVE ON 17-NOV-2011 */
-  %let _vdw_enroll_v2               = __vdw.enroll2_v2              ; /* REMOVE ON 10-DEC-2011 */
+  %** let _vdw_vitalsigns_v2           = __vdw.vitalsigns_view ;  /* REMOVE ON 12-AUG-2011 */
+  %** let _vdw_demographic_v2          = __vdw.demog_view ;       /* REMOVE ON 12-AUG-2011 */
+  %let _vdw_lab_v2                 = __vdw.lab_results_view         ; /* REMOVE ON 17-NOV-2011 */
+  %let _vdw_lab_notes_v2           = __vdw.lab_results_notes_view   ; /* REMOVE ON 17-NOV-2011 */
+  %let _vdw_enroll_v2              = __vdw.enroll2_v2               ; /* REMOVE ON 10-DEC-2011 */
+  %let _vdw_utilization_v2         = __vdw.utilization_v2           ; /* REMOVE ON 30-MAR-2012 */
+  %let _vdw_dx_v2                  = __vdw.dx_v2                    ; /* REMOVE ON 30-MAR-2012 */
+  %let _vdw_px_v2                  = __vdw.px_v2                    ; /* REMOVE ON 30-MAR-2012 */
+  %let _vdw_provider_specialty_v2  = __vdw.specfile_view            ; /* REMOVE ON 30-MAR-2012 */
 
-
-** Version 3 Milestone file variables. ;
-
-  ** These vars should point to datasets/views that meet the specs for the indicated milestone. ;
-  ** So e.g., the data named in _vdw_enroll_m1 should have a var called enrollment_basis on it. ;
-  ** These vars are temporary--will only exist during the v2 -> v3 transition.  ;
-  ** See https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/version-3/implementation-plan for details. ;
-
-  %let _vdw_utilization_m2          = __vdw.utilization ;
-  %let _vdw_dx_m2                   = __vdw.dx ;
-  %let _vdw_px_m2                   = __vdw.px ;
-
-  %let _vdw_provider_specialty_m5   = __vdw.specfile ;
-
+** End of file. ;
