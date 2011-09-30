@@ -734,7 +734,6 @@ run;
       by MRNs) hich ocurred between the dates specified in StartDt and EndDt.
    */
 
-
    %if &People = &Outset %then %do ;
     %put PROBLEM: The People dataset must be different from the OutSet dataset.;
     %put PROBLEM: Both parameters are set to "&People". ;
@@ -887,7 +886,8 @@ run;
                &PxLst as PLittle
          on    PBig.PX = PLittle.&PxVarName.  and
                /* will this screw up use of an index? gh */
-               PBig.CodeType = PLittle.&PxCodeTypeVarName.
+               /* not one on both px and px_codetype. */
+               PBig.PX_CodeType = PLittle.&PxCodeTypeVarName.
          where Pbig.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
       quit ;
    %end ;
