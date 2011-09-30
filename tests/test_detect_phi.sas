@@ -38,7 +38,9 @@ options
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
 
 ** Please edit the below statement so it points at a lib w/data you would like to test. ;
-libname trans '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance\for_gh_chartval' ;
+** libname trans '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance\for_gh_chartval' ;
+** C:\deleteme\phi_macro_testing ;
+libname trans 'c:\deleteme\phi_macro_testing' ;
 
 ** Where you want the HTML report spat out.  Please include a trailing path separator. ;
 %let out_folder = c:\Documents and Settings\pardre1\My Documents\vdw\macros\tests\ ;
@@ -46,7 +48,7 @@ libname trans '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance\for_gh_chartval' ;
 ** ====================== END EDIT SECTION ============================ ;
 
 ** detect_phi will ultimately live in stdvars, but for now we have to include them b/c it uses *other* standard macros. ;
-%include vdw_macs ;
+%**include vdw_macs ;
 
 options orientation = landscape ;
 
@@ -57,7 +59,7 @@ ods html path = "&out_folder" (URL=NONE)
 
   options nofmterr ;
 
-  %detect_phi(transfer_lib = trans, obs_lim = 200, eldest_age = 50) ;
+  %detect_phi(transfer_lib = trans, obs_lim = 5, eldest_age = 50) ;
 
 run ;
 
