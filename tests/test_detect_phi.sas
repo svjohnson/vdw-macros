@@ -25,14 +25,15 @@ options
 ;
 
 %** A regular expression giving the pattern that your MRN values follow. Used to check character vars for possibly holding MRNs. ;
-%let mrn_regex = (\d{7,8}|[A-Z0-9]{10}) ;
+%**let mrn_regex = (\d{7,8}|[A-Z0-9]{10}) ;
 
 %** A pipe-delimited list of variable names that should trigger a warning in the ouput of the macro detect_phi. ;
 %** Not case-sensitive. ;
-%let locally_forbidden_varnames = consumno|hrn ;
+%**let locally_forbidden_varnames = consumno|hrn ;
 
 %** Where you put the detect_phi program file. ;
-%include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas" ;
+%**include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas" ;
+%include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
 
 ** Please replace this w/the proper path to your stdvars file. ;
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
