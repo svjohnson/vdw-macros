@@ -32,8 +32,8 @@ options
 %**let locally_forbidden_varnames = consumno|hrn ;
 
 %** Where you put the detect_phi program file. ;
-%**include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas" ;
-%include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
+%include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas" ;
+%**include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
 
 ** Please replace this w/the proper path to your stdvars file. ;
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
