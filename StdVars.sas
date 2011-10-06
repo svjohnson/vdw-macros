@@ -94,7 +94,7 @@ options errors = 0 ;
   %** OPTIONAL: A pipe-delimited list of variable names that should trigger a warning in the ouput of the macro detect_phi. ;
   %** Not case-sensitive. ;
   %** Do not include spaces between the pipes. ;
-  %**let locally_forbidden_varnames = consumno|chsid|ghriid|csr_id|pat_id|csr_num ;
+  %let locally_forbidden_varnames = consumno|chsid|ghriid|pat_mrn_id|pat_id|csr_num ;
 
 ** Legacy Version 2-compatible file variables. ;
   %** let _vdw_vitalsigns_v2           = __vdw.vitalsigns_view ;  /* REMOVE ON 12-AUG-2011 */

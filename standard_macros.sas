@@ -5580,7 +5580,7 @@ options user = work;
       data      = &dset
       out       = __sub_dset
       method    = srs
-      sampsize  = &obs_lim
+      sampsize  = &obs_lim SELECTALL
       seed      = 1234567
       noprint
     ;
