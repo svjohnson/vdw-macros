@@ -63,7 +63,7 @@
       data      = &dset
       out       = __sub_dset
       method    = srs
-      sampsize  = &obs_lim
+      sampsize  = &obs_lim SELECTALL
       seed      = 1234567
       noprint
     ;
@@ -181,7 +181,8 @@
       run ;
       proc sql outobs = 30 nowarn ;
         insert into phi_warnings(dset, variable, warning)
-        select distinct "&inset_name", badvar, "If this is a date, at least one value is " || compress(put(maybe_age, best.)) || " years ago.  If this date applies to a person, the record is probably PHI."
+        select distinct "&inset_name", badvar, "If this is a date, at least one value is " || compress(put(maybe_age, best.)) || " years ago, which is older than &eldest_age..  " ||
+        "If this date applies to a person, the record is probably PHI."
         from __gnu ;
         drop table __gnu ;
       quit ;
@@ -318,7 +319,7 @@
 
   %do i = 1 %to &num_dsets ;
     %put about to check &&d&i ;
-    %check_dataset(dset = &&d&i, obs_lim = &obs_lim) ;
+    %check_dataset(dset = &&d&i, obs_lim = &obs_lim, eldest_age = &eldest_age) ;
   %end ;
 
 %mend detect_phi ;

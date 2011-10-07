@@ -32,7 +32,7 @@ options
 %**let locally_forbidden_varnames = consumno|hrn ;
 
 %** Where you put the detect_phi program file. ;
-%include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas" ;
+%**include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas" ;
 %**include "c:\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
 
 ** Please replace this w/the proper path to your stdvars file. ;
@@ -51,6 +51,8 @@ libname trans 'c:\deleteme\phi_macro_testing' ;
 ** detect_phi will ultimately live in stdvars, but for now we have to include them b/c it uses *other* standard macros. ;
 %**include vdw_macs ;
 
+%include 'c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas' ;
+
 options orientation = landscape ;
 
 ods html path = "&out_folder" (URL=NONE)
@@ -60,7 +62,7 @@ ods html path = "&out_folder" (URL=NONE)
 
   options nofmterr ;
 
-  %detect_phi(transfer_lib = trans, obs_lim = 5, eldest_age = 50) ;
+  %detect_phi(transfer_lib = trans, obs_lim = 500, eldest_age = 50) ;
 
 run ;
 
