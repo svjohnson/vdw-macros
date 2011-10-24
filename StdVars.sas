@@ -19,6 +19,18 @@
 * For further details.
 *********************************************/
 
+%macro set_server_name ;
+  %global __server_name ;
+  %if %lowcase(&syshostname) = %str(ctrhs-sas) %then %do ;
+    %let __server_name = ctrhs-sas ;
+  %end ;
+  %else %do ;
+    %let __server_name = ghrisas ;
+  %end ;
+%mend set_server_name ;
+
+%set_server_name ;
+
 ** This keeps SAS from dumping raw records into the log. ;
 options errors = 0 ;
 
@@ -26,7 +38,7 @@ options errors = 0 ;
 
   ** This is the one lib var that makes sense to keep around--there are 4 different reference dsets ;
   ** that the rxrisk macro looks for--does not make sense to make 4 different _vdw vars for them. ;
-  %let _RxRiskLib               = \\ctrhs-sas\warehouse\sasdata\rxrisk  ;
+  %let _RxRiskLib               = \\&__server_name.\warehouse\sasdata\rxrisk  ;
 
 ** 'Standard' VDW DATASET VARIABLES ;
 
@@ -45,7 +57,7 @@ options errors = 0 ;
   ** for details. ;
 
   ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
-  libname __vdw "\\ctrhs-sas\warehouse\sasdata\crn_vdw" access = readonly ;
+  libname __vdw "\\&__server_name.\warehouse\sasdata\crn_vdw" access = readonly ;
 
   %let _vdw_tumor               = __vdw.tumor                   ;
   %let _vdw_enroll              = __vdw.enroll3_vw              ;

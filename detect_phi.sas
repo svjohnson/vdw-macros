@@ -1,56 +1,3 @@
-/*********************************************
-* Roy Pardee
-* Group Health Research Institute
-* (206) 287-2078
-* pardee.r@ghc.org
-*
-* c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas
-*
-* Macros for inspecting to-be-transferred datasets for obvious
-* Protected Health Information (PHI), and sounding an alarm if any is
-* found.
-*
-* NOT INTENDED TO BE A SUBSTITUTE FOR HUMAN INSPECTION!!!
-*
-*********************************************/
-
-/*
-
-  Things to check for:
-    Var names:
-      MRN
-      birth_date
-      BirthDate
-      DOB
-      BDate
-      SSN
-      SocialSecurityNumber
-      social_security_number
-      socsec
-
-      Anything on a comma-delimited list of locally-specified vars to check (e.g., consumno, hrn).
-
-    Content checks:
-      Any char vars > 6 long should be evaulated w/a site-specified regular expression as a check for MRN-type identifiers.
-      Anything thats a date (based on format as reported by proc contents) should be evaluated as if it were a DOB.  Would anybody be
-      over age 85?  If so--report.
-        (right?)
-
-    Output should be:
-      - warnings
-      - proc contents
-      - proc print obs = 20
-      - repeat of warnings
-
-      Can we do some styling depending on whether a given dset is warning-worthy, to make particular bits of output jump out?
-
-  To-do:
-    date checks
-      sensitive age is 89, but make that a defaulted parameter
-    banner with warning
-
-*/
-
 %macro check_dataset(dset =, obs_lim = max, eldest_age = 89) ;
   %local inset_name ;
   %let inset_name = &dset ;
@@ -323,4 +270,3 @@
   %end ;
 
 %mend detect_phi ;
-

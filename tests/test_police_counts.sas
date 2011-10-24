@@ -42,7 +42,7 @@ proc print data = age_freqs_orig ;
 run ;
 */
 
-libname l '\\ctrhs-sas\sasuser\pardre1\vdw\voc_lab\v3_qa_results' ;
-libname u '\\ctrhs-sas\SASUser\pardre1\vdw\voc_ute\general_qa\to_send' ;
+libname l '\\ctrhs-sas\SASUser\pardre1\vdw\voc_rx' ;
+** libname u '\\ctrhs-sas\SASUser\pardre1\vdw\voc_ute\general_qa\to_send' ;
 %police_counts(transfer_lib = l, check_or_recode = c, lowest_count = 5) ;
 run ;
