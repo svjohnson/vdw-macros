@@ -21,11 +21,11 @@
 
 %macro set_server_name ;
   %global __server_name ;
-  %if %lowcase(&syshostname) = %str(ctrhs-sas) %then %do ;
-    %let __server_name = ctrhs-sas ;
+  %if (%sysfunc(prxmatch(/roc/i, &syshostname)) > 0) %then %do ;
+    %let __server_name = ghrisas ;
   %end ;
   %else %do ;
-    %let __server_name = ghrisas ;
+    %let __server_name = ctrhs-sas ;
   %end ;
 %mend set_server_name ;
 
