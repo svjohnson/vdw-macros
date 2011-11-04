@@ -96,7 +96,7 @@ options errors = 0 ;
 ** as cells with "low" counts are masked. This variable should hold what is considered "low" at your site. ;
 ** The most commonly used value is 5. ;
 
-  %let lowest_count = 0 ;
+  %let lowest_count = 5 ;
 
 ** Variables used by the detect_phi macro. ;
   %** A regular expression giving the pattern that your MRN values follow. Used to check character vars for possibly holding MRNs. ;
