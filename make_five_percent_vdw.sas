@@ -24,6 +24,8 @@ options
 
 libname five '\\ctrhs-sas\Warehouse\Sasdata\CRN_VDW\5percent_subset' ;
 
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+
 %macro move_it ;
 
   %** This leaves out non-MRN files like everndc and provider specialty.  But those are ;
