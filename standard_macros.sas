@@ -4799,6 +4799,7 @@ run;
   %** Obtain the list of pregnancy-related codes from the FTP server ;
   %** These lists are managed in: ;
   %** \\groups\data\ctrhs\crn\s d r c\vdw\macros\manage_pregnancy_codes.sas ;
+  %** TODO: make it easy to swap this out for a local filename, for sites (KPNW) that cant do FTP. ;
   filename preg_ftp  FTP     "pregnancy_codes.xpt"
                      HOST  = "vdw.hmoresearchnetwork.org"
                      CD    = "/vdwcode"
@@ -4832,7 +4833,7 @@ run;
     on    p.mrn = c.mrn  INNER JOIN
           preg_px as pp
     on    p.px = pp.px AND
-          p.codetype = pp.codetype
+          p.px_codetype = pp.px_ct
     where p.adate between "&start_date"d and "&end_date"d
     ;
 
