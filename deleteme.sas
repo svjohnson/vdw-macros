@@ -1,21 +1,54 @@
+/*********************************************
+* Roy Pardee
+* Group Health Research Institute
+* (206) 287-2078
+* pardee.r@ghc.org
+*
+* c:\Documents and Settings\pardre1\My Documents\vdw\macros\deleteme.sas
+*
+* <<purpose>>
+*********************************************/
 
-** filename vdw_fmt   FTP     "formats.xpt"
-**                   HOST  = "vdw.hmoresearchnetwork.org"
-**                   CD    = "/vdwcode"
-**                   PASS  = "%2hilario36"
-**                   USER  = "VDWReader"
-**                   DEBUG
-**                   rcmd  = 'binary'
-**                   ;
+%include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
-** Does this work here? ;
-%vdw_formats ;
+options
+  linesize  = 150
+  msglevel  = i
+  formchar  = '|-++++++++++=|-/|<>*'
+  dsoptions = note2err
+  errors    = 5
+  nocenter
+  noovp
+  nosqlremerge
+;
 
-** Change this to wherever you put your copy of formats.xpt ;
-filename vdw_fmt 'C:\Documents and Settings\pardre1\My Documents\vdw\macros\data\formats.xpt' ;
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+%include vdw_macs ;
 
-libname  vdw_fmt xport ;
-
-proc format lib = work cntlin = vdw_fmt.formats ;
+data test ;
+  input
+    @1  mrn $char10.
+    @13 contact_date date9.
+  ;
+  end_date = contact_date + 30 ;
+  format
+    contact_date end_date mmddyy10.
+  ;
+datalines ;
+roy         01jan2001
+roy         01feb2001
+roy         15jun2002
+roy         14jul2002
+roy         03aug2005
+;
 run ;
 
+proc print ;
+run ;
+
+%collapseperiods(lib = work, dset = test
+      , recstart = contact_date
+      , recend = end_date) ;
+
+proc print ;
+run ;

@@ -1727,9 +1727,10 @@ proc datasets nolist ;
 
    data &outset ;
       retain PeriodStart PeriodEnd ;
+      length PeriodStart PeriodEnd 4 ;
       format PeriodStart PeriodEnd mmddyy10. ;
       set &inset(rename = (&RecStart = _&RecStart
-                                &RecEnd   = _&RecEnd)) ;
+                           &RecEnd   = _&RecEnd)) ;
 
       by &PersonID &VarList NOTSORTED ;
 
@@ -4806,7 +4807,7 @@ run;
                      PASS  = "%2hilario36"
                      USER  = "VDWReader"
                      DEBUG
-                     rcmd  = 'binary'
+                     /* rcmd  = 'binary' this makes the macro barf w/an access violation at Essentia--it is not necessary. */
                      ;
   libname preg_ftp xport ;
 

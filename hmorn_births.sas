@@ -27,12 +27,14 @@
 ** So if your last complete year of ute data is 2010, you would specify 01jan2008. ;
 %let start_date = 01jan2009 ;
 
-options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' dsoptions="note2err" ;
+options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ; ** dsoptions="note2err" ;
 
 **options obs = 10000 ;
 ** ========================= END EDIT SECTION ================================= ;
 
 libname out "&outloc" ;
+
+%include vdw_macs ;
 
 %** Obtain the list of pregnancy-related codes from the FTP server ;
 filename preg_ftp  FTP     "pregnancy_codes.xpt"
@@ -41,7 +43,6 @@ filename preg_ftp  FTP     "pregnancy_codes.xpt"
                    PASS  = "%2hilario36"
                    USER  = "VDWReader"
                    DEBUG
-                   rcmd  = 'binary'
                    ;
 libname preg_ftp xport ;
 
@@ -84,10 +85,6 @@ proc sql ;
 
 quit ;
 
-proc sort nodupkey data = delivery_events ;
-  by mrn adate ;
-run ;
-
 ** Limit events to women of at least minimal child-birthing age, to guard ;
 ** against babies getting e.g. "normal live birth" event codes. ;
 proc sql ;
@@ -96,9 +93,16 @@ proc sql ;
   from delivery_events as de INNER JOIN
        &_vdw_demographic as d
   on   de.mrn = d.mrn
-  where gender in ('F', 'f') and %calcage(BDtVar = birth_date, RefDate = "&start_date"d) ge 12
+  where gender in ('F', 'f') and %calcage(BDtVar = birth_date, RefDate = adate) ge 12
   ;
+
+  drop table delivery_events ;
+
 quit ;
+
+proc sort nodupkey data = de2 ;
+  by mrn adate ;
+run ;
 
 ** Reduce to single deliveries per pregnancy. This is far from perfect, but should ;
 ** serve for quick-n-dirty. ;
