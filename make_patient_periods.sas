@@ -108,7 +108,7 @@ options mprint ;
   221,233,015 raw contact recs
   129,917,584 after nodupkey
     3,879,401 happening outside an enrollment period
-    1,020,311 period records after collapsing. (compare, 12,022,467 in enroll).
+    1,020,311 period records after collapsing. (compare, 3,049,266 in enroll).
     Median & Mode durations = days_tolerance.
 
 

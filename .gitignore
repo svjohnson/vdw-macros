@@ -7,5 +7,7 @@
 *.lst
 *.run
 *.*~
+deleteme.*
+collate_births.*
 StdVars*.sas
 !StdVars.sas
