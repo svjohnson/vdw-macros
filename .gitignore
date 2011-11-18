@@ -8,6 +8,6 @@
 *.run
 *.*~
 deleteme.*
-col*.*
+collate_births.sas
 StdVars*.sas
 !StdVars.sas
