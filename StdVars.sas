@@ -85,7 +85,7 @@ options errors = 0 ;
 
   /*
     Site code--pls use the codes/abbreviations listed on:
-    https://appliedresearch.cancer.gov/crnportal/other-resources/orientation/participating-sites/overview
+    https://appliedresearch.cancer.gov/crnportal/data-resources/vdw/site-data-managers/participating-sites/overview
   */
 
   %let _SiteCode = 01 ;
