@@ -41,14 +41,14 @@
   libname __full "\\ctrhs-sas\warehouse\sasdata\crn_vdw" access = readonly ;
 
   %let _vdw_tumor               = __vdw.tumor                   ;
-  %let _vdw_enroll              = __vdw.enroll2_v2              ;
+  %let _vdw_enroll              = __vdw.enroll3_vw              ;
   %let _vdw_demographic         = __vdw.demog                   ;
   %let _vdw_rx                  = __vdw.rx                      ;
-  %let _vdw_everndc             = __full.everndc                 ;
-  %let _vdw_utilization         = __vdw.utilization_v2          ;
-  %let _vdw_dx                  = __vdw.dx_v2                   ;
-  %let _vdw_px                  = __vdw.px_v2                   ;
-  %let _vdw_provider_specialty  = __full.specfile_view           ;
+  %let _vdw_everndc             = __full.everndc                ;
+  %let _vdw_utilization         = __vdw.utilization             ;
+  %let _vdw_dx                  = __vdw.dx                      ;
+  %let _vdw_px                  = __vdw.px                      ;
+  %let _vdw_provider_specialty  = __full.specfile_view          ;
   %let _vdw_vitalsigns          = __vdw.vitalsigns              ;
   %let _vdw_census              = __vdw.census2000              ;
   %let _vdw_lab                 = __vdw.lab_results             ;
