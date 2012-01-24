@@ -5157,7 +5157,7 @@ run;
     create table with_agegroup as
     select g.mrn
         , year
-        , put(%calcage(refdate = mdy(1, 1, year)), agecat.) as agegroup label = "Age on 1-jan of [[year]]"
+        , put(%calcage(birth_date, refdate = mdy(1, 1, year)), agecat.) as agegroup label = "Age on 1-jan of [[year]]"
         , gender
         , put(race1, $race.) as race length = 10
         , put(drugcov, $cd.) as drugcov
