@@ -1095,6 +1095,9 @@ run;
 /**********************************************/
 /*Define and format diagnosis codes*/
 /**********************************************/
+
+** TODO:  Come up with an ICD-10 version of this format!!! ;
+** TODO: character formats w/ranges make me nervous--this should be vetted against a lookup dataset. ;
 PROC FORMAT;
    VALUE $ICD9CF
 /* Myocardial infraction */
@@ -1163,20 +1166,20 @@ PROC FORMAT;
 ;
 run;
 
-* For debugging. ;
+** For debugging. ;
 %local sqlopts ;
 %let sqlopts = feedback sortmsg stimer ;
-%*let sqlopts = ;
+%**let sqlopts = ;
 
-******************************************************************************;
-* subset to the utilization data of interest (add the people with no visits  *;
-*    back at the end                                                         *;
-******************************************************************************;
+*******************************************************************************;
+** subset to the utilization data of interest (add the people with no visits  *;
+**    back at the end                                                         *;
+*******************************************************************************;
 
 
-**********************************************;
-* implement the Inpatient and Outpatient Flags;
-********************************************** ;
+***********************************************;
+** implement the Inpatient and Outpatient Flags;
+*********************************************** ;
 %if &inpatonly =I %then %let inpatout= AND EncType in ('IP');
 %else %if &inpatonly =B %then %let inpatout= AND EncType in ('IP','AV');
 %else %if &inpatonly =A %then %let inpatout=;
@@ -1198,10 +1201,10 @@ proc sql &sqlopts ;
   alter table _ppl add primary key (MRN) ;
 
   create table  _DxSubset as
-  select sample.mrn, &IndexDateVarName, adate, put(dx, $icd9cf.) as CodedDx
+  select sample.mrn, &IndexDateVarName, adate, case dx_codetype when '09' then put(dx, $icd9cf.) else '???' end as CodedDx
   from &_vdw_dx as d INNER JOIN _ppl as sample
   ON    d.mrn = sample.mrn
-  where adate between sample.&IndexDateVarName-1
+  where  adate between sample.&IndexDateVarName-1
                   and sample.&IndexDateVarName-365
             &inpatout.
   ;
@@ -1216,6 +1219,7 @@ proc sql &sqlopts ;
   select p.*
   from &_vdw_px as p, _ppl as sample
   where p.mrn = sample.mrn
+        and px_codetype in ('C4', 'H4') /* Pretty sure all the PVD codes below are CPTs, but I will code defensively here. */
         and adate between sample.&IndexDateVarName-1
                       and sample.&IndexDateVarName-365
         &inpatout.
@@ -1248,47 +1252,45 @@ run ;
                 DIABC PLEGIA REN MALIGN SLIVD MST AIDS ;
 
 data _DxAssign ;
-array COMORB (*) &var_list ;
-
-length &var_list 3 ; *<-This is host-specific--are we sure we want to do this?;
-
-retain           &var_list ;
-keep   mrn  &var_list ;
-set _DxSubset;
-by mrn;
-if first.mrn then do;
-   do I=1 to dim(COMORB);
-      COMORB(I) = 0 ;
-   end;
-end;
-select (CodedDx);
-   when ('MI')    MI     = 1;
-   when ('CHD')   CHD    = 1;
-   when ('PVD')   PVD    = 1;
-   when ('CVD')   CVD    = 1;
-   when ('DEM')   DEM    = 1;
-   when ('CPD')   CPD    = 1;
-   when ('RHD')   RHD    = 1;
-   when ('PUD')   PUD    = 1;
-   when ('MLIVD') MLIVD  = 1;
-   when ('DIAB')  DIAB   = 1;
-   when ('DIABC') DIABC  = 1;
-   when ('PLEGIA')PLEGIA = 1;
-   when ('REN')   REN    = 1;
-   when ('MALIGN')MALIGN = 1;
-   when ('SLIVD') SLIVD  = 1;
-   when ('MST')   MST    = 1;
-   when ('AIDS')  AIDS   = 1;
-   otherwise ;
-end;
-if last.mrn then output;
+  length &var_list 3 ;
+  retain           &var_list ;
+  set _DxSubset;
+  by mrn;
+  array COMORB (*) &var_list ;
+  if first.mrn then do;
+     do I=1 to dim(COMORB);
+        COMORB(I) = 0 ;
+     end;
+  end;
+  select (CodedDx);
+     when ('MI')    MI     = 1;
+     when ('CHD')   CHD    = 1;
+     when ('PVD')   PVD    = 1;
+     when ('CVD')   CVD    = 1;
+     when ('DEM')   DEM    = 1;
+     when ('CPD')   CPD    = 1;
+     when ('RHD')   RHD    = 1;
+     when ('PUD')   PUD    = 1;
+     when ('MLIVD') MLIVD  = 1;
+     when ('DIAB')  DIAB   = 1;
+     when ('DIABC') DIABC  = 1;
+     when ('PLEGIA')PLEGIA = 1;
+     when ('REN')   REN    = 1;
+     when ('MALIGN')MALIGN = 1;
+     when ('SLIVD') SLIVD  = 1;
+     when ('MST')   MST    = 1;
+     when ('AIDS')  AIDS   = 1;
+     otherwise ;
+  end;
+  if last.mrn then output;
+  keep   mrn  &var_list ;
 run;
 
 /** Procedures: Peripheral vascular disorder **/
 data _PxAssign;
    set _PxSubset;
    by mrn;
-   retain PVD ; * [RP] Added 5-jul-2007, at Hassan Fouyazis suggestion. ;
+   retain PVD ; ** [RP] Added 5-jul-2007, at Hassan Fouyazis suggestion. ;
    keep mrn PVD;
    if first.mrn then PVD = 0;
    if    PX= "38.48" or
@@ -1308,25 +1310,26 @@ run;
 
 /** Connect DXs and PROCs together  **/
 proc sql &sqlopts ;
+  ** Adding a bunch of coalesces here in case there are ppl w/procs but no dxs. ;
   create table _DxPxAssign as
    select  coalesce(D.MRN, P.MRN) as MRN
-         , D.MI
-         , D.CHD
-         , max(D.PVD, P.PVD) as PVD
-         , D.CVD
-         , D.DEM
-         , D.CPD
-         , D.RHD
-         , D.PUD
-         , D.MLIVD
-         , D.DIAB
-         , D.DIABC
-         , D.PLEGIA
-         , D.REN
-         , D.MALIGN
-         , D.SLIVD
-         , D.MST
-         , D.AIDS
+         , coalesce(D.MI    , 0)  as MI
+         , coalesce(D.CHD   , 0)  as CHD
+         , coalesce(D.CVD   , 0)  as CVD
+         , coalesce(D.DEM   , 0)  as DEM
+         , coalesce(D.CPD   , 0)  as CPD
+         , coalesce(D.RHD   , 0)  as RHD
+         , coalesce(D.PUD   , 0)  as PUD
+         , coalesce(D.MLIVD , 0)  as MLIVD
+         , coalesce(D.DIAB  , 0)  as DIAB
+         , coalesce(D.DIABC , 0)  as DIABC
+         , coalesce(D.PLEGIA, 0)  as PLEGIA
+         , coalesce(D.REN   , 0)  as REN
+         , coalesce(D.MALIGN, 0)  as MALIGN
+         , coalesce(D.SLIVD , 0)  as SLIVD
+         , coalesce(D.MST   , 0)  as MST
+         , coalesce(D.AIDS  , 0)  as AIDS
+         , max(D.PVD, P.PVD)      as PVD
    from  WORK._DXASSIGN as D full outer join
          WORK._PXASSIGN P
    on    D.MRN = P.MRN
@@ -1341,7 +1344,7 @@ Data _WithCharlson;
   set _DxPxAssign;
   M1=1;M2=1;M3=1;
 
-* implement the MALIG flag;
+** implement the MALIG flag;
    %if &malig =N %then %do; O1=1;O2=1; %end;
    %else %if &malig =Y %then  %do; O1=0; O2=0; %end;
    %else %do;
@@ -1349,13 +1352,14 @@ Data _WithCharlson;
      %Put ERROR the cancer vars)  and N (treat cancer normally);
    %end;
 
-  if SLIVD=1 then M1=0;
-  if DIABC=1 then M2=0;
-  if MST=1 then M3=0;
+  if SLIVD = 1 then M1=0;
+  if DIABC = 1 then M2=0;
+  if MST   = 1 then M3=0;
 
-&IndexVarName =   MI + CHD + PVD + CVD + DEM + CPD + RHD +
-                  PUD + M1*MLIVD + M2*DIAB + 2*DIABC + 2*PLEGIA + 2*REN +
-                  O1*2*M3*MALIGN + 3*SLIVD + O2*6*MST + 6*AIDS;
+
+&IndexVarName =   sum(MI , CHD , PVD , CVD , DEM , CPD , RHD ,
+                  PUD , M1*MLIVD , M2*DIAB , 2*DIABC , 2*PLEGIA , 2*REN ,
+                  O1*2*M3*MALIGN , 3*SLIVD , O2*6*MST , 6*AIDS) ;
 
 Label
   MI            = "Myocardial Infarction: "
@@ -1426,7 +1430,7 @@ proc sql &sqlopts ;
       , coalesce(w.&IndexVarName, 0) as  &IndexVarName
                    label = "Charlson score: "
       , (w.MRN is null)              as  NoVisitFlag
-                   label = "No visits for this person"
+                   label = "No diagnoses or procedures found in the year prior to &IndexDateVarName for this person"
   from _ppl as i left join _WithCharlson as w
   on i.MRN = w.MRN
   ;
@@ -1443,193 +1447,6 @@ proc datasets nolist ;
         _ppl
         ;
 %mend charlson;
-
-%macro OldGetFollowUpTime(People    /* Dset of MRNs */
-               , IndexDate       /* Name of a date var in &People, or else a
-                                    date literal, marking the start of the
-                                    follow-up period. */
-               , EndDate         /* Name of a date var in &People, or else a
-                                    complete date literal, marking the end of
-                                    the period of interest. */
-               , GapTolerance    /* Number of months disenrollment to ignore in
-                                    deciding the disenrollment date. */
-               , CallEndDateVar  /* What name should we give the date var that
-                                    will hold the end of the f/up period? */
-               , OutSet          /* The name of the output dataset. */
-                 ) ;
-
-
-   %put ;
-   %put ;
-   %put ============================================================== ;
-   %put ;
-   %put Macro GetFollowUpTime V0.80: ;
-   %put ;
-   %put Creating a dset "&OutSet", which will look just like "&People" except ;
-   %put that it will have an additional variable "&CallEndDateVar", which will ;
-   %put hold the earliest of date-of-last-enrollment, or &EndDate (or, if the ;
-   %put person was not enrolled at all a missing value). ;
-   %put ;
-   %put THIS IS BETA SOFTWARE-PLEASE SCRUTINIZE THE RESULTS AND REPORT PROBLEMS;
-   %put ;
-   %put ============================================================== ;
-   %put ;
-   %put ;
-
-
-  %local debuglib ;
-   %* Use this to save interim dsets for later inspection. ;
-   %*let debuglib = owt. ;
-   %let debuglib = ;
-
-
-
-   proc sql ;
-
-    %* Grab ENROLL recs for our ppl of interest, between &IndexDate and EndDate;
-    %* This semi-redundant WHERE clause is b/c I want to use an index on;
-    %* enr_year if there is one.;
-    %* The intnx() makes up for the month-level precision of the EnrollDate;
-      create table &debuglib._grist as
-      select distinct e.MRN
-            , &IndexDate                  as idate       format = mmddyy10.
-            , &EndDate                    as edate       format = mmddyy10.
-            , mdy(enr_month, 1, enr_year) as EnrollDate  format = mmddyy10.
-      from &_vdw_enroll as e INNER JOIN
-            &People as p
-      on    e.MRN = p.MRN
-      where e.enr_year between year(&IndexDate) and year(&EndDate) AND
-           CALCULATED EnrollDate between intnx('MONTH',&IndexDate,0,'BEGINNING')
-                                     and intnx('MONTH',&EndDate  ,0,'END') ;
-   quit ;
-
-   * Who has a gap longer than the tolerance? ;
-   proc sort data = &debuglib._grist ;
-      by MRN EnrollDate ;
-   run ;
-
-   data &debuglib._gap_ends ;
-      retain _LastDate . ;
-      set &debuglib._grist ;
-      by MRN EnrollDate ;
-
-      format _LastDate mmddyy10. ;
-
-      * For *most* recs we want to eval the difference between this recs;
-      *   EnrollDate, and the one on the last rec. ;
-      * We always expect a 1-month gap, so we subtract out the expected gap. ;
-      ThisGap = intck("MONTH", _LastDate, EnrollDate) - 1 ;
-      EndGap = 0 ;
-
-      * But two rec types are special--firsts and lasts w/in an MRN group. ;
-      select ;
-         * For first MRN recs, the gap we need to eval is the one from the ;
-         * start of the period of interest to the current EnrollDate
-         *   --so redefine ThisGap. ;
-         when (first.MRN) ThisGap = intck("MONTH", IDate, EnrollDate) ;
-         * For last MRN recs, we have an additional gap to consider;
-         *  --the one between ;
-         * EnrollDate and the end of the period of interest. So redefine EndGap;
-         when (last.MRN)  EndGap = intck("MONTH", EnrollDate, EDate) ;
-         otherwise ; * Do nothing! ;
-      end ;
-
-      if max(ThisGap, EndGap) gt (&GapTolerance) then do ;
-         * Weve got an intolerable gap somewhere. ;
-         /*
-            There are 3 types of gaps:
-               - Leading (gaps between index and first EnrollDate).
-               - Interim (gaps entirely embraced by Index and End).
-               - Trailing (gaps between EnrollDate and End).
-
-            For a Leading gap, the f/up time should be 0.
-            For an Interim gap, the f/up time runs from Index to the last
-               EnrollDate prior to the gap.
-            For a Trailing gap, the f/up time should run from Index to
-               the last EnrollDate.
-
-            In the next step, we remove records from _grist w/enrolldates on or
-            after the one on the earliest gap.
-
-            So-since ppl w/Trailing gaps are enrolled on this EnrollDate we will
-            bump their enrolldate by one month, so they get credit for being
-            enrolled during this month.
-
-         */
-
-         select ;
-            when (first.MRN) do ;
-               * Its a leading gap--meaning no relevant enrollment hx. ;
-               EnrollDate = idate ;
-            end ;
-            when (last.MRN) do ;
-               * Could be either an interim or a trailing gap, or both. ;
-               * If *just* a trailing, we need to bump EnrollDate by a month. ;
-               if ThisGap le (&GapTolerance)
-                 then EnrollDate = intnx('MONTH', EnrollDate, 1) ;
-            end ;
-            otherwise ; * Do nothing! ;
-         end ;
-         output ;
-      end ;
-
-      _LastDate = EnrollDate ;
-   run ;
-
-
-   proc sql ;
-      * Dset _gap_ends contains MRN/EDate combos for the *ends* of all ;
-      *   impermissible gaps.  Find each persons first such gap. ;
-      create table &debuglib._first_gaps as
-      select MRN, min(EnrollDate) as EndFirstGap format = mmddyy10.
-      from &debuglib._gap_ends
-      group by MRN
-      ;
-
-      * Remove any recs from grist that are on or after each persons ;
-      *   first impermissible gap. ;
-      create table &debuglib._clean_grist as
-      select g.MRN, g.EnrollDate
-      from  &debuglib._grist as g LEFT JOIN
-            &debuglib._first_gaps as f
-      on    g.MRN = f.MRN
-      where f.MRN IS NULL OR
-            g.EnrollDate lt f.EndFirstGap
-      ;
-
-      %if %length(&debuglib) = 0 %then drop table &debuglib._grist ; ;
-      %if %length(&debuglib) = 0 %then drop table &debuglib._gap_ends ; ;
-
-     * Now find each persons last enrollment date. ;
-     * Right now these are firsts-of-the-month.  ;
-     *   Should we bump them to lasts? Yes. ;
-      create table &debuglib._last_enroll_dates as
-      select MRN
-           , intnx('MONTH', max(EnrollDate), 0, 'END')
-               as LastEnrollDate format = mmddyy10.
-      from &debuglib._clean_grist
-      group by MRN
-      ;
-
-      %if %length(&debuglib) = 0 %then drop table &debuglib._clean_grist ; ;
-
-      %* Finally, write the new var to &People. ;
-      create table &OutSet as
-      select p.*
-           ,  case
-                  when l.MRN IS NULL then .
-                  else min(&EndDate, LastEnrollDate)
-              end as &CallEndDateVar format = mmddyy10.
-      from &People as p LEFT JOIN
-            &debuglib._last_enroll_dates as l
-      on    p.MRN = l.MRN
-      ;
-
-      %if %length(&debuglib) = 0 %then drop table &debuglib._first_gaps ; ;
-   quit ;
-
-
-%mend OldGetFollowUpTime ;
 
 %macro LastWord(WordList) ;
    %** This is a helper macro for CollapsePeriods--it just returns the last word (variable name) in a string (var list). ;

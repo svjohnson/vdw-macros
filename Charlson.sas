@@ -30,24 +30,24 @@
 * Outputs:
 *     Dataset &outputsd with on record per studyid
 *     Variables
-*       MI= "Myocardial Infarction: "
-*       CHD= "Congestive heart disease: "
-*       PVD= "Peripheral vascular disorder: "
-*       CVD= "Cerebrovascular disease: "
-*       DEM= "Dementia: "
-*       CPD= "Chronic pulmonary disease: "
-*       RHD= "Rheumatologic disease: "
-*       PUD= "Peptic ulcer disease: "
-*       MLIVD= "Mild liver disease: "
-*       DIAB= "Diabetes: "
-*       DIABC= "Diabetes with chronic complications: "
-*       PLEGIA= "Hemiplegia or paraplegia: "
-*       REN= "Renal Disease: "
-*       MALIGN= "Malignancy, including leukemia and lymphoma: "
-*       SLIVD= "Moderate or severe liver disease: "
-*       MST= "Metastatic solid tumor: "
-*       AIDS= "AIDS: "
-*       &IndexVarName= "Charlson score: "
+*       MI            = "Myocardial Infarction: "
+*       CHD           = "Congestive heart disease: "
+*       PVD           = "Peripheral vascular disorder: "
+*       CVD           = "Cerebrovascular disease: "
+*       DEM           = "Dementia: "
+*       CPD           = "Chronic pulmonary disease: "
+*       RHD           = "Rheumatologic disease: "
+*       PUD           = "Peptic ulcer disease: "
+*       MLIVD         = "Mild liver disease: "
+*       DIAB          = "Diabetes: "
+*       DIABC         = "Diabetes with chronic complications: "
+*       PLEGIA        = "Hemiplegia or paraplegia: "
+*       REN           = "Renal Disease: "
+*       MALIGN        = "Malignancy, including leukemia and lymphoma: "
+*       SLIVD         = "Moderate or severe liver disease: "
+*       MST           = "Metastatic solid tumor: "
+*       AIDS          = "AIDS: "
+*       &IndexVarName = "Charlson score: "
 *
 *
 * Dependencies:
@@ -105,6 +105,9 @@
 /**********************************************/
 /*Define and format diagnosis codes*/
 /**********************************************/
+
+** TODO:  Come up with an ICD-10 version of this format!!! ;
+** TODO: character formats w/ranges make me nervous--this should be vetted against a lookup dataset. ;
 PROC FORMAT;
    VALUE $ICD9CF
 /* Myocardial infraction */
@@ -173,19 +176,20 @@ PROC FORMAT;
 ;
 run;
 
-* For debugging. ;
+** For debugging. ;
+%local sqlopts ;
 %let sqlopts = feedback sortmsg stimer ;
-%*let sqlopts = ;
+%**let sqlopts = ;
 
-******************************************************************************;
-* subset to the utilization data of interest (add the people with no visits  *;
-*    back at the end                                                         *;
-******************************************************************************;
-libname util "&_UtilizationLib." access = readonly ;
+*******************************************************************************;
+** subset to the utilization data of interest (add the people with no visits  *;
+**    back at the end                                                         *;
+*******************************************************************************;
 
-**********************************************;
-* implement the Inpatient and Outpatient Flags;
-********************************************** ;
+
+***********************************************;
+** implement the Inpatient and Outpatient Flags;
+*********************************************** ;
 %if &inpatonly =I %then %let inpatout= AND EncType in ('IP');
 %else %if &inpatonly =B %then %let inpatout= AND EncType in ('IP','AV');
 %else %if &inpatonly =A %then %let inpatout=;
@@ -201,15 +205,16 @@ proc sql &sqlopts ;
    from &inputds
    group by MRN ;
 
+  %local TotPeople ;
    %let TotPeople = &SQLOBS ;
 
   alter table _ppl add primary key (MRN) ;
 
   create table  _DxSubset as
-  select sample.mrn, &IndexDateVarName,adate, put(dx, $icd9cf.)as CodedDx
-  from util.&_DxData as d, _ppl as sample
-  where d.mrn = sample.mrn
-        and adate between sample.&IndexDateVarName-1
+  select sample.mrn, &IndexDateVarName, adate, case dx_codetype when '09' then put(dx, $icd9cf.) else '???' end as CodedDx
+  from &_vdw_dx as d INNER JOIN _ppl as sample
+  ON    d.mrn = sample.mrn
+  where  adate between sample.&IndexDateVarName-1
                   and sample.&IndexDateVarName-365
             &inpatout.
   ;
@@ -222,8 +227,9 @@ proc sql &sqlopts ;
 
   create table _PxSubset as
   select p.*
-  from util.&_PxData as p, _ppl as sample
+  from &_vdw_px as p, _ppl as sample
   where p.mrn = sample.mrn
+        and px_codetype in ('C4', 'H4') /* Pretty sure all the PVD codes below are CPTs, but I will code defensively here. */
         and adate between sample.&IndexDateVarName-1
                       and sample.&IndexDateVarName-365
         &inpatout.
@@ -251,51 +257,50 @@ run ;
 /***                                        ***/
 /**********************************************/
 
+%local var_list ;
 %let var_list = MI CHD PVD CVD DEM CPD RHD PUD MLIVD DIAB
                 DIABC PLEGIA REN MALIGN SLIVD MST AIDS ;
 
 data _DxAssign ;
-array COMORB (*) &var_list ;
-
-length &var_list 3 ; *<-This is host-specific--are we sure we want to do this?;
-
-retain           &var_list ;
-keep   mrn  &var_list ;
-set _DxSubset;
-by mrn;
-if first.mrn then do;
-   do I=1 to dim(COMORB);
-      COMORB(I) = 0 ;
-   end;
-end;
-select (CodedDx);
-   when ('MI')    MI     = 1;
-   when ('CHD')   CHD    = 1;
-   when ('PVD')   PVD    = 1;
-   when ('CVD')   CVD    = 1;
-   when ('DEM')   DEM    = 1;
-   when ('CPD')   CPD    = 1;
-   when ('RHD')   RHD    = 1;
-   when ('PUD')   PUD    = 1;
-   when ('MLIVD') MLIVD  = 1;
-   when ('DIAB')  DIAB   = 1;
-   when ('DIABC') DIABC  = 1;
-   when ('PLEGIA')PLEGIA = 1;
-   when ('REN')   REN    = 1;
-   when ('MALIGN')MALIGN = 1;
-   when ('SLIVD') SLIVD  = 1;
-   when ('MST')   MST    = 1;
-   when ('AIDS')  AIDS   = 1;
-   otherwise ;
-end;
-if last.mrn then output;
+  length &var_list 3 ;
+  retain           &var_list ;
+  set _DxSubset;
+  by mrn;
+  array COMORB (*) &var_list ;
+  if first.mrn then do;
+     do I=1 to dim(COMORB);
+        COMORB(I) = 0 ;
+     end;
+  end;
+  select (CodedDx);
+     when ('MI')    MI     = 1;
+     when ('CHD')   CHD    = 1;
+     when ('PVD')   PVD    = 1;
+     when ('CVD')   CVD    = 1;
+     when ('DEM')   DEM    = 1;
+     when ('CPD')   CPD    = 1;
+     when ('RHD')   RHD    = 1;
+     when ('PUD')   PUD    = 1;
+     when ('MLIVD') MLIVD  = 1;
+     when ('DIAB')  DIAB   = 1;
+     when ('DIABC') DIABC  = 1;
+     when ('PLEGIA')PLEGIA = 1;
+     when ('REN')   REN    = 1;
+     when ('MALIGN')MALIGN = 1;
+     when ('SLIVD') SLIVD  = 1;
+     when ('MST')   MST    = 1;
+     when ('AIDS')  AIDS   = 1;
+     otherwise ;
+  end;
+  if last.mrn then output;
+  keep   mrn  &var_list ;
 run;
 
 /** Procedures: Peripheral vascular disorder **/
 data _PxAssign;
    set _PxSubset;
    by mrn;
-   retain PVD ; * [RP] Added 5-jul-2007, at Hassan Fouyazis suggestion. ;
+   retain PVD ; ** [RP] Added 5-jul-2007, at Hassan Fouyazis suggestion. ;
    keep mrn PVD;
    if first.mrn then PVD = 0;
    if    PX= "38.48" or
@@ -315,25 +320,26 @@ run;
 
 /** Connect DXs and PROCs together  **/
 proc sql &sqlopts ;
+  ** Adding a bunch of coalesces here in case there are ppl w/procs but no dxs. ;
   create table _DxPxAssign as
    select  coalesce(D.MRN, P.MRN) as MRN
-         , D.MI
-         , D.CHD
-         , max(D.PVD, P.PVD) as PVD
-         , D.CVD
-         , D.DEM
-         , D.CPD
-         , D.RHD
-         , D.PUD
-         , D.MLIVD
-         , D.DIAB
-         , D.DIABC
-         , D.PLEGIA
-         , D.REN
-         , D.MALIGN
-         , D.SLIVD
-         , D.MST
-         , D.AIDS
+         , coalesce(D.MI    , 0)  as MI
+         , coalesce(D.CHD   , 0)  as CHD
+         , coalesce(D.CVD   , 0)  as CVD
+         , coalesce(D.DEM   , 0)  as DEM
+         , coalesce(D.CPD   , 0)  as CPD
+         , coalesce(D.RHD   , 0)  as RHD
+         , coalesce(D.PUD   , 0)  as PUD
+         , coalesce(D.MLIVD , 0)  as MLIVD
+         , coalesce(D.DIAB  , 0)  as DIAB
+         , coalesce(D.DIABC , 0)  as DIABC
+         , coalesce(D.PLEGIA, 0)  as PLEGIA
+         , coalesce(D.REN   , 0)  as REN
+         , coalesce(D.MALIGN, 0)  as MALIGN
+         , coalesce(D.SLIVD , 0)  as SLIVD
+         , coalesce(D.MST   , 0)  as MST
+         , coalesce(D.AIDS  , 0)  as AIDS
+         , max(D.PVD, P.PVD)      as PVD
    from  WORK._DXASSIGN as D full outer join
          WORK._PXASSIGN P
    on    D.MRN = P.MRN
@@ -348,7 +354,7 @@ Data _WithCharlson;
   set _DxPxAssign;
   M1=1;M2=1;M3=1;
 
-* implement the MALIG flag;
+** implement the MALIG flag;
    %if &malig =N %then %do; O1=1;O2=1; %end;
    %else %if &malig =Y %then  %do; O1=0; O2=0; %end;
    %else %do;
@@ -356,33 +362,34 @@ Data _WithCharlson;
      %Put ERROR the cancer vars)  and N (treat cancer normally);
    %end;
 
-  if SLIVD=1 then M1=0;
-  if DIABC=1 then M2=0;
-  if MST=1 then M3=0;
+  if SLIVD = 1 then M1=0;
+  if DIABC = 1 then M2=0;
+  if MST   = 1 then M3=0;
 
-&IndexVarName =   MI + CHD + PVD + CVD + DEM + CPD + RHD +
-                  PUD + M1*MLIVD + M2*DIAB + 2*DIABC + 2*PLEGIA + 2*REN +
-                  O1*2*M3*MALIGN + 3*SLIVD + O2*6*MST + 6*AIDS;
+
+&IndexVarName =   sum(MI , CHD , PVD , CVD , DEM , CPD , RHD ,
+                  PUD , M1*MLIVD , M2*DIAB , 2*DIABC , 2*PLEGIA , 2*REN ,
+                  O1*2*M3*MALIGN , 3*SLIVD , O2*6*MST , 6*AIDS) ;
 
 Label
-MI= "Myocardial Infarction: "
-CHD= "Congestive heart disease: "
-PVD= "Peripheral vascular disorder: "
-CVD= "Cerebrovascular disease: "
-DEM= "Dementia: "
-CPD= "Chronic pulmonary disease: "
-RHD= "Rheumatologic disease: "
-PUD= "Peptic ulcer disease: "
-MLIVD= "Mild liver disease: "
-DIAB= "Diabetes: "
-DIABC= "Diabetes with chronic complications: "
-PLEGIA= "Hemiplegia or paraplegia: "
-REN= "Renal Disease: "
-MALIGN= "Malignancy, including leukemia and lymphoma: "
-SLIVD= "Moderate or severe liver disease: "
-MST= "Metastatic solid tumor: "
-AIDS= "AIDS: "
-&IndexVarName= "Charlson score: "
+  MI            = "Myocardial Infarction: "
+  CHD           = "Congestive heart disease: "
+  PVD           = "Peripheral vascular disorder: "
+  CVD           = "Cerebrovascular disease: "
+  DEM           = "Dementia: "
+  CPD           = "Chronic pulmonary disease: "
+  RHD           = "Rheumatologic disease: "
+  PUD           = "Peptic ulcer disease: "
+  MLIVD         = "Mild liver disease: "
+  DIAB          = "Diabetes: "
+  DIABC         = "Diabetes with chronic complications: "
+  PLEGIA        = "Hemiplegia or paraplegia: "
+  REN           = "Renal Disease: "
+  MALIGN        = "Malignancy, including leukemia and lymphoma: "
+  SLIVD         = "Moderate or severe liver disease: "
+  MST           = "Metastatic solid tumor: "
+  AIDS          = "AIDS: "
+  &IndexVarName = "Charlson score: "
 ;
 
 keep MRN &var_list &IndexVarName ;
@@ -433,7 +440,7 @@ proc sql &sqlopts ;
       , coalesce(w.&IndexVarName, 0) as  &IndexVarName
                    label = "Charlson score: "
       , (w.MRN is null)              as  NoVisitFlag
-                   label = "No visits for this person"
+                   label = "No diagnoses or procedures found in the year prior to &IndexDateVarName for this person"
   from _ppl as i left join _WithCharlson as w
   on i.MRN = w.MRN
   ;

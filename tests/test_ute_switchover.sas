@@ -23,28 +23,31 @@ options
   dsoptions="note2err" NOSQLREMERGE
 ;
 
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+
+
 libname t '\\ctrhs-sas\SASUser\pardre1\vdw\macro_testing' ;
 
 /*
   Macros that hit one or more of the ute files or provider specialty:
-    GetUtilizationForPeople
-    GetPxForPeople
-    GetDxForPeople
-    GetDxForDx
-    GetPxForPx
+    GetUtilizationForPeople     *
+    GetPxForPeople              *
+    GetDxForPeople              *
+    GetDxForDx                  *
+    GetPxForPx                  *
     GetDxForPeopleAndDx
     GetPxForPeopleAndPx
-    charlson
+    charlson                    *
     get_preg_events
     vdwcountsandrates1
 */
 
 
 ** Make the v3 stuff the current. ;
-%let _vdw_utilization        = &_vdw_utilization_m2        ;
-%let _vdw_dx                 = &_vdw_dx_m2                 ;
-%let _vdw_px                 = &_vdw_px_m2                 ;
-%let _vdw_provider_specialty = &_vdw_provider_specialty_m5 ;
+%**let _vdw_utilization        = &_vdw_utilization_m2        ;
+%**let _vdw_dx                 = &_vdw_dx_m2                 ;
+%**let _vdw_px                 = &_vdw_px_m2                 ;
+%**let _vdw_provider_specialty = &_vdw_provider_specialty_m5 ;
 
 %macro get_test_cohort(n = 300, outset = s.test_cohort) ;
   proc sql outobs = &n nowarn ;
@@ -72,9 +75,6 @@ libname t '\\ctrhs-sas\SASUser\pardre1\vdw\macro_testing' ;
           , EndDt     = 30jun2010
           , Outset    = t.out_get_dx_for_dx
           ) ;
-
-%mend no_changes_needed ;
-
 libname pv '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance' ;
 
   %GetPxForPx(PxLst   = pv.outcome_procedure_codes
@@ -84,3 +84,18 @@ libname pv '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance' ;
           , EndDt     = 30jun2010
           , Outset    = t.out_get_px_for_px
           ) ;
+
+%mend no_changes_needed ;
+
+%macro changes_complete ;
+  libname pvg '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance' ;
+
+  data gnu ;
+    set pvg.cohort(keep = mrn dx_date charlson_score) ;
+  run ;
+  options mprint errors = 4 ;
+  %charlson(InputDS = gnu, IndexDateVarName = dx_date, OutputDS = s.charlson_out, IndexVarName = charlie, InpatOnly = A, Malig = N) ;
+
+%mend changes_complete ;
+
+%changes_complete ;
