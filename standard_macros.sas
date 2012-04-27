@@ -868,30 +868,64 @@ run;
         , Outset            /*Name of the output dataset containing the data*/
         ) ;
 
-   /*
-     Gets the records for a specified set of diagnoses (identified by ICD9 code)
-     which ocurred between the dates specified in StartDt and EndDt.
-   */
+  /*
+  Gets the records for a specified set of diagnoses (identified by ICD9 code)
+  which ocurred between the dates specified in StartDt and EndDt.
+  */
 
-   %if &PxLst = &Outset %then %do ;
+  %if &PxLst = &Outset %then %do ;
+    %** Make sure we arent going to overwrite the pxlist dset. ;
     %put PROBLEM: The Px List dataset must be different from the OutSet dataset;
     %put PROBLEM: Both parameters are set to "&PxLst". ;
     %put PROBLEM: Doing nothing. ;
-   %end ;
-   %else %do ;
-      proc sql ;
-         create table &OutSet as
-         select PBig.*
-         from  &_vdw_px as PBig INNER JOIN
-               &PxLst as PLittle
-         on    PBig.PX = PLittle.&PxVarName.  and
-               /* will this screw up use of an index? gh */
-               /* not one on both px and px_codetype. */
-               PBig.PX_CodeType = PLittle.&PxCodeTypeVarName.
-         where Pbig.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
-      quit ;
-   %end ;
+  %end ;
+  %else %do ;
+    ** Make sure input variables exist in the pxlist dset. ;
+    proc contents noprint data = &PxLst out = __varlist ;
 
+    proc sql noprint ;
+      select count(*) as num_vars
+      into :num_vars
+      from __varlist
+      where upcase(name) in (%upcase("&PxVarName"), %upcase("&PxCodeTypeVarName")) ;
+      drop table __varlist ;
+    quit ;
+    %if (&num_vars < 2) %then %do ;
+      %put ERROR: The Px List dataset you supplied does not have one or both of the variables you named in the input parameters!!! ;
+      %put ERROR: Expected to find both variables "&PxVarName" and "&PxCodeTypeVarName" in dataset "&PxLst", but one or both are missing. ;
+      %put ERROR: Doing nothing. ;
+    %end ;
+    %else %do ;
+      proc sort nodupkey data = &pxlst dupout = in_dupes ;
+        by &pxvarname &pxcodetypevarname ;
+      run ;
+      proc sql noprint ;
+
+        select count(*) as frq
+        into :num_dupes
+        from in_dupes
+        ;
+
+        reset print ;
+
+        %if &num_dupes > 0 %then %do ;
+          %put WARNING: There were duplicated values in your &PxLst dataset--THEY HAVE BEEN REMOVED!  Please see output for a listing of the codes that were duplicated. ;
+          select 'WARNING: These values were duplicated in your input dataset of procedure codes.' as msg, *
+          from in_dupes
+          ;
+          drop table in_dupes ;
+        %end ;
+        reset noexec ;
+        create table &OutSet as
+        select PBig.*
+        from  &_vdw_px as PBig INNER JOIN
+              &PxLst as PLittle
+        on    PBig.PX = PLittle.&PxVarName.  and
+              PBig.PX_CodeType = PLittle.&PxCodeTypeVarName.
+        where Pbig.ADate BETWEEN "&StartDt"d AND "&EndDt"d ;
+      quit ;
+    %end ;
+  %end ;
 %mend GetPxForPx ;
 *********************************************************;
 * Testing GetPxForPx (tested 20041230 gh);
