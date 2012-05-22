@@ -62,7 +62,7 @@ proc format;
 proc format;
     	value LessSix
     	.a = '<6'
-    	other=[comma5.0];    
+    	other=[comma8.0];    
 run;
 
   proc sql noprint;
@@ -96,8 +96,8 @@ options user = work;
 
    ods tagsets.ExcelXP file="&path.\&sysdate. &catg. file &InName .xls" style=analysis
 	options
-    (embedded_titles="yes"	Embedded_footnotes="yes" 	Autofit_Height = "YES"
-	default_column_width="50,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10");
+    (embedded_titles="yes"	Embedded_footnotes="yes" 	Autofit_Height = "YES" Frozen_Headers="8"  Frozen_RowHeaders="1"
+	Absolute_Column_Width="40,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5");
 
     %local i cat;  %let i = 1;
     %let cat = %scan(%bquote(&medcodes),&i);
@@ -196,7 +196,7 @@ options user = work;
    		proc tabulate data = &cat. missing format=LessSix. classdata=dataclass;
 			where upcase(Category)="%upcase(&catg.)";
 			freq rateallenr;  format sitecode $sitef.;
-			keylabel N="Rate/10k";
+			keylabel N="Rate/ 10k";
 			class Description category sitecode; 
 			table Description, sitecode /box="Enrolled Rates" misstext='.'; *added description for non-ndc;
 	   	%titlefoots;
