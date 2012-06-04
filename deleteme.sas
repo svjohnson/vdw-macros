@@ -22,33 +22,26 @@ options
   nosqlremerge
 ;
 
-%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
-%include vdw_macs ;
+%let outt = \\ghrisas\SASUser\pardre1\ ;
+%let outpath = &outt ;
+libname s "&outt" ;
 
-data test ;
-  input
-    @1  mrn $char10.
-    @13 contact_date date9.
-  ;
-  end_date = contact_date + 30 ;
-  format
-    contact_date end_date mmddyy10.
-  ;
-datalines ;
-roy         01jan2001
-roy         01feb2001
-roy         15jun2002
-roy         14jul2002
-roy         03aug2005
-;
-run ;
+%let __out = s.ghc_test_counts ;
 
-proc print ;
-run ;
+%let out_folder = \\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\tests\ ;
 
-%collapseperiods(lib = work, dset = test
-      , recstart = contact_date
-      , recend = end_date) ;
+ods html path = "&out_folder" (URL=NONE)
+         body = "test_counts_and_rates.html"
+         (title = "test_counts_and_rates output")
+          ;
+	proc print data = &__out (obs=200) ;
+		title1 "Here is a sample of what you are sending out" ;
+		title2 "Please inspect the full dataset in &outpath.&__out..sas7bdat before sending." ;
+    id data_type category ;
+		var code descrip num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
+		sum num_ppl num_enrolled_ppl rate_enrolled_ppl ;
+    by data_type category ;
+  run ;
 
-proc print ;
+ods _all_ close ;
 run ;
