@@ -9,7 +9,7 @@
 * <<purpose>>
 *********************************************/
 
-%include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
+%**include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
 options
   linesize  = 150
@@ -22,26 +22,15 @@ options
   nosqlremerge
 ;
 
-%let outt = \\ghrisas\SASUser\pardre1\ ;
-%let outpath = &outt ;
-libname s "&outt" ;
+libname submit 'C:\deleteme\counts_rates\submitted' ;
 
-%let __out = s.ghc_test_counts ;
+data submit.sop_test_counts ;
+  set submit.nsp_test_counts ;
+  array n num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
+  do i = 1 to dim(n) ;
+    n{i} = max(n{i}, 0) * 10 * uniform(0) ;
+  end ;
 
-%let out_folder = \\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\tests\ ;
+  drop i ;
 
-ods html path = "&out_folder" (URL=NONE)
-         body = "test_counts_and_rates.html"
-         (title = "test_counts_and_rates output")
-          ;
-	proc print data = &__out (obs=200) ;
-		title1 "Here is a sample of what you are sending out" ;
-		title2 "Please inspect the full dataset in &outpath.&__out..sas7bdat before sending." ;
-    id data_type category ;
-		var code descrip num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-		sum num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-    by data_type category ;
-  run ;
-
-ods _all_ close ;
 run ;
