@@ -27,7 +27,7 @@ options
 %**let rt = C:\deleteme\counts_rates ;
 %let rt = \\ghrisas\SASUser\pardre1\counts_rates ;
 
-libname submit "&rt.\submitted" ;
+libname submit "&rt./submitted/" ;
 libname main "&rt" ;
 
 %**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\stack_datasets.sas" ;
@@ -39,6 +39,8 @@ ods graphics / height = 6in width = 10in ;
 
 %**let out_folder = \\home\pardre1\ ;
 %let out_folder = c:\Documents and Settings\pardre1\My Documents\vdw\macros\tests\ ;
+
+%**test_lib(inlib = submit, inset = main.chemo_counts) ;
 
 ods html path = "&out_folder" (URL=NONE)
          body = "count_rate_report.html"

@@ -14,36 +14,11 @@
                           , outlib =      /* the lib where you want the output, single dset of counts/rates to be */
                           , report_name = /* the full path & filename of the output excel file. */ ) ;
 
-  title1 "Counts/Rates from &dset_name.." ;
+  ** title1 "Counts/Rates from &dset_name.." ;
+  %local i rgx ;
+  %let rgx = s/[^a-z]/_/ ;
 
   %stack_datasets(inlib = &inlib, nom = &dset_name, outlib = &outlib) ;
-
-  proc sort data = &outlib..&dset_name out = gnu ;
-    by data_type site category code ;
-  run ;
-
-  %macro distinct(var) ;
-    %** Purpose: description ;
-    proc sort nodupkey data = gnu(keep = &var) out = _&var ;
-      by &var ;
-    run ;
-  %mend distinct ;
-
-  %**distinct(descrip) ;
-  %**distinct(code) ;
-
-  proc sort nodupkey data = gnu (keep = data_type category code descrip) out = _code ;
-    by data_type category code descrip ;
-  run ;
-
-  %distinct(site) ;
-
-  proc sql ;
-    create table classes as
-    select data_type, descrip, code, category, site
-    from _code CROSS JOIN _site
-    ;
-  quit ;
 
   proc format ;
     value $dt
@@ -54,22 +29,11 @@
     ;
   quit ;
 
-  ods tagsets.ExcelXP
-    file = "&report_name"
-    style = analysis
-    options (
-              Frozen_Headers="5"
-              Frozen_RowHeaders="1"
-              embedded_titles="yes"
-              embedded_footnotes="yes"
-              autofit_height = "yes"
-              /* suppress_bylines = 'yes' */
-              absolute_column_width = "25, 12, 40, 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5"
-              /* sheet_interval='bygroup'  */
-              /* doc = 'help' */
-              orientation = 'landscape'
-              )
-  ;
+  %macro distinct(var =, outset = ) ;
+    proc sort nodupkey data = gnu(keep = &var) out = &outset ;
+      by &var ;
+    run ;
+  %mend distinct ;
 
   %macro new_sheet(tab_name, var, box_text = " ") ;
     ods tagsets.ExcelXP options (sheet_interval = 'none' sheet_name = "&tab_name") ;
@@ -83,20 +47,108 @@
   		keylabel N=" ";
   		class data_type descrip category site / missing ;
    ** table category="Category" * (data_type="Type of data" * descrip="Event" * code="Signifying Code" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
-  		table category="Category" * (data_type="Type of data" * descrip="Event" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
+   ** table category="Category" * (data_type="Type of data" * descrip="Event" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
+  		table data_type="Type of data" * (descrip="Event" all="Subtotal") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
   		format data_type $dt. ;
  		run;
 
 
   %mend new_sheet ;
 
-  %new_sheet(tab_name = Records   , var = num_recs        , box_text = "Raw record counts") ;
-  %new_sheet(tab_name = People    , var = num_ppl         , box_text = "Counts of people (enrolled or not)") ;
-  %new_sheet(tab_name = Enrollees , var = num_enrolled_ppl, box_text = "Counts of people enrolled at the time of the event.") ;
-  %new_sheet(tab_name = Rates     , var = rate_enrolled_ppl, box_text = "Rates per 10k enrollees ") ;
+  %macro do_category(cat) ;
+    %** Purpose: Runs a report for one of the categories. ;
+    %let this_file = "%sysfunc(pathname(&outlib))/&cat..xls" ;
+    %put Working on &cat.. ;
+    %put File will be &this_file.. ;
 
+    %** Subset to our category of interest ;
+    proc sort data = &outlib..&dset_name out = gnu ;
+      by data_type site code ;
+      where prxchange("&rgx", -1, trim(lowcase(category))) = "&cat" ;
+    run ;
 
-  ods tagsets.ExcelXP close ;
+    %** Create the classdata dataset (used in new_sheet above). ;
+    %distinct(var = site, outset = _site) ;
+    %distinct(var = %str(data_type category code descrip), outset = _code) ;
 
+    proc sql noprint ;
+      create table classes as
+      select data_type, descrip, code, category, site
+      from _code CROSS JOIN _site
+      ;
+
+      select category
+      into :category
+      from classes
+      ;
+    quit ;
+
+    title "&category" ;
+
+    ods tagsets.ExcelXP
+      file = &this_file
+      style = analysis
+      options (
+                Frozen_Headers        = "5"
+                Frozen_RowHeaders     = "2"
+                embedded_titles       = "yes"
+                embedded_footnotes    = "yes"
+                autofit_height        = "yes"
+                absolute_column_width = "12, 40, 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5"
+                orientation           = "landscape"
+                )
+    ;
+
+      %new_sheet(tab_name = Records   , var = num_recs          , box_text = "Raw record counts") ;
+      %new_sheet(tab_name = People    , var = num_ppl           , box_text = "Counts of people (enrolled or not)") ;
+      %new_sheet(tab_name = Enrollees , var = num_enrolled_ppl  , box_text = "Counts of people enrolled at the time of the event.") ;
+      %new_sheet(tab_name = Rates     , var = rate_enrolled_ppl , box_text = "Rates per 10k enrollees ") ;
+
+    ods tagsets.ExcelXP close ;
+  %mend do_category ;
+
+  proc sql noprint ; ;
+    select distinct prxchange("&rgx", -1, trim(lowcase(category))) as cat
+    into :cat1 - :cat999
+    from &outlib..&dset_name
+    ;
+    %local num_cats ;
+    %let num_cats = &sqlobs ;
+  quit ;
+
+  %do i = 1 %to &num_cats ;
+    %let this_cat = &&cat&i ;
+    %do_category(cat = &this_cat) ;
+  %end ;
 
 %mend report_counts_rates ;
+
+%macro test_lib(inlib, inset) ;
+
+  proc sql noprint ; ;
+    select distinct prxchange("s/[^a-z]/_/", -1, trim(lowcase(category))) as cat
+    into :cat1 - :cat999
+    from &inset
+    ;
+    %local num_cats ;
+    %let num_cats = &sqlobs ;
+  quit ;
+
+  %do i = 1 %to &num_cats ;
+    %let this_cat = &&cat&i ;
+    %** The forward-slash there works on windows, and will likely also work on unix. ;
+    %let this_file = "%sysfunc(pathname(&inlib))/&this_cat..xls" ;
+    %put Working on &this_cat.. ;
+    %put File will be &this_file.. ;
+
+    ods tagsets.ExcelXP file = &this_file ;
+      proc print data = sashelp.class ;
+      run ;
+    ods tagsets.ExcelXP close ;
+
+  %end ;
+
+
+
+
+%mend test_lib ;

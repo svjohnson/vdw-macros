@@ -22,15 +22,21 @@ options
   nosqlremerge
 ;
 
-libname submit 'C:\deleteme\counts_rates\submitted' ;
+libname submit '\\ghrisas\SASUser\pardre1\counts_rates\submitted' ;
 
-data submit.sop_test_counts ;
-  set submit.nsp_test_counts ;
-  array n num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-  do i = 1 to dim(n) ;
-    n{i} = max(n{i}, 0) * 10 * uniform(0) ;
-  end ;
+%macro make_fake(site) ;
+  %** Purpose: description ;
+  data submit.&site._chemo_counts ;
+    set submit.ghc_chemo_counts ;
+    array n num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
+    do i = 1 to dim(n) ;
+      n{i} = max(n{i}, 0) * 10 * uniform(0) ;
+    end ;
 
-  drop i ;
+    drop i ;
 
-run ;
+  run ;
+%mend make_fake ;
+
+%make_fake(bobbity) ;
+%make_fake(boo) ;
