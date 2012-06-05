@@ -27,7 +27,8 @@ options
 libname submit 'C:\deleteme\counts_rates\submitted' ;
 libname main 'C:\deleteme\counts_rates' ;
 
-%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\stack_datasets.sas" ;
+%**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\stack_datasets.sas" ;
+%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
 %include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\ReportCountsAndRates.sas" ;
 
 options orientation = landscape ;
