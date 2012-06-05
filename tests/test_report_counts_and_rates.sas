@@ -24,8 +24,11 @@ options
 ** For inspecting SQL sent to a server. ;
 ** options sastrace = ',,,d' sastraceloc = saslog nostsuffix ;
 
-libname submit 'C:\deleteme\counts_rates\submitted' ;
-libname main 'C:\deleteme\counts_rates' ;
+%**let rt = C:\deleteme\counts_rates ;
+%let rt = \\ghrisas\SASUser\pardre1\counts_rates ;
+
+libname submit "&rt.\submitted" ;
+libname main "&rt" ;
 
 %**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\stack_datasets.sas" ;
 %include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
@@ -45,7 +48,7 @@ ods html path = "&out_folder" (URL=NONE)
 ** ods rtf file = "&out_folder.count_rate_report.rtf" device = sasemf ;
 
 %report_counts_rates(inlib = submit
-                    , dset_name = test_counts
+                    , dset_name = chemo_counts
                     , outlib = main
                     , report_name = C:\deleteme\counts_rates\bubba.xls) ;
 

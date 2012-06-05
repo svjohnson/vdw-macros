@@ -57,15 +57,14 @@
   ods tagsets.ExcelXP
     file = "&report_name"
     style = analysis
-    options (/*
-              Frozen_Headers="8"
+    options (
+              Frozen_Headers="5"
               Frozen_RowHeaders="1"
-              */
               embedded_titles="yes"
               embedded_footnotes="yes"
               autofit_height = "yes"
               /* suppress_bylines = 'yes' */
-              absolute_column_width = "25, 12, 40, 8,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5"
+              absolute_column_width = "25, 12, 40, 5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5"
               /* sheet_interval='bygroup'  */
               /* doc = 'help' */
               orientation = 'landscape'
@@ -79,13 +78,13 @@
     **   var category code descrip &var ;
     ** run ;
 
- 		proc tabulate data = gnu missing format = comma9.0 ; ** classdata = classes ;
+ 		proc tabulate data = gnu missing format = comma9.0 classdata = classes ;
   		freq &var;  ;
   		keylabel N=" ";
-  		class data_type descrip code category site / missing ;
-  		table category="Category" * (data_type="Type of data" * descrip="Event" * code="Signifying Code" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
+  		class data_type descrip category site / missing ;
+   ** table category="Category" * (data_type="Type of data" * descrip="Event" * code="Signifying Code" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
+  		table category="Category" * (data_type="Type of data" * descrip="Event" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
   		format data_type $dt. ;
-  		** by data_type ;
  		run;
 
 

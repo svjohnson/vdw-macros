@@ -25,9 +25,38 @@ options
 %include '\\home\pardre1\SAS\SCRIPTS\sasntlogon.sas';
 %include "//ghrisas/warehouse/sasdata/crn_vdw/lib/StdVars_Teradata.sas";
 
-%let outt = \\ghrisas\SASUser\pardre1\ ;
+%let outt = \\ghrisas\SASUser\pardre1\counts_rates ;
 
 libname s "&outt" ;
+
+%macro make_chemo_codes(outset = s.chemo_codes) ;
+  libname c '\\mlt1q0\C$\Documents and Settings\pardre1\My Documents\vdw\chemo_codes\data' ;
+  %** Purpose: description ;
+  proc format ;
+      value $chmtyp
+        "A"  = "Anthracycline"
+        "H"  = "Herceptin"
+        "O"  = "Other Agent"
+        "U"  = "Unknown Agent"
+        "I"  = "Immunotherapy"
+        "R"  = "Hormone therapy"
+        "N"  = "Not on list of chemo codes"
+      ;
+  quit ;
+
+  proc sql ;
+    create table &outset as
+    select 'DX' as data_type, '09' as code_type, put(chemo_type, $chmtyp.) as category, dx as code, description as descrip
+    from c.diagnoses
+    UNION ALL
+    select 'PX' as data_type, case code_type when 'CPT4' then 'C4' when 'ICD9' then '09' when 'HCPC' then 'H4' else '??' end as code_type, put(coalesce(chemo_type, 'U'), $chmtyp.) as category, px as code, description as descrip
+    from c.procedures
+    UNION ALL
+    select 'NDC' as data_type, '  ' as code_type, put(chemo_type, $chmtyp.) as category, ndc as code, description as descrip
+    from c.drugs
+    ;
+  quit ;
+%mend make_chemo_codes ;
 
   /*
     InCodeSet
@@ -98,12 +127,12 @@ ods html path = "&out_folder" (URL=NONE)
           ;
 
 
-%VDWCountsAndRates(incodeset   = gnu
+%VDWCountsAndRates(incodeset   = s.chemo_codes
                   , start_date = 01jan2007
                   , end_date = 31dec2008
                   /* , cohort = s.cohort */
                   , outpath = &outt
-                  , outfile = test_counts
+                  , outfile = chemo_counts
                   ) ;
 
 run ;
