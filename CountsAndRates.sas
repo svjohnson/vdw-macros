@@ -6,22 +6,23 @@
 *
 * C:\Documents and Settings\pardre1\My Documents\vdw\macros\CountsAndRates.sas
 *
-* A rewrite of the VDWCountsAndRates1 and 2 macros.
+* A rewrite of the VDWCountsAndRates1 macro.
 *********************************************/
 
-%macro VDWCountsAndRates(incodeset   = /* Name of an input dset of data types, code types, categories and codes (see below). */
-                        , start_date = /* Beginning of the period over which you want the counts/rates. */
-                        , end_date   = /* End of the period over which you want the counts/rates. */
-                        , cohort     = /* Optional--if your interest is limited to an enumerated population of peple, name the dset of MRNs identifying them here. */
-                        , outpath    = /* Path giving the location where you want the output files that will contain the counts/rates. */
-                        , outfile    = /* Base name of the output files (so--no extension).  'my_file' will produce 'my_file.xls' and 'my_file.sas7bdat' */
+%macro generate_counts_rates(incodeset = /* Name of an input dset of data types, code types, categories and codes (see below). */
+                          , start_date = /* Beginning of the period over which you want the counts/rates. */
+                          , end_date   = /* End of the period over which you want the counts/rates. */
+                          , cohort     = /* Optional--if your interest is limited to an enumerated population of peple, name the dset of MRNs identifying them here. */
+                          , outpath    = /* Path giving the location where you want the output files that will contain the counts/rates. */
+                          , outfile    = /* Base name of the output files (so--no extension).  'my_file' will produce 'my_file.xls' and 'my_file.sas7bdat' */
                         ) ;
 
   /*
     InCodeSet
-      data_type: one of PX, DX, NDC, LAB
+      data_type: one of PX, DX, NDC, LAB.
       code_type: one of the valid values for px_codetype, dx_codetype, or null for NDCs/Labs.
       category: a user-specified string that can be used to group codes into categories (e.g., 'Analgesics', 'Therapeutic Radiation').
+      descrip: a more fine-grained description of the particular code.  You could think of this as a subcategory (since codes w/the same descrip value get rolled up at the reporting stage).
       code: the actual NDC, ICD-9 dx code, etc.
   */
 
@@ -251,4 +252,4 @@
 
   %exit: ;
 
-%mend VDWCountsAndRates ;
+%mend generate_counts_rates ;

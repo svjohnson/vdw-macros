@@ -6,13 +6,13 @@
 *
 * c:\Documents and Settings\pardre1\My Documents\vdw\macros\ReportCountsAndRates.sas
 *
-* Produces xls files combining the outputs of several sites runs of the VDWCountsAndRates macro.
+* Produces xls files combining the outputs of several sites runs of the generate_counts_rates macro.
 *********************************************/
 
 %macro report_counts_rates(inlib =        /* lib where the site-submitted dsets live */
                           , dset_name =   /* the stub dataset name to use to identify which dsets should be part of this report */
                           , outlib =      /* the lib where you want the output, single dset of counts/rates to be */
-                          , report_name = /* the full path & filename of the output excel file. */ ) ;
+                          ) ;
 
   ** title1 "Counts/Rates from &dset_name.." ;
   %local i rgx ;
@@ -123,32 +123,3 @@
 
 %mend report_counts_rates ;
 
-%macro test_lib(inlib, inset) ;
-
-  proc sql noprint ; ;
-    select distinct prxchange("s/[^a-z]/_/", -1, trim(lowcase(category))) as cat
-    into :cat1 - :cat999
-    from &inset
-    ;
-    %local num_cats ;
-    %let num_cats = &sqlobs ;
-  quit ;
-
-  %do i = 1 %to &num_cats ;
-    %let this_cat = &&cat&i ;
-    %** The forward-slash there works on windows, and will likely also work on unix. ;
-    %let this_file = "%sysfunc(pathname(&inlib))/&this_cat..xls" ;
-    %put Working on &this_cat.. ;
-    %put File will be &this_file.. ;
-
-    ods tagsets.ExcelXP file = &this_file ;
-      proc print data = sashelp.class ;
-      run ;
-    ods tagsets.ExcelXP close ;
-
-  %end ;
-
-
-
-
-%mend test_lib ;

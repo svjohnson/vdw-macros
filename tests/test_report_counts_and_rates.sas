@@ -52,7 +52,7 @@ ods html path = "&out_folder" (URL=NONE)
 %report_counts_rates(inlib = submit
                     , dset_name = chemo_counts
                     , outlib = main
-                    , report_name = C:\deleteme\counts_rates\bubba.xls) ;
+                    ) ;
 
 
 ods _all_ close ;

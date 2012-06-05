@@ -64,6 +64,7 @@ libname s "&outt" ;
       code_type: one of the valid values for px_codetype, dx_codetype, or null for NDCs.
       category: a user-specified string that can be used to group codes into categories (e.g., 'Analgesics', 'Therapeutic Radiation').
       code: the actual NDC, ICD-9 dx code, etc.
+
   */
 
 data gnu ;
