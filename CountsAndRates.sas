@@ -14,7 +14,7 @@
                           , end_date   = /* End of the period over which you want the counts/rates. */
                           , cohort     = /* Optional--if your interest is limited to an enumerated population of peple, name the dset of MRNs identifying them here. */
                           , outpath    = /* Path giving the location where you want the output files that will contain the counts/rates. */
-                          , outfile    = /* Base name of the output files (so--no extension).  'my_file' will produce 'my_file.xls' and 'my_file.sas7bdat' */
+                          , outfile    = /* Base name of the output files (so--no extension).  'my_file' will produce '<<siteabbrev>>_my_file.sas7bdat' */
                         ) ;
 
   /*

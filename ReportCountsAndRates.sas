@@ -11,7 +11,7 @@
 
 %macro report_counts_rates(inlib =        /* lib where the site-submitted dsets live */
                           , dset_name =   /* the stub dataset name to use to identify which dsets should be part of this report */
-                          , outlib =      /* the lib where you want the output, single dset of counts/rates to be */
+                          , outlib =      /* the lib where you want the output--a single aggregated dset + xls files for each category found */
                           ) ;
 
   ** title1 "Counts/Rates from &dset_name.." ;
