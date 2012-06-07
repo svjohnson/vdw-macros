@@ -128,7 +128,7 @@ ods html path = "&out_folder" (URL=NONE)
           ;
 
 
-%VDWCountsAndRates(incodeset   = s.chemo_codes
+%generate_counts_rates(incodeset   = s.chemo_codes
                   , start_date = 01jan2007
                   , end_date = 31dec2008
                   /* , cohort = s.cohort */
