@@ -5823,7 +5823,7 @@ options user = work;
                           , end_date   = /* End of the period over which you want the counts/rates. */
                           , cohort     = /* Optional--if your interest is limited to an enumerated population of peple, name the dset of MRNs identifying them here. */
                           , outpath    = /* Path giving the location where you want the output files that will contain the counts/rates. */
-                          , outfile    = /* Base name of the output files (so--no extension).  'my_file' will produce 'my_file.xls' and 'my_file.sas7bdat' */
+                          , outfile    = /* Base name of the output files (so--no extension).  'my_file' will produce '<<siteabbrev>>_my_file.sas7bdat' */
                         ) ;
 
   /*
@@ -6049,19 +6049,21 @@ options user = work;
     by data_type category ;
   run ;
 
-  %** This was in the prior version of the macro--repeating it here for compatibility. ;
-	proc print data = &__out (obs=200) ;
+  %** Switching to tabulate in order to avoid ERR: The ID columns were too wide for the LINESIZE to print
+  %** the special report usually generated when BY and ID lists are identical. ;
+	proc tabulate data = &__out (obs=200) missing format = comma9.0 ; ** classdata = &incodeset ;
 		title1 "Here is a sample of what you are sending out" ;
 		title2 "Please inspect the full dataset in &outpath.&_SiteAbbr._&outfile..sas7bdat before sending." ;
-    id data_type category ;
-		var code descrip num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-		sum num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-    by data_type category ;
-  run ;
+		class data_type descrip category / missing ;
+		classlev descrip / style=[outputwidth=5.5in] ;
+		var num_: rate_enrolled_ppl ;
+		table data_type="Type of data" * (category * descrip="Event") , (num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl)*SUM=" " / misstext = '.' box = "Data to be sent" ;
+	run;
 
   %exit: ;
 
 %mend generate_counts_rates ;
+
 
 %macro report_counts_rates(inlib =        /* lib where the site-submitted dsets live */
                           , dset_name =   /* the stub dataset name to use to identify which dsets should be part of this report */
@@ -6226,18 +6228,18 @@ options user = work;
 		combinedrace = "UN";
 		array aryrace {*} Race1 Race2;
 		do i=1 to dim(aryrace);
-			if aryrace{i} = "HP" then do;
+			if upcase(aryrace{i}) = "HP" then do;
 				CombinedRace = "HP";
 			end;
-			else if aryrace{i} in ( "IN" , "AS", "BA") then do;
+			else if upcase(aryrace{i}) in ( "IN" , "AS", "BA") then do;
 				if combinedrace = "UN" then CombinedRace = aryrace{i};
 				else combinedrace = "MU";
 			end;
-			else if aryrace{i} = "WH" then do;
+			else if upcase(aryrace{i}) = "WH" then do;
 				if combinedrace ="UN" then CombinedRace = "WH";
-				else if &WHOther = 'MU' then combinedrace = "MU";
+				else if %upcase(&WHOther) = 'MU' then combinedrace = "MU";
 			end;
-			else if aryrace{i} = "MU" then do;
+			else if upcase(aryrace{i}) = "MU" then do;
 				CombinedRace = "MU";
 			end;
 		end;

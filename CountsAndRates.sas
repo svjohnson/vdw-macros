@@ -240,17 +240,18 @@
     by data_type category ;
   run ;
 
-  %** This was in the prior version of the macro--repeating it here for compatibility. ;
-	proc print data = &__out (obs=200) ;
+  %** Switching to tabulate in order to avoid ERR: The ID columns were too wide for the LINESIZE to print
+  %** the special report usually generated when BY and ID lists are identical. ;
+	proc tabulate data = &__out (obs=200) missing format = comma9.0 ; ** classdata = &incodeset ;
 		title1 "Here is a sample of what you are sending out" ;
 		title2 "Please inspect the full dataset in &outpath.&_SiteAbbr._&outfile..sas7bdat before sending." ;
-    id data_type category ;
-		var code descrip num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-		sum num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-    by data_type category ;
-  run ;
+		class data_type descrip category / missing ;
+		classlev descrip / style=[outputwidth=5.5in] ;
+		var num_: rate_enrolled_ppl ;
+		table data_type="Type of data" * (category * descrip="Event") , (num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl)*SUM=" " / misstext = '.' box = "Data to be sent" ;
+	run;
 
   %exit: ;
 
 %mend generate_counts_rates ;
-   
+
