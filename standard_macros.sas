@@ -1253,7 +1253,7 @@ proc sql &sqlopts ;
   select p.*
   from &_vdw_px as p, _ppl as sample
   where p.mrn = sample.mrn
-        and px_codetype in ('C4', 'H4') /* Pretty sure all the PVD codes below are CPTs, but I will code defensively here. */
+        and px_codetype in ('C4', 'H4', '09')
         and adate between sample.&IndexDateVarName-1
                       and sample.&IndexDateVarName-365
         &inpatout.
@@ -1461,8 +1461,7 @@ proc sql &sqlopts ;
                    label = "Metastatic solid tumor: "
       , coalesce(w.AIDS         , 0) as  AIDS
                    label = "AIDS: "
-      , coalesce(w.&IndexVarName, 0) as  &IndexVarName
-                   label = "Charlson score: "
+      , w.&IndexVarName label = "Charlson score: "
       , (w.MRN is null)              as  NoVisitFlag
                    label = "No diagnoses or procedures found in the year prior to &IndexDateVarName for this person"
   from _ppl as i left join _WithCharlson as w
