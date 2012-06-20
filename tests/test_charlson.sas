@@ -86,5 +86,6 @@ options
           , IndexVarName = charlson
           , inpatonly=A
           , malig=N
+              , NoEncounterGetsMissing = Y
           );
 run ;

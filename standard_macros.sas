@@ -1028,6 +1028,7 @@ run;
               , IndexVarName
               , inpatonly=I
               , malig=N
+              , NoEncounterGetsMissing = N
               );
 /*********************************************
 
@@ -1051,6 +1052,18 @@ run;
 *        MALIG flag - Defaults to no(N).  If MALIG is yes (Y) then the weights
 *                         of Metastasis and Malignancy are set to zero.
 *                     This may be useful in a study of cancer.
+*
+*        NoEncounterGetsMissing - Defaults to (N).  Controls whether people for
+*                                 whom no dx/px data is found get a charlson score
+*                                 of 0 (default) or a missing value.  For cohorts whose
+*                                 year-pre-index-date data capture is assured (usually via
+*                                 enrollment data), having no encounters should legitimately
+*                                 indicate a lack of any comorbidities & therefore a legit
+*                                 score of 0.  Cohorts *not* previously vetted in this way may
+*                                 not support that inference, and users should specify a Y
+*                                 for this parameter to prevent unwarranted interpretation
+*                                 of the Charlson score.
+*
 * Outputs:
 *     Dataset &outputsd with on record per studyid
 *     Variables
@@ -1461,7 +1474,13 @@ proc sql &sqlopts ;
                    label = "Metastatic solid tumor: "
       , coalesce(w.AIDS         , 0) as  AIDS
                    label = "AIDS: "
-      , w.&IndexVarName label = "Charlson score: "
+      %if %upcase(&NoEncounterGetsMissing) = Y %then %do ;
+        , w.&IndexVarName
+      %end ;
+      %else %do ;
+        , coalesce(w.&IndexVarName, 0) as &IndexVarName
+      %end ;
+       label = "Charlson score: "
       , (w.MRN is null)              as  NoVisitFlag
                    label = "No diagnoses or procedures found in the year prior to &IndexDateVarName for this person"
   from _ppl as i left join _WithCharlson as w
@@ -1480,6 +1499,7 @@ proc datasets nolist ;
         _ppl
         ;
 %mend charlson;
+
 
 %macro LastWord(WordList) ;
    %** This is a helper macro for CollapsePeriods--it just returns the last word (variable name) in a string (var list). ;
