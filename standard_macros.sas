@@ -4108,7 +4108,7 @@ run;
       on    i.mrn = d.mrn
       ;
 
-      * Now gather any ht/wt measures that occurred prior to the 18th birthday. ;
+      ** Now gather any ht/wt measures that occurred prior to the 18th birthday. ;
       create table _indata as
       select d.mrn
             , d.sex
@@ -4119,7 +4119,7 @@ run;
             , bmi             as original_bmi label = 'BMI as originally calculated'
             , ((measure_date - birth_date)/365.25 * 12) as agemos label = 'Age at measure in months'
             , days_diff
-            , %CalcAge(refdate = measure_date) as age_at_measure
+            , %CalcAge(bdtvar = birth_date, refdate = measure_date) as age_at_measure
             , . as recumbnt   label = 'Recumbent flag (not implemented in VDW)'
             , . as headcir    label = 'Head circumference (not implemented in VDW)'
       from  __demog as d INNER JOIN
