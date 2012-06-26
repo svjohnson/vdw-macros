@@ -13,8 +13,10 @@
 
 options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ; ** dsoptions="note2err" NOSQLREMERGE ;
 
-%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas" ;
+%**include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\standard_macros.sas" ;
+%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
 
+%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
 %macro get_test_kids(n = 300, outset = s.test_kids) ;
   proc sql outobs = &n nowarn ;
     create table &outset as
