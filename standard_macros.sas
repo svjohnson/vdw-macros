@@ -5811,7 +5811,8 @@ options user = work;
   ** All input dataset names begin with <<site abbreviation>>_ and end with the text passed in the nom parameter. ;
   ** This guy creates a big old UNION query against them all and then executes it to create a dataset named <<nom>> in the outlib library. ;
 
-  %local i ;
+  %local i rgx ;
+  %let rgx = (.*)_&nom.\s*$ ;
 
   proc sql ;
     ** create table s.drop_me as    select *    from dictionary.tables    ;
@@ -5822,7 +5823,7 @@ options user = work;
     from dictionary.tables
     where libname = "%upcase(&inlib)" AND
           nvar = 0 AND
-          memname like '%' || "%upcase(&nom)"
+          prxmatch("/&rgx./i", memname)
     ;
 
     %if &sqlobs > 0 %then %do ;
@@ -5834,25 +5835,35 @@ options user = work;
 
     drop table __novars ;
 
-    reset noprint ;
+    reset noprint feedback ;
 
     select memname as dset
-         , 'select *, "' || substr(memname, 1, index(memname, "_") -1) || '" as site from ' || "&inlib.." || memname as sequel
-         ,                  substr(memname, 1, index(memname, "_") -1) as site
+         , 'select *, "' || prxchange("s/&rgx./$1/i", -1, memname) || '" as site from ' || "&inlib.." || memname as sequel
+         ,                  prxchange("s/&rgx./$1/i", -1, memname) as site
     into   :dset1-:dset100
          , :union_stmt separated by ' UNION ALL CORRESPONDING '
          , :sitelist separated by ', '
     from dictionary.tables
     where libname = "%upcase(&inlib)" AND
           nvar > 0 AND
-          memname like '%' || "%upcase(&nom)"
+          prxmatch("/&rgx./i", memname)
     ;
 
-    reset feedback ;
+    %if &sqlobs = 0 %then %do ;
+      %do i = 1 %to 5 ;
+        %put ERROR: No datasets whose names end with "%trim(&nom)" found in input location %sysfunc(pathname(&inlib)) !!! ;
+      %end ;
+      reset print ;
+      select libname, memname, '%' || "%upcase(&nom)" as match_expression, memlabel
+      from dictionary.tables
+      ;
 
-    create table &outlib..&nom as
-    &union_stmt
-    ;
+    %end ;
+    %else %do ;
+      create table &outlib..&nom as
+      &union_stmt
+      ;
+    %end ;
   quit ;
 
 %mend stack_datasets ;
