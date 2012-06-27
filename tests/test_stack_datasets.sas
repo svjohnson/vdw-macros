@@ -9,7 +9,7 @@
 * Tests the stack_datasets macro.
 *********************************************/
 
-%include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
+%**include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
 options
   linesize  = 150
@@ -24,8 +24,9 @@ options
 ** For inspecting SQL sent to a server. ;
 ** options sastrace = ',,,d' sastraceloc = saslog nostsuffix ;
 
-libname z '\\groups\data\CTRHS\Crn\Pharmacovigilance\programming\data\chartval\submitted' ;
+libname z '\\ghrisas\SASUser\pardre1\test\stack_datasets' ;
+libname s '\\ghrisas\SASUser\pardre1\test\' ;
 
 %include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\stack_datasets.sas" ;
 
-%stack_datasets(inlib = z, nom = lvef_events, outlib = s) ;
+%stack_datasets(inlib = z, nom = ghct, outlib = s) ;
