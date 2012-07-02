@@ -6119,6 +6119,7 @@ options user = work;
 %macro report_counts_rates(inlib =        /* lib where the site-submitted dsets live */
                           , dset_name =   /* the stub dataset name to use to identify which dsets should be part of this report */
                           , outlib =      /* the lib where you want the output--a single aggregated dset + xls files for each category found */
+                          , sitefmt =     /* optional--the name of the format to use for the site variable. */
                           ) ;
 
   ** title1 "Counts/Rates from &dset_name.." ;
@@ -6149,14 +6150,17 @@ options user = work;
     **   var category code descrip &var ;
     ** run ;
 
- 		proc tabulate data = gnu missing format = comma9.0 classdata = classes ;
+ 		proc tabulate data = gnu missing format = comma10.0 classdata = classes ;
   		freq &var;  ;
   		keylabel N=" ";
   		class data_type descrip category site / missing ;
    ** table category="Category" * (data_type="Type of data" * descrip="Event" * code="Signifying Code" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
    ** table category="Category" * (data_type="Type of data" * descrip="Event" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
-  		table data_type="Type of data" * (descrip="Event" all="Subtotal") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
+  		table data_type="Type of data" * (descrip="Event" all="Subtotal") , site*N*[style=[tagattr='format:#,###']] / box = &box_text ; ** misstext = '.' ;
   		format data_type $dt. ;
+  		%if %length(&sitefmt) > 0 %then %do ;
+  		  format site &sitefmt ;
+  		%end ;
  		run;
 
 

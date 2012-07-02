@@ -101,6 +101,24 @@ LAB         Pretend Category                ALBUMIN       Lab tests I have known
 ;
 run ;
 
+data gnu ;
+  infile datalines truncover ;
+  input
+    @1    data_type   $char3.
+    @7    code_type   $char2.
+    @13   category    $char30.
+    @45   code        $char12.
+    @59   descrip     $char200.
+  ;
+  ** if data_type = 'DX' ;
+datalines ;
+PX    C4    Testing                         45307         Flex Sig
+PX    C4    Testing                         45300         Flex Sig
+PX    C4    Testing                         0066T         Code that does not appear anywhere at GH
+;
+run ;
+
+
 %macro gen_cohort(outset = s.cohort, n = 200) ;
   %** Purpose: description ;
   proc sql outobs = &n nowarn ;
@@ -128,12 +146,12 @@ ods html path = "&out_folder" (URL=NONE)
           ;
 
 
-%generate_counts_rates(incodeset   = s.chemo_codes
-                  , start_date = 01jan2007
-                  , end_date = 31dec2008
+%generate_counts_rates(incodeset   = gnu
+                  , start_date = 01jan2011
+                  , end_date = 31dec2011
                   /* , cohort = s.cohort */
                   , outpath = &outt
-                  , outfile = chemo_counts
+                  , outfile = test_missing
                   ) ;
 
 run ;

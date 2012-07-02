@@ -240,6 +240,50 @@
     by data_type category ;
   run ;
 
+  %** Now supplement the output dset w/any codes that did not appear anywhere in the site data. ;
+  proc sql ;
+    create table __not_found as
+    select i.data_type
+            , i.code_type
+            , i.category
+            , i.code
+            , i.descrip
+    from  &incodeset as i LEFT JOIN
+          &__out as o
+    on    i.data_type = o.data_type AND
+          i.code_type = o.code_type AND
+          i.category = o.category AND
+          i.descrip = o.descrip
+    where o.data_type IS NULL
+    ;
+
+    %if &sqlobs > 0 %then %do ;
+      insert into &__out (data_type
+                        , code_type
+                        , category
+                        , code
+                        , descrip
+                        , num_recs
+                        , num_ppl
+                        , num_enrolled_ppl
+                        , rate_enrolled_ppl)
+      select     data_type
+                , code_type
+                , category
+                , code
+                , descrip
+                , 0 as num_recs
+                , 0 as num_ppl
+                , 0 as num_enrolled_ppl
+                , 0 as rate_enrolled_ppl
+      from __not_found
+      ;
+    %end ;
+
+    drop table __not_found ;
+
+  quit ;
+
   %** Switching to tabulate in order to avoid ERR: The ID columns were too wide for the LINESIZE to print
   %** the special report usually generated when BY and ID lists are identical. ;
 	proc tabulate data = &__out (obs=200) missing format = comma9.0 ; ** classdata = &incodeset ;
@@ -254,4 +298,3 @@
   %exit: ;
 
 %mend generate_counts_rates ;
-

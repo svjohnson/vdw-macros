@@ -31,8 +31,8 @@ libname submit "&rt./submitted/" ;
 libname main "&rt" ;
 
 %**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\stack_datasets.sas" ;
-%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
-%**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\ReportCountsAndRates.sas" ;
+%**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
+%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\ReportCountsAndRates.sas" ;
 
 options orientation = landscape ;
 ods graphics / height = 6in width = 10in ;
@@ -46,12 +46,18 @@ ods html path = "&out_folder" (URL=NONE)
          body = "count_rate_report.html"
          (title = "count_rate_report output")
           ;
-
+  proc format ;
+    value $st
+      'GHC' = 'Group Health'
+      'BOO' = 'Spooky!'
+    ;
+  quit ;
 ** ods rtf file = "&out_folder.count_rate_report.rtf" device = sasemf ;
 
 %report_counts_rates(inlib = submit
-                    , dset_name = chemo_counts
+                    , dset_name = test_missing
                     , outlib = main
+                    , sitefmt = $st.
                     ) ;
 
 
