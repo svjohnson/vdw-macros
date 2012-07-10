@@ -55,7 +55,7 @@ ods html path = "&out_folder" (URL=NONE)
 ** ods rtf file = "&out_folder.count_rate_report.rtf" device = sasemf ;
 
 %report_counts_rates(inlib = submit
-                    , dset_name = test_missing
+                    , dset_name = test_counts
                     , outlib = main
                     , sitefmt = $st.
                     ) ;

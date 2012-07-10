@@ -97,25 +97,15 @@ PX    C4    Radiology Exams	                78320	        78320:Bone and/or join
 DX    09    Pretend Category                V82.81        Screening for osteoporosis
 DX    09    Pretend Category                V72.84        Pre-operative procedure, unspecified
 NDC         Pretend Category                00002323704   Fascinating NDC.
-LAB         Pretend Category                ALBUMIN       Lab tests I have known.
+LAB         Pretend Category                ALBUMIN       Albumin
+LAB         Pretend Category                CA125         CA-125.
 ;
 run ;
 
 data gnu ;
-  infile datalines truncover ;
-  input
-    @1    data_type   $char3.
-    @7    code_type   $char2.
-    @13   category    $char30.
-    @45   code        $char12.
-    @59   descrip     $char200.
-  ;
-  ** if data_type = 'DX' ;
-datalines ;
-PX    C4    Testing                         45307         Flex Sig
-PX    C4    Testing                         45300         Flex Sig
-PX    C4    Testing                         0066T         Code that does not appear anywhere at GH
-;
+  ** set s.chemo_codes ;
+  set gnu ;
+  **where data_type = 'LAB' ;
 run ;
 
 
@@ -151,7 +141,8 @@ ods html path = "&out_folder" (URL=NONE)
                   , end_date = 31dec2011
                   /* , cohort = s.cohort */
                   , outpath = &outt
-                  , outfile = test_missing
+                  , outfile = test_counts
+                  , censor_low = N
                   ) ;
 
 run ;

@@ -49,7 +49,7 @@
   		class data_type descrip category site / missing ;
    ** table category="Category" * (data_type="Type of data" * descrip="Event" * code="Signifying Code" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
    ** table category="Category" * (data_type="Type of data" * descrip="Event" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
-  		table data_type="Type of data" * (descrip="Event" all="Subtotal") , site*N*[style=[tagattr='format:#,###']] / box = &box_text ; ** misstext = '.' ;
+  		table data_type="Type of data" * (descrip="Event") , site*N*[style=[tagattr='format:#,###']] / box = &box_text ; ** misstext = '.' ;
   		format data_type $dt. ;
   		%if %length(&sitefmt) > 0 %then %do ;
   		  format site &sitefmt ;
@@ -67,18 +67,18 @@
 
     %** Subset to our category of interest ;
     proc sort data = &outlib..&dset_name out = gnu ;
-      by data_type site code ;
+      by data_type site descrip ;
       where prxchange("&rgx", -1, trim(lowcase(category))) = "&cat" ;
     run ;
 
     %** Create the classdata dataset (used in new_sheet above). ;
     %distinct(var = site, outset = _site) ;
-    %distinct(var = %str(data_type category code descrip), outset = _code) ;
+    %distinct(var = %str(data_type category descrip), outset = _descr) ;
 
     proc sql noprint ;
       create table classes as
-      select data_type, descrip, code, category, site
-      from _code CROSS JOIN _site
+      select data_type, descrip, category, site
+      from _descr CROSS JOIN _site
       ;
 
       select category

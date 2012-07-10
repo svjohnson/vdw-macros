@@ -5868,13 +5868,13 @@ options user = work;
 
 %mend stack_datasets ;
 
-
 %macro generate_counts_rates(incodeset = /* Name of an input dset of data types, code types, categories and codes (see below). */
                           , start_date = /* Beginning of the period over which you want the counts/rates. */
                           , end_date   = /* End of the period over which you want the counts/rates. */
                           , cohort     = /* Optional--if your interest is limited to an enumerated population of peple, name the dset of MRNs identifying them here. */
                           , outpath    = /* Path giving the location where you want the output files that will contain the counts/rates. */
                           , outfile    = /* Base name of the output files (so--no extension).  'my_file' will produce '<<siteabbrev>>_my_file.sas7bdat' */
+                          , censor_low = Y /* If set to N, it will skip the lowest-count redacting (mostly useful for debugging and single-site use). */
                         ) ;
 
   /*
@@ -5924,45 +5924,13 @@ options user = work;
     %goto exit ;
   %end ;
 
-  %macro gather_px(outset = _pxcounts) ;
-    %** Purpose: Grabs raw px data for the counting. ;
-    proc sql ; ** inobs = 1000 nowarn ;
-      create table &outset as
-      select data_type, code_type, category, code, descrip
-            , count(*) as num_recs                      format = comma9.0 label = "No. records"
-            , count(distinct p.mrn) as num_ppl          format = comma9.0 label = "No. people (enrolled or not)"
-            , count(distinct e.mrn) as num_enrolled_ppl format = comma9.0 label = "No. *enrolled* people"
-      from &_vdw_px as p INNER JOIN
+  %macro gather_any_data(dtype = PX, dset = &_vdw_px, date_var = adate, join_condition = %str(d.px_codetype = i.code_type AND d.px = i.code), outset = __blah) ;
+    proc sql ;
+      create table __grist as
+      select d.mrn, e.mrn as e_mrn, data_type, code_type, category, code, descrip
+      from &dset as d INNER JOIN
            &incodeset as i
-      on   p.px_codetype = i.code_type AND
-           p.px = i.code
-           %if %length(&cohort) > 0 %then %do ;
-            INNER JOIN &cohort as c
-            on  p.mrn = c.mrn
-           %end ;
-           LEFT JOIN
-           &_vdw_enroll as e
-      on   p.mrn = e.mrn AND
-           p.adate between e.enr_start and e.enr_end
-      where  i.data_type = 'PX' AND
-             p.adate between "&start_date"d and "&end_date"d
-      group by data_type, code_type, category, code, descrip
-      ;
-    quit ;
-  %mend gather_px ;
-
-  %macro gather_dx(outset = _dxcounts) ;
-    %** Purpose: description ;
-    proc sql ; ** inobs = 1000 nowarn ;
-      create table &outset as
-      select data_type, code_type, category, code, descrip
-            , count(*) as num_recs                      format = comma9.0 label = "No. records"
-            , count(distinct d.mrn) as num_ppl          format = comma9.0 label = "No. people (enrolled or not)"
-            , count(distinct e.mrn) as num_enrolled_ppl format = comma9.0 label = "No. *enrolled* people"
-      from &_vdw_dx as d INNER JOIN
-           &incodeset as i
-      on   d.dx_codetype = i.code_type AND
-           d.dx = i.code
+      on   &join_condition
            %if %length(&cohort) > 0 %then %do ;
             INNER JOIN &cohort as c
             on  d.mrn = c.mrn
@@ -5970,64 +5938,55 @@ options user = work;
            LEFT JOIN
            &_vdw_enroll as e
       on   d.mrn = e.mrn AND
-           d.adate between e.enr_start and e.enr_end
-      where  i.data_type = 'DX' AND
-             d.adate between "&start_date"d and "&end_date"d
-      group by data_type, code_type, category, code, descrip
+           &date_var between e.enr_start and e.enr_end
+      where  i.data_type = "&dtype" AND
+             &date_var between "&start_date"d and "&end_date"d
       ;
+      create table &outset as
+      select data_type, category, descrip
+            , count(*) as num_recs                      format = comma9.0 label = "No. records"
+            , count(distinct mrn)   as num_ppl          format = comma9.0 label = "No. people (enrolled or not)"
+            , count(distinct e_mrn) as num_enrolled_ppl format = comma9.0 label = "No. *enrolled* people"
+      from __grist
+      group by data_type, category, descrip
+      ;
+
+      create table __subt as
+      select data_type, category
+            , count(*) as num_recs                      format = comma9.0 label = "No. records"
+            , count(distinct mrn)   as num_ppl          format = comma9.0 label = "No. people (enrolled or not)"
+            , count(distinct e_mrn) as num_enrolled_ppl format = comma9.0 label = "No. *enrolled* people"
+      from __grist
+      group by data_type, category
+      ;
+
+      drop table __grist ;
+
+      insert into &outset(data_type, category, descrip, num_recs, num_ppl, num_enrolled_ppl)
+      select              data_type, category, "~SUBTOTAL for &dtype in this category:" as descrip, num_recs, num_ppl, num_enrolled_ppl
+      from __subt
+      ;
+
+      drop table __subt ;
+
     quit ;
+
+  %mend gather_any_data ;
+
+  %macro gather_px(outset = _pxcounts) ;
+    %gather_any_data(dtype = PX, dset = &_vdw_px, date_var = adate, join_condition = %str(d.px_codetype = i.code_type AND d.px = i.code), outset = &outset) ;
+  %mend gather_px ;
+
+  %macro gather_dx(outset = _dxcounts) ;
+    %gather_any_data(dtype = DX, dset = &_vdw_dx, date_var = adate, join_condition = %str(d.dx_codetype = i.code_type AND d.dx = i.code), outset = &outset) ;
   %mend gather_dx ;
 
   %macro gather_rx(outset = _rxcounts) ;
-    %** Purpose: description ;
-    proc sql ; ** inobs = 1000 nowarn ;
-      create table &outset as
-      select data_type, code_type, category, code, descrip
-            , count(*) as num_recs                      format = comma9.0 label = "No. records"
-            , count(distinct r.mrn) as num_ppl          format = comma9.0 label = "No. people (enrolled or not)"
-            , count(distinct e.mrn) as num_enrolled_ppl format = comma9.0 label = "No. *enrolled* people"
-      from &_vdw_rx as r INNER JOIN
-           &incodeset as i
-      on   r.ndc = i.code
-           %if %length(&cohort) > 0 %then %do ;
-            INNER JOIN &cohort as c
-            on  r.mrn = c.mrn
-           %end ;
-           LEFT JOIN
-           &_vdw_enroll as e
-      on    r.mrn = e.mrn AND
-            r.rxdate between e.enr_start and e.enr_end
-      where i.data_type = 'NDC' AND
-            r.rxdate between "&start_date"d and "&end_date"d
-      group by data_type, code_type, category, code, descrip
-      ;
-    quit ;
+    %gather_any_data(dtype = NDC, dset = &_vdw_rx, date_var = rxdate, join_condition = %str(d.ndc = i.code), outset = &outset) ;
   %mend gather_rx ;
 
   %macro gather_lab(outset = _labcounts) ;
-    %** Purpose: description ;
-    proc sql ; ** inobs = 1000 nowarn ;
-      create table &outset as
-      select data_type, code_type, category, code, descrip
-            , count(*) as num_recs                      format = comma9.0 label = "No. records"
-            , count(distinct l.mrn) as num_ppl          format = comma9.0 label = "No. people (enrolled or not)"
-            , count(distinct e.mrn) as num_enrolled_ppl format = comma9.0 label = "No. *enrolled* people"
-      from &_vdw_lab as l INNER JOIN
-           &incodeset as i
-      on   l.test_type = i.code
-           %if %length(&cohort) > 0 %then %do ;
-            INNER JOIN &cohort as c
-            on  l.mrn = c.mrn
-           %end ;
-           LEFT JOIN
-           &_vdw_enroll as e
-      on    l.mrn = e.mrn AND
-            coalesce(result_dt, lab_dt, order_dt) between e.enr_start and e.enr_end
-      where i.data_type = 'LAB' AND
-            coalesce(result_dt, lab_dt, order_dt) between "&start_date"d and "&end_date"d
-      group by data_type, code_type, category, code, descrip
-      ;
-    quit ;
+    %gather_any_data(dtype = LAB, dset = &_vdw_lab, date_var = %str(coalesce(result_dt, lab_dt, order_dt)), join_condition = %str(d.test_type = i.code), outset = &outset) ;
   %mend gather_lab ;
 
   proc sql noprint ;
@@ -6081,19 +6040,20 @@ options user = work;
 
   data &__out (label = "Counts at site &_SiteName for period from &start_date to &end_date") ;
     set &__out ;
-    ** Redact any counts that are less than &lowest_count ;
-    array n num_recs num_ppl num_enrolled_ppl ;
-    do i = 1 to dim(n) ;
-      if n{i} gt 0 and n{i} lt &lowest_count then n{i} = .a ;
-    end ;
-
+    %if %upcase(&censor_low) = Y %then %do ;
+      ** Redact any counts that are less than &lowest_count ;
+      array n num_recs num_ppl num_enrolled_ppl ;
+      do i = 1 to dim(n) ;
+        if n{i} gt 0 and n{i} lt &lowest_count then n{i} = .a ;
+      end ;
+      drop i ;
+    %end ;
     if num_enrolled_ppl then rate_enrolled_ppl = int((num_enrolled_ppl / &EnrPple.) * 10000) ;
 
     label
       rate_enrolled_ppl = "Rate of enrolled people per 10k enrollees"
     ;
     format rate_enrolled_ppl comma8.0 ;
-    drop i ;
   run ;
 
   proc sort data = &__out ;
@@ -6103,34 +6063,26 @@ options user = work;
   %** Now supplement the output dset w/any codes that did not appear anywhere in the site data. ;
   proc sql ;
     create table __not_found as
-    select i.data_type
-            , i.code_type
+    select distinct i.data_type
             , i.category
-            , i.code
             , i.descrip
     from  &incodeset as i LEFT JOIN
           &__out as o
     on    i.data_type = o.data_type AND
-          i.code_type = o.code_type AND
-          i.category = o.category AND
-          i.descrip = o.descrip
+          i.category = o.category
     where o.data_type IS NULL
     ;
 
     %if &sqlobs > 0 %then %do ;
       insert into &__out (data_type
-                        , code_type
                         , category
-                        , code
                         , descrip
                         , num_recs
                         , num_ppl
                         , num_enrolled_ppl
                         , rate_enrolled_ppl)
       select     data_type
-                , code_type
                 , category
-                , code
                 , descrip
                 , 0 as num_recs
                 , 0 as num_ppl
@@ -6158,7 +6110,6 @@ options user = work;
   %exit: ;
 
 %mend generate_counts_rates ;
-
 
 %macro report_counts_rates(inlib =        /* lib where the site-submitted dsets live */
                           , dset_name =   /* the stub dataset name to use to identify which dsets should be part of this report */
@@ -6200,7 +6151,7 @@ options user = work;
   		class data_type descrip category site / missing ;
    ** table category="Category" * (data_type="Type of data" * descrip="Event" * code="Signifying Code" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
    ** table category="Category" * (data_type="Type of data" * descrip="Event" all="Category Totals") , site*N*[style=[tagattr='format:#,###']] / misstext = '.' box = &box_text ;
-  		table data_type="Type of data" * (descrip="Event" all="Subtotal") , site*N*[style=[tagattr='format:#,###']] / box = &box_text ; ** misstext = '.' ;
+  		table data_type="Type of data" * (descrip="Event") , site*N*[style=[tagattr='format:#,###']] / box = &box_text ; ** misstext = '.' ;
   		format data_type $dt. ;
   		%if %length(&sitefmt) > 0 %then %do ;
   		  format site &sitefmt ;
@@ -6218,18 +6169,18 @@ options user = work;
 
     %** Subset to our category of interest ;
     proc sort data = &outlib..&dset_name out = gnu ;
-      by data_type site code ;
+      by data_type site descrip ;
       where prxchange("&rgx", -1, trim(lowcase(category))) = "&cat" ;
     run ;
 
     %** Create the classdata dataset (used in new_sheet above). ;
     %distinct(var = site, outset = _site) ;
-    %distinct(var = %str(data_type category code descrip), outset = _code) ;
+    %distinct(var = %str(data_type category descrip), outset = _descr) ;
 
     proc sql noprint ;
       create table classes as
-      select data_type, descrip, code, category, site
-      from _code CROSS JOIN _site
+      select data_type, descrip, category, site
+      from _descr CROSS JOIN _site
       ;
 
       select category
@@ -6277,6 +6228,7 @@ options user = work;
   %end ;
 
 %mend report_counts_rates ;
+
 
 /*********************************************
 * Sharon Fuller
