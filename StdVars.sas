@@ -45,7 +45,7 @@ options errors = 0 ;
   ** for details. ;
 
   ** Making this intentionally wacky so as to keep from colliding w/names likely to be chosen in application programs. ;
-  libname __vdw "\\&__server_name.\warehouse\sasdata\crn_vdw" access = readonly ;
+  libname __vdw "\\ghrisas\warehouse\sasdata\crn_vdw" access = readonly ;
 
   %let _vdw_tumor               = __vdw.tumor                   ;
   %let _vdw_enroll              = __vdw.enroll3_vw              ;
