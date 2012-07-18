@@ -21,9 +21,10 @@ options
   nosqlremerge
 ;
 
-%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\CountsAndRates.sas" ;
 %include '\\home\pardre1\SAS\SCRIPTS\sasntlogon.sas';
 %include "//ghrisas/warehouse/sasdata/crn_vdw/lib/StdVars_Teradata.sas";
+%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\CountsAndRates.sas" ;
+%**include vdw_macs ;
 
 %let outt = \\ghrisas\SASUser\pardre1\counts_rates ;
 
@@ -141,7 +142,7 @@ ods html path = "&out_folder" (URL=NONE)
                   , end_date = 31dec2011
                   /* , cohort = s.cohort */
                   , outpath = &outt
-                  , outfile = test_counts
+                  , outfile = remote_code_test
                   , censor_low = N
                   ) ;
 
