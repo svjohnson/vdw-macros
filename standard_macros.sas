@@ -4982,6 +4982,12 @@ run;
       'MU' = 'Multiple'
       Other = 'Unknown'
     ;
+    value $eb
+      'I' = 'Insurance'
+      'G' = 'Geography'
+      'B' = 'Both Ins + Geog'
+      'P' = 'Non-member patient'
+    ;
   quit ;
 
   data all_years ;
@@ -5013,6 +5019,7 @@ run;
           , year
           , min(put(drugcov, $dc.)) as drugcov
           , min(put(outside_utilization, $dc.)) as outside_utilization
+          , min(put(enrollment_basis, $eb.)) as enrollment_basis
           /* This depends on there being no overlapping periods to work! */
           , sum((min(enr_end, last_day) - max(enr_start, first_day) + 1) / num_days) as enrolled_proportion
     from  &_vdw_enroll as e INNER JOIN
@@ -5032,6 +5039,7 @@ run;
         , put(race1, $race.) as race length = 10
         , put(drugcov, $cd.) as drugcov
         , put(outside_utilization, $cd.) as outside_utilization
+        , enrollment_basis
         , enrolled_proportion
     from gnu as g LEFT JOIN
          &_vdw_demographic as d
@@ -5043,13 +5051,14 @@ run;
         , agegroup
         , drugcov label = "Drug coverage status (set to 'Y' if drugcov was 'Y' even once in [[year]])"
         , outside_utilization label = "Was there reason to suspect incomplete capture of ute or rx? (set to 'Y' if outside_ute was 'Y' even once in [[year]])"
+        , enrollment_basis label = "What sort of relationship between person and HMO does this record document?"
         , race
         , gender
         , round(sum(enrolled_proportion), &round_to) as prorated_total format = comma20.2 label = "Pro-rated number of people enrolled in [[year]] (accounts for partial enrollments)"
         , count(mrn)               as total          format = comma20.0 label = "Number of people enrolled at least one day in [[year]]"
     from with_agegroup
-    group by year, agegroup, drugcov, outside_utilization, race, gender
-    order by year, agegroup, drugcov, outside_utilization, race, gender
+    group by year, agegroup, drugcov, outside_utilization, enrollment_basis, race, gender
+    order by year, agegroup, drugcov, outside_utilization, enrollment_basis, race, gender
     ;
 
     /*
