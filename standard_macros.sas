@@ -915,7 +915,6 @@ run;
           ;
           drop table in_dupes ;
         %end ;
-        reset noexec ;
         create table &OutSet as
         select PBig.*
         from  &_vdw_px as PBig INNER JOIN

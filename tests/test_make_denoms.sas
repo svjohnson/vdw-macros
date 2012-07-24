@@ -24,6 +24,7 @@ options
 %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
 
 
-%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\make_denoms.sas" ;
+%**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\make_denoms.sas" ;
+%include vdw_macs ;
 
 %make_denoms(start_year = 2009, end_year = 2011, outset = s.test_denoms) ;
