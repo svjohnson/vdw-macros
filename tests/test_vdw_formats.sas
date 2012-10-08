@@ -22,9 +22,10 @@ options
 ;
 
 ** Please replace w/a reference to your local StdVars. ;
-%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+* %include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
+%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\vdw_formats.sas" ;
 
-%include vdw_macs ;
+* %include vdw_macs ;
 
 data gnu ;
   input
@@ -39,8 +40,9 @@ run ;
 proc print ;
 run ;
 
-options mprint ;
-%vdw_formats ;
+options mprint mlogic ;
+
+%vdw_formats(tweaked_descriptions = 1) ;
 
 proc print data = gnu ;
   format drg drga. ;

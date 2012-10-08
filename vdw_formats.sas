@@ -10,7 +10,7 @@
 * define some VDW-useful formats.
 *********************************************/
 
-%macro vdw_formats(lib = work) ;
+%macro vdw_formats(lib = work, tweaked_descriptions = 0) ;
   filename vdw_fmt   FTP     "formats.xpt"
                      HOST  = "vdw.hmoresearchnetwork.org"
                      CD    = "/vdwcode"
@@ -22,7 +22,19 @@
 
   libname  vdw_fmt xport ;
 
-  proc format lib = &lib cntlin = vdw_fmt.formats ;
+  *recode label to be of the form CODE(DESCRIPTION) if label only contains DESCRIPTION;
+  data vdw_formats;
+    set vdw_fmt.formats;
+    %if &tweaked_descriptions = 1 %then %do ;
+      if not(label =: strip(start)) and start = end then
+        label = strip(start) || ' (' || strip(label) || ')' ; *prepend code to desc;
+    %end ;
+  run;
+
+  proc format lib = &lib cntlin = vdw_formats ;
   run ;
 
+  proc datasets nolist;  delete vdw_formats;  run; *Clean up workspace;
+
 %mend vdw_formats ;
+
