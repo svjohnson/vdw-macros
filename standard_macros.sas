@@ -4655,7 +4655,7 @@ run;
   data vdw_formats;
     set vdw_fmt.formats;
     %if &tweaked_descriptions = 1 %then %do ;
-      if not(label =: strip(start)) and start = end then
+      if (not(label =: strip(start)) or index(label,'(')=0) and start = end then
         label = strip(start) || ' (' || strip(label) || ')' ; *prepend code to desc;
     %end ;
   run;
