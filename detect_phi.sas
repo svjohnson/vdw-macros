@@ -99,7 +99,7 @@
     select name
     into :dat_array separated by ' '
     from these_vars
-    where type = &num and format in (&dtfmts) or lowcase(name) like '%date%'
+    where type = &num and (format in (&dtfmts) or lowcase(name) like '%date%')
     ;
     	  /* added by cb to shorten the process of looking at all dates */
     %if &sqlobs > 0 %then %do ;
