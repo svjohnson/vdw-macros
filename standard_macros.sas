@@ -5460,6 +5460,7 @@ options user = work;
 %mend VDWCountsAndRates2;
 
 %macro check_dataset(dset =, obs_lim = max, eldest_age = 89) ;
+  %local i ;
   %local inset_name ;
   %let inset_name = &dset ;
 
@@ -5468,7 +5469,7 @@ options user = work;
   %end ;
   %else %do ;
     proc surveyselect
-      data      = &dset
+      data      = &inset_name
       out       = __sub_dset
       method    = srs
       sampsize  = &obs_lim SELECTALL
@@ -5512,7 +5513,7 @@ options user = work;
           mrn_regex_handle
           badcount
         ;
-        set &dset (obs = &obs_lim keep = &mrn_array) ;
+        set &inset_name (obs = &obs_lim keep = &mrn_array) ;
         if _n_ = 1 then do ;
           mrn_regex_handle = prxparse("/&mrn_regex/") ;
           badcount = 0 ;
@@ -5560,20 +5561,18 @@ options user = work;
       from these_vars
       where type = &num and (format in (&dtfmts) or lowcase(name) like '%date%')
       ;
-  	  /* added by cb to shorten the process of looking at all dates */
+      /* added by cb to shorten the process of looking at all dates */
       %if &sqlobs > 0 %then %do ;
+        %put Checking these vars for possible DOB contents: &dat_array ;
         select 'min(' || trim(name) || ') as ' || name into :var_list separated by ','
         from these_vars
-        where type = &num and format in (&dtfmts) or lowcase(name) like '%date%'
+        where type = &num and (format in (&dtfmts) or lowcase(name) like '%date%')
         ;
         create table __gnu as
-        select &var_list from &dset
+        select &var_list from &inset_name
         ;
-	%end
-	/* end cb additions */
+      /* end cb additions */
     quit ;
-    %if &sqlobs > 0 %then %do ;
-      %put Checking these vars for possible DOB contents: &dat_array ;
       data __gnu ;
         set __gnu (obs = &obs_lim keep = &dat_array) ;
         array d &dat_array ;
@@ -5595,12 +5594,13 @@ options user = work;
         drop table __gnu ;
       quit ;
     %end ;
+    %else %do ;
+      %put No obvious date variables found in &inset_name.--skipping age checks. ;
+    %end ;
   %mend check_vars_for_oldsters ;
 
-  proc contents noprint data = &dset out = these_vars ;
+  proc contents noprint data = &inset_name out = these_vars ;
   run ;
-
-  ** proc print data = these_vars ; run ;
 
   proc sql noprint ;
     create table phi_warnings (dset char(50), variable char(255), label char(255), warning char(200)) ;
@@ -5613,40 +5613,43 @@ options user = work;
       %check_varname(regx = &locally_forbidden_varnames, msg = %str(May be on the locally defined list of variables not allowed to be sent to other sites.)) ;
     %end ;
 
-
-
   quit ;
 
   %check_vars_for_mrn(obs_lim = &obs_lim) ;
   %check_vars_for_oldsters(obs_lim = &obs_lim, eldest_age = &eldest_age) ;
 
+  title3 "WARNINGS for dataset &inset_name:" ;
+
   proc sql noprint ;
     select count(*) as num_warns into :num_warns from phi_warnings ;
 
-    %if :num_warns = 0 %then %do i = 1 %to 5 ;
-      %put No obvious phi-like data elements in &dset.  BUT PLEASE INSPECT THE CONTENTS AND PRINTs CAREFULLY TO MAKE SURE OF THIS! ;
+    %if &num_warns = 0 %then %do ;
+      reset print outobs = 5 NOWARN ;
+      select "No obvious PHI-like data elements in &inset_name--BUT PLEASE INSPECT THE CONTENTS AND PRINTs TO FOLLOW" as x label = "No warnings for &inset_name"
+      from &inset_name
+      ;
+      %do i = 1 %to 5 ;
+        %put No obvious phi-like data elements in &inset_name.  BUT PLEASE INSPECT THE CONTENTS AND PRINTs CAREFULLY TO MAKE SURE OF THIS! ;
+      %end ;
     %end ;
     %else %do ;
       reset print ;
-      title3 "WARNINGS for dataset &inset_name:" ;
       select variable, warning from phi_warnings
       order by variable, warning
       ;
       quit ;
-
-      title3 " " ;
     %end ;
     title1 "Dataset &inset_name" ;
-    proc contents data = &dset varnum ;
+    proc contents data = &inset_name varnum ;
     run ;
 /*
-    proc print data = &dset (obs = 20) ;
+    proc print data = &inset_name (obs = 20) ;
     run ;
 */
     ** TODO: make the print print out recs that trip the value warnings. ;
     proc sql number ;
       select *
-      from &dset (obs = 20)
+      from &inset_name (obs = 20)
       ;
     quit ;
 

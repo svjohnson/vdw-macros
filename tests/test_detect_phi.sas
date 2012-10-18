@@ -19,7 +19,8 @@ options
   msglevel = i
   NOOVP
   formchar = '|-++++++++++=|-/|<>*'
-  dsoptions="note2err" NOSQLREMERGE
+  /* dsoptions="note2err"  */
+  NOSQLREMERGE
   mprint
   nofmterr
 ;
@@ -42,6 +43,8 @@ options
 ** libname trans '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance\for_gh_chartval' ;
 ** C:\deleteme\phi_macro_testing ;
 libname trans 'c:\deleteme\phi_macro_testing' ;
+libname togo "\\groups\data\CTRHS\Crn\voc\lab\vdw_lab_qa_local_wp01v01\share" ;
+
 
 ** Where you want the HTML report spat out.  Please include a trailing path separator. ;
 %let out_folder = c:\Documents and Settings\pardre1\My Documents\vdw\macros\tests\ ;
@@ -60,9 +63,9 @@ ods html path = "&out_folder" (URL=NONE)
          (title = "test_detect_phi output")
           ;
 
-  options nofmterr ;
+  * options nofmterr mlogic ;
 
-  %detect_phi(transfer_lib = trans, obs_lim = 500, eldest_age = 50) ;
+  %detect_phi(transfer_lib = togo) ; *, obs_lim = 500, eldest_age = 50) ;
 
 run ;
 
