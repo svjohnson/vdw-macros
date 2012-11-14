@@ -1,41 +1,3 @@
-/*********************************************
-* Roy Pardee
-* Center For Health Studies
-* (206) 287-2078
-* pardee.r@ghc.org
-*
-* \\groups\data\CTRHS\Crn\S D R C\VDW\VitalSigns\kid_bmi_test.sas
-*
-* <<purpose>>
-*********************************************/
-
-/* This is managed in the login script so that it doesnt
-   actually try to login when the machine is not connected
-   to the network */
-%include "\\home\pardre1\SAS\Scripts\dw_login.sas" ;
-
-options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>*' ; * dsoptions="note2err" ;
-
-%include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
-filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
-                   HOST  = "centerforhealthstudies.org"
-                   CD    = "/CRNSAS"
-                   PASS  = "%1thunder#dog"
-                   USER  = "CRNReader" ;
-
-%include crn_macs ;
-
-
-%macro get_test_set(num_recs = 500, outset = s.test_kids) ;
-   proc sql outobs = &num_recs nowarn ;
-      create table &outset as
-      select mrn
-      from vdw.demog
-      where %calcage(refdate = "&sysdate9"d) lt 18
-      ;
-   quit ;
-%mend ;
-
 %macro GetKidBMIPercentiles(Inset  /* Dset of MRNs on whom you want kid BMI recs */
                         , OutSet
                         , StartDt = 01jan1960
@@ -56,7 +18,7 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
    %put  ;
    %put The output dataset will contain a variable calculated by the CDCs ;
    %put normative sample percentile score program found here: ;
-   %put http://www.cdc.gov/nccdphp/dnpa/growthcharts/sas.htm ;
+   %put http://www.cdc.gov/nccdphp/dnpao/growthcharts/resources/sas.htm ;
    %put ;
    %put From this variable (called BMIPCT) you can categorize the children ;
    %put into normal/overweight/obese brackets with the following format: ;
@@ -76,21 +38,20 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
 
 
 
-   libname __d "&_DemographicLib"   access = readonly ;
-   libname __v "&_VitalLib"         access = readonly ;
+
 
    proc sql ;
-      * Gather the demog data for our input dset. ;
+      ** Gather the demog data for our input dset. ;
       create table __demog as
       select i.mrn
-            , case gender when 'M' then 1 when 'F' then 2 else . end as sex label = '1 = Male; 2 = Female'
-            , birth_date
+            , case d.gender when 'M' then 1 when 'F' then 2 else . end as sex label = '1 = Male; 2 = Female'
+            , d.birth_date
       from  &InSet as i LEFT JOIN
-            __d.&_DemographicData as d
+           &_vdw_demographic as d
       on    i.mrn = d.mrn
       ;
 
-      * Now gather any ht/wt measures that occurred prior to the 18th birthday. ;
+      ** Now gather any ht/wt measures that occurred prior to the 18th birthday. ;
       create table _indata as
       select d.mrn
             , d.sex
@@ -100,11 +61,12 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
             , wt*0.45359237   as weight label = 'Weight in kilograms'
             , bmi             as original_bmi label = 'BMI as originally calculated'
             , ((measure_date - birth_date)/365.25 * 12) as agemos label = 'Age at measure in months'
-            , %CalcAge(refdate = measure_date) as age_at_measure
+            , days_diff
+            , %CalcAge(bdtvar = birth_date, refdate = measure_date) as age_at_measure
             , . as recumbnt   label = 'Recumbent flag (not implemented in VDW)'
             , . as headcir    label = 'Head circumference (not implemented in VDW)'
       from  __demog as d INNER JOIN
-            __v.&_VitalData as v
+            &_vdw_vitalsigns as v
       on    d.mrn = v.mrn
       where calculated age_at_measure between 2 and 17 AND
             ht IS NOT NULL AND
@@ -114,11 +76,21 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
       ;
    quit ;
 
-   filename kid_bmi   FTP     "gc-calculate-BIV.sas"
-                      HOST  = "centerforhealthstudies.org"
-                      CD    = "/CRNSAS"
-                      PASS  = "%1thunder#dog"
-                      USER  = "CRNReader" ;
+   ** ROY--REMOVE THIS!! ;
+   data s.sample_bmipct_inset ;
+      set _indata ;
+   run ;
+
+
+   ** ROY--CHANGE THIS BACK TO PULLING FROM THE FTP SERVER!!! ;
+  filename kid_bmi   FTP     "gc-calculate-BIV.sas"
+                     HOST  = "vdw.hmoresearchnetwork.org"
+                     CD    = "/vdwcode"
+                     PASS  = "%2hilario36"
+                     USER  = "VDWReader" ;
+
+
+   ** filename kid_bmi "\\groups\data\CTRHS\Crn\S D R C\VDW\VitalSigns\gc-calculate-BIV.sas" ;
 
    data _indata ;
       set _indata ;
@@ -172,25 +144,4 @@ filename crn_macs  FTP     "CRN_VDW_MACROS.sas"
 
    run ;
 
-   libname __d clear ;
-   libname __v clear ;
-
 %mend GetKidBMIPercentiles ;
-
-%*get_test_set ;
-
- %GetKidBMIPercentiles(InSet   = s.test_kids
-                     , OutSet  = s.test_bmis
-                     , StartDt = 01jan2004
-                     , EndDt   = 31dec2007
-                     ) ;
-
-proc format ;
-   value bmipct
-      low -< 5    = 'Underweight < 5th percentile'
-      5 -< 85     = 'Normal weight 5th to 84.9th percentile'
-      85 -< 95    = 'Overweight 85th to 94.9th percentile'
-      95 - high   = 'Obese >=95th percentile'
-   ;
-quit ;
-

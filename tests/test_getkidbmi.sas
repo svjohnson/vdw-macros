@@ -17,8 +17,11 @@ options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>
 %**include "\\groups\data\CTRHS\Crn\S D R C\VDW\Macros\StdVars.sas" ;
 %include "\\ctrhs-sas\Warehouse\sasdata\CRN_VDW\lib\StdVars.sas" ;
 
-%include vdw_macs ;
+* %include vdw_macs ;
 %**include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\standard_macros.sas" ;
+
+%include "\\mlt1q0\c$\Documents and Settings\pardre1\My Documents\vdw\macros\GetKidBMIPercentiles.sas" ;
+
 
 %macro get_test_kids(n = 300, outset = s.test_kids) ;
   proc sql outobs = &n nowarn ;
@@ -31,7 +34,7 @@ options linesize = 150 nocenter msglevel = i NOOVP formchar='|-++++++++++=|-/|<>
   quit ;
 %mend get_test_kids ;
 
-%**get_test_kids ;
+%get_test_kids ;
 
 %GetKidBMIPercentiles(Inset = s.test_kids /* Dset of MRNs on whom you want kid BMI recs */
                         , OutSet = s.test_kid_bmis
