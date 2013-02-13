@@ -50,6 +50,7 @@ options errors = 0 ;
   %let _vdw_tumor               = __vdw.tumor                   ;
   %let _vdw_enroll              = __vdw.enroll3_vw              ;
   %let _vdw_demographic         = __vdw.demog                   ;
+  %let _vdw_language            = __vdw.person_languages        ;
   %let _vdw_rx                  = __vdw.rx                      ;
   %let _vdw_everndc             = __vdw.everndc                 ;
   %let _vdw_utilization         = __vdw.utilization             ;
