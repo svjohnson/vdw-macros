@@ -13,3 +13,5 @@ collate_births.sas
 StdVars*.sas
 !StdVars.sas
 SendVDWMacros.rb
+manage_format_data.sas
+manage_pregnancy_codes.sas
