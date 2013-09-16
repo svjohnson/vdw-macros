@@ -5603,7 +5603,7 @@ options user = work;
   run ;
 
   proc sql noprint ;
-    create table phi_warnings (dset char(50), variable char(255), label char(255), warning char(200)) ;
+    create table phi_warnings (dset char(50), variable char(256), label char(256), warning char(200)) ;
 
     %check_varname(regx = mrn|hrn                                               , msg = %str(Name suggests this var may be an MRN, which should never move across sites.)) ;
     %check_varname(regx = birth_date|BirthDate|DOB|BDate                        , msg = %str(Name suggests this var may be a date of birth.)) ;
@@ -5639,13 +5639,13 @@ options user = work;
       ;
       quit ;
     %end ;
-    title1 "Dataset &inset_name" ;
+    title3 "Dataset &inset_name" ;
     proc contents data = &inset_name varnum ;
     run ;
-/*
+  /*
     proc print data = &inset_name (obs = 20) ;
     run ;
-*/
+  */
     ** TODO: make the print print out recs that trip the value warnings. ;
     proc sql number ;
       select *

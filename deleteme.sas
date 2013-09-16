@@ -4,67 +4,60 @@
 * (206) 287-2078
 * pardee.r@ghc.org
 *
-* c:\Documents and Settings\pardre1\My Documents\vdw\macros\deleteme.sas
+* C:\users/pardre1/documents/vdw/macros/deleteme.sas
 *
-* <<purpose>>
+* purpose
 *********************************************/
 
-%**include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
+* %include "\\home\pardre1\SAS\Scripts\remoteactivate.sas" ;
 
 options
+  linesize  = 150
   msglevel  = i
   formchar  = '|-++++++++++=|-/|<>*'
   dsoptions = note2err
-  errors    = 5
   nocenter
   noovp
   nosqlremerge
-  linesize  = 150
 ;
-
-libname s '\\groups\data\CTRHS\Crn\S D R C\VDW\Programs\CountsAndRates\OutputDatasets\Lots' ;
-libname c 'C:\deleteme\counts_rates\' ;
-
-%let dset = s.ghc_lots  ;
-%**let dset = c.test_counts ;
-
-%macro do_print() ;
-  %** This was in the prior version of the macro--repeating it here for compatibility. ;
-	proc print data = s.ghc_lots (obs=200) ;
-		title1 "Here is a sample of what you are sending out" ;
-		title2 "Please inspect the full dataset in <<something>> before sending." ;
-    id data_type category ;
-		var code descrip num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-		sum num_ppl num_enrolled_ppl rate_enrolled_ppl ;
-    by data_type category ;
-  run ;
-%mend do_print ;
-
-options orientation = landscape ;
-ods graphics / height = 6in width = 10in ;
-
-%**let out_folder = \\home\pardre1\ ;
-%let out_folder = C:\Documents and Settings\pardre1\My Documents\vdw\macros\ ;
-
-ods html path = "&out_folder" (URL=NONE)
-         body = "FILE_NAME.html"
-         (title = "FILE_NAME output")
-          ;
-
-	proc tabulate data = &dset missing format = comma9.0 ; ** classdata = classes ;
-		class data_type descrip category / missing ;
-		classlev descrip / style=[outputwidth=5.5in] ;
-		var num_: rate_enrolled_ppl ;
-		table data_type="Type of data" * (category * descrip="Event") , (num_recs num_ppl num_enrolled_ppl rate_enrolled_ppl)*SUM=" " / misstext = '.' box = "Data to be sent" ;
-		** format data_type $dt. ;
-	run;
-
-
+data these_vars ;
+  input
+    @1    name      $char9.
+    @11   label     $char21.
+  ;
+datalines ;
+mrn       medical record number
+something mind-blowing variable
+nolabel
 run ;
 
-ods _all_ close ;
+* proc print ;
+* run ;
+libname togo "\\groups\data\CTRHS\CHS\pardre1\repos\faux_enroll\SPAN_PROXY_ENROLL_WP02V01\SHARE" ;
+libname s "//ghrisas/SASUser/pardre1" ;
 
 
+proc contents noprint data = TOGO.NO_P_IN_POOL_GHC out = these_vars ;
+run ;
 
+  data s.these_vars ;
+    set these_vars ;
+  run ;
 
+ proc sql noprint ;
+   create table phi_warnings (dset char(50), variable char(255), label char(256), warning char(200)) ;
 
+   create table possible_bad_vars as
+   select name, label
+   from these_vars
+   where prxmatch(compress("/(mrn|hrn)/i"), name)
+   ;
+
+   insert into phi_warnings(dset, variable, label, warning)
+      select "TOGO.NO_P_IN_POOL_GHC" as dset
+            , name
+            , label
+            , "Name suggests this var may be an MRN, which should never move across sites."
+      from possible_bad_vars
+    ;
+  quit ;

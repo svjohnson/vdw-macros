@@ -43,18 +43,19 @@ options
 ** libname trans '\\ctrhs-sas\SASUser\pardre1\pharmacovigilance\for_gh_chartval' ;
 ** C:\deleteme\phi_macro_testing ;
 libname trans 'c:\deleteme\phi_macro_testing' ;
-libname togo "\\groups\data\CTRHS\Crn\voc\lab\vdw_lab_qa_local_wp01v01\share" ;
+* libname togo "\\groups\data\CTRHS\Crn\voc\lab\vdw_lab_qa_local_wp01v01\share" ;
+libname togo "\\groups\data\CTRHS\CHS\pardre1\repos\faux_enroll\SPAN_PROXY_ENROLL_WP02V01\SHARE" ;
 
 
 ** Where you want the HTML report spat out.  Please include a trailing path separator. ;
-%let out_folder = c:\Documents and Settings\pardre1\My Documents\vdw\macros\tests\ ;
+%let out_folder = c:\users\pardre1\documents\vdw\macros\tests\ ;
 
 ** ====================== END EDIT SECTION ============================ ;
 
 ** detect_phi will ultimately live in stdvars, but for now we have to include them b/c it uses *other* standard macros. ;
 %**include vdw_macs ;
 
-%include 'c:\Documents and Settings\pardre1\My Documents\vdw\macros\detect_phi.sas' ;
+%include 'c:\users\pardre1\documents\vdw\macros\detect_phi.sas' ;
 
 options orientation = landscape ;
 
