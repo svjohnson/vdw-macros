@@ -4135,9 +4135,11 @@ run;
    ** ROY--CHANGE THIS BACK TO PULLING FROM THE FTP SERVER!!! ;
   filename kid_bmi   FTP     "gc-calculate-BIV.sas"
                      HOST  = "vdw.hmoresearchnetwork.org"
-                     CD    = "/vdwcode"
+                     CD    = "/Alfresco/Sites/vdwcode/documentLibrary"
                      PASS  = "%2hilario36"
-                     USER  = "VDWReader" ;
+                     USER  = "VDWReader"
+                     PASSIVE
+                     ;
 
 
    ** filename kid_bmi "\\groups\data\CTRHS\Crn\S D R C\VDW\VitalSigns\gc-calculate-BIV.sas" ;
@@ -4642,9 +4644,10 @@ run;
 %macro vdw_formats(lib = work, tweaked_descriptions = 0) ;
   filename vdw_fmt   FTP     "formats.xpt"
                      HOST  = "vdw.hmoresearchnetwork.org"
-                     CD    = "/vdwcode"
+                     CD    = "/Alfresco/Sites/vdwcode/documentLibrary"
                      PASS  = "%2hilario36"
                      USER  = "VDWReader"
+                     PASSIVE
                      DEBUG
                      /* rcmd  = 'binary' this makes the macro barf w/an access violation at Essentia--it is not necessary. */
                      ;
@@ -4683,10 +4686,11 @@ run;
   %** TODO: make it easy to swap this out for a local filename, for sites (KPNW) that cant do FTP. ;
   filename preg_ftp  FTP     "pregnancy_codes.xpt"
                      HOST  = "vdw.hmoresearchnetwork.org"
-                     CD    = "/vdwcode"
+                     CD    = "/Alfresco/Sites/vdwcode/documentLibrary"
                      PASS  = "%2hilario36"
                      USER  = "VDWReader"
                      DEBUG
+                     PASSIVE
                      /* rcmd  = 'binary' this makes the macro barf w/an access violation at Essentia--it is not necessary. */
                      ;
   libname preg_ftp xport ;
