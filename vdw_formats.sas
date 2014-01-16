@@ -13,11 +13,9 @@
 %macro vdw_formats(lib = work, tweaked_descriptions = 0) ;
   filename vdw_fmt   FTP     "formats.xpt"
                      HOST  = "vdw.hmoresearchnetwork.org"
-                     CD    = "/vdwcode"
+                     CD    = "/Alfresco/Sites/vdwcode/documentLibrary"
                      PASS  = "%2hilario36"
                      USER  = "VDWReader"
-                     DEBUG
-                     /* rcmd  = 'binary' this makes the macro barf w/an access violation at Essentia--it is not necessary. */
                      ;
 
   libname  vdw_fmt xport ;
@@ -26,7 +24,7 @@
   data vdw_formats;
     set vdw_fmt.formats;
     %if &tweaked_descriptions = 1 %then %do ;
-      if not(label =: strip(start)) and start = end then
+      if (not(label =: strip(start)) or index(label,'(')=0) and start = end then
         label = strip(start) || ' (' || strip(label) || ')' ; *prepend code to desc;
     %end ;
   run;

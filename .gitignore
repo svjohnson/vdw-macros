@@ -8,6 +8,7 @@
 *.lst
 *.run
 *.*~
+*.sublime*
 deleteme.*
 collate_births.sas
 StdVars*.sas
