@@ -21,9 +21,8 @@
 
 ** Utility macro for fairly precisely calculating age. ;
 %macro CalcAge(BDtVar, RefDate) ;
-
-  floor ((intck('month',&BDTVar,&RefDate) - (day(&RefDate) < day(&BDTVar))) / 12)
-
+  floor ((intck('month',&BDTVar,&RefDate) - (day(&RefDate) < min (day(&BDTVar),
+  day (intnx ('month',&RefDate, 1) - 1) ) ) ) /12 )
 %mend CalcAge ;
 
 %macro GetRxForPeople(
